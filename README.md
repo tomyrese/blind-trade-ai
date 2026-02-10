@@ -2,8 +2,6 @@
 
 PokéMarket is a premium React Native mobile application designed for Pokémon Card collectors and traders. It mimics a high-end marketplace with features like blind box trading ("Trade Up"), AI-powered card scanning/valuation, and real-time market data visualization.
 
-![PokéMarket Screenshot](./assets/screenshot_demo.png)
-
 ## 🌟 Key Features
 
 ### 1. Market Dashboard (Trang Chủ)

@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Market } from '../../domain/models/Market';
 
-const GEMINI_API_KEY = 'AIzaSyD736WSTUeuMv9tWAU4V2hpeED70_5Ddlk';
+const GEMINI_API_KEY = 'API_KEY';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
