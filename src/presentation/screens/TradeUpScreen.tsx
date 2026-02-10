@@ -5,14 +5,18 @@ import { Layers, Zap, Info, ArrowRight, Sparkles, Filter } from 'lucide-react-na
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { LootboxAnimation } from '../features/tradeup/components/LootboxAnimation';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
+import { useUserStore } from '../../shared/stores/userStore';
+import { useTranslation } from '../../shared/utils/translations';
 import { generateReward, mockCards, Card } from '../../shared/utils/cardData';
-import { formatVND } from '../../shared/utils/formatters';
+import { formatCurrency } from '../../shared/utils/currency';
 
 export const TradeUpScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const assets = usePortfolioStore((state) => state.assets);
   const addAsset = usePortfolioStore((state) => state.addAsset);
   const removeAsset = usePortfolioStore((state) => state.removeAsset);
+  const currency = useUserStore((state) => state.profile.currency);
+  const { t } = useTranslation();
   
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isOpening, setIsOpening] = useState(false);
@@ -52,16 +56,16 @@ export const TradeUpScreen: React.FC = () => {
         return prev.filter((i) => i !== id);
       }
       if (prev.length >= 10) {
-        Alert.alert('Giới hạn', 'Bạn chỉ có thể chọn tối đa 10 thẻ để hợp nhất.');
+        Alert.alert(t('fusion_limit_title'), t('fusion_limit_message'));
         return prev;
       }
       return [...prev, id];
     });
-  }, []);
+  }, [t]);
 
   const handleFusion = () => {
     if (selectedCards.length < 2) {
-      Alert.alert('Yêu cầu', 'Bạn cần ít nhất 2 thẻ bài để bắt đầu hợp nhất.');
+      Alert.alert(t('fusion_requirement_title'), t('fusion_requirement_message'));
       return;
     }
 
@@ -90,17 +94,17 @@ export const TradeUpScreen: React.FC = () => {
         <View style={[styles.fusionPanel, { marginTop: 20 }]}>
           <View style={styles.fusionHeader}>
             <View style={styles.valueInfo}>
-              <Text style={styles.valueLabel}>Giá trị hợp nhất</Text>
-              <Text style={styles.valueAmount}>{formatVND(totalValue)}</Text>
+              <Text style={styles.valueLabel}>{t('fusion_value')}</Text>
+              <Text style={styles.valueAmount}>{formatCurrency(totalValue, currency)}</Text>
             </View>
             <View style={styles.chancesBox}>
               <View style={styles.chanceItem}>
                 <Sparkles size={14} color="#f59e0b" />
-                <Text style={styles.chanceText}>Nâng cấp: {fusionChances.upgrade}%</Text>
+                <Text style={styles.chanceText}>{t('fusion_upgrade')}: {fusionChances.upgrade}%</Text>
               </View>
               <View style={styles.chanceItem}>
                 <Zap size={14} color="#ef4444" />
-                <Text style={styles.chanceText}>Rủi ro: {fusionChances.fail}%</Text>
+                <Text style={styles.chanceText}>{t('fusion_risk')}: {fusionChances.fail}%</Text>
               </View>
             </View>
           </View>
@@ -109,7 +113,7 @@ export const TradeUpScreen: React.FC = () => {
             {selectedCards.length === 0 ? (
               <View style={styles.emptySlot}>
                 <Layers size={48} color="#cbd5e1" strokeWidth={1} />
-                <Text style={styles.emptySlotText}>Chưa có thẻ nào được chọn</Text>
+                <Text style={styles.emptySlotText}>{t('no_cards_selected')}</Text>
               </View>
             ) : (
               <View style={styles.selectedGrid}>
@@ -136,17 +140,17 @@ export const TradeUpScreen: React.FC = () => {
             disabled={selectedCards.length < 2}
           >
             <Zap size={24} color="#ffffff" fill="#ffffff" />
-            <Text style={styles.fuseButtonText}>BẮT ĐẦU HỢP NHẤT</Text>
+            <Text style={styles.fuseButtonText}>{t('start_fusion')}</Text>
           </Pressable>
         </View>
 
         {/* Inventory Selection Grid */}
         <View style={styles.listSection}>
           <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Kho Thẻ Của Bạn</Text>
+            <Text style={styles.listTitle}>{t('your_inventory')}</Text>
             <View style={styles.filterBtn}>
               <Filter size={16} color="#64748b" />
-              <Text style={styles.filterText}>Lọc</Text>
+              <Text style={styles.filterText}>{t('filter')}</Text>
             </View>
           </View>
           
@@ -165,7 +169,7 @@ export const TradeUpScreen: React.FC = () => {
           
           {ownedCards.length === 0 && (
             <View style={styles.emptyInventory}>
-              <Text style={styles.emptyInventoryText}>Bạn không có thẻ bài nào để hợp nhất.</Text>
+              <Text style={styles.emptyInventoryText}>{t('no_cards_to_fuse')}</Text>
             </View>
           )}
         </View>

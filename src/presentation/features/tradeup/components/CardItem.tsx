@@ -3,7 +3,9 @@ import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image } from 'lucide-react-native';
 import { Card, RARITY_CONFIGS } from '../../../../shared/utils/cardData';
-import { formatVND } from '../../../../shared/utils/formatters';
+import { formatCurrency } from '../../../../shared/utils/currency';
+import { useUserStore } from '../../../../shared/stores/userStore';
+import { useTranslation } from '../../../../shared/utils/translations';
 import { useFavoritesStore } from '../../../../shared/stores/favoritesStore';
 import { useCartStore } from '../../../../shared/stores/cartStore';
 import { useToast } from '../../../../shared/contexts/ToastContext';
@@ -22,6 +24,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const addToCart = useCartStore((state) => state.addToCart);
     const { showToast } = useToast();
+    const currency = useUserStore((state) => state.profile.currency);
+    const { t } = useTranslation();
 
     const isSmall = size === 'small';
     const isList = size === 'list';
@@ -99,8 +103,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 toggleFavorite(card.id);
                 showToast(
                   wasFavorite 
-                    ? `Đã xóa ${card.name} khỏi yêu thích`
-                    : `Đã thêm ${card.name} vào yêu thích`,
+                    ? `${t('remove_success')} ${card.name}`
+                    : `${t('add_success')} ${card.name}`,
                   'favorite'
                 );
               }}
@@ -187,7 +191,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
             {/* Grid Mode Seller Info */}
             {!isList && (
                 <Text style={styles.sellerInfo} numberOfLines={1}>
-                Listed by: {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
+                {t('listed_by')}: {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
                 </Text>
             )}
 
@@ -198,11 +202,11 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
             <View style={[styles.bottomRow, isList && { marginTop: 0 }]}>
               <View style={[styles.priceWrapper, isList && { flexDirection: 'row', alignItems: 'baseline', gap: 6 }]}>
                 <Text style={[styles.mainPrice, isList && { fontSize: 16 }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatVND(card.value)}
+                  {formatCurrency(card.value, currency)}
                 </Text>
                 {card.tcgPlayerPrice && (
                   <Text style={[styles.subPrice, isList && { marginTop: 0 }]} numberOfLines={1}>
-                    TCG: {formatVND(card.tcgPlayerPrice)}
+                    TCG: {formatCurrency(card.tcgPlayerPrice, currency)}
                   </Text>
                 )}
               </View>
@@ -214,7 +218,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                             onPress={() => {
                                 const wasFavorite = isFavorite;
                                 toggleFavorite(card.id);
-                                showToast(wasFavorite ? 'Removed' : 'Added', 'favorite');
+                                showToast(wasFavorite ? t('remove_success') : t('add_success'), 'favorite');
                             }}
                             style={styles.iconButton}
                          >
@@ -229,7 +233,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     <Pressable 
                     onPress={() => {
                         addToCart(card);
-                        showToast(`Đã thêm ${card.name} vào giỏ hàng`, 'cart');
+                        showToast(`${t('add_success')} ${card.name}`, 'cart');
                     }}
                     style={[styles.cartIconButton, { backgroundColor: config.glowColor }]}
                     >

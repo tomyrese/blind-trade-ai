@@ -4,13 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ShoppingBag, Trash2, Minus, Plus, CreditCard } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useCartStore } from '../../shared/stores/cartStore';
+import { useUserStore } from '../../shared/stores/userStore';
+import { useTranslation } from '../../shared/utils/translations';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { formatVND } from '../../shared/utils/formatters';
+import { formatCurrency } from '../../shared/utils/currency';
 
 export const CartScreen: React.FC = () => {
   const navigation = useNavigation();
   const { items, removeFromCart, updateQuantity, clearCart } = useCartStore();
   const total = items.reduce((sum, item) => sum + (item.card.value * item.quantity), 0);
+  const currency = useUserStore((state) => state.profile.currency);
+  const { t } = useTranslation();
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cartItemWrapper}>
@@ -29,7 +33,7 @@ export const CartScreen: React.FC = () => {
             <Text style={styles.itemRarity}>{item.card.rarityLabel || item.card.rarity}</Text>
             
             <View style={styles.itemFooter}>
-                <Text style={styles.itemPrice}>{formatVND(item.card.value)}</Text>
+                <Text style={styles.itemPrice}>{formatCurrency(item.card.value, currency)}</Text>
                 
                 <View style={styles.quantityControls}>
                     <Pressable 
@@ -58,7 +62,7 @@ export const CartScreen: React.FC = () => {
         <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
           <ChevronLeft size={24} color="#1e293b" />
         </Pressable>
-        <Text style={styles.headerTitle}>Giỏ Hàng ({items.length})</Text>
+        <Text style={styles.headerTitle}>{t('cart_title')} ({items.length})</Text>
         {items.length > 0 ? (
              <Pressable onPress={clearCart} style={[styles.iconButton, { borderColor: '#fee2e2' }]}>
                 <Trash2 size={20} color="#ef4444" />
@@ -77,10 +81,8 @@ export const CartScreen: React.FC = () => {
             <View style={styles.emptyIconContainer}>
                 <ShoppingBag size={48} color="#cbd5e1" fill="#f1f5f9" />
             </View>
-            <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
-            <Text style={styles.emptyDesc}>
-                Bạn chưa chọn thẻ bài nào. Hãy dạo quanh chợ và tìm cho mình những thẻ bài ưng ý nhé!
-            </Text>
+            <Text style={styles.emptyTitle}>{t('cart_empty_title')}</Text>
+            <Text style={styles.emptyDesc}>{t('cart_empty_desc')}</Text>
           </View>
         }
       />
@@ -88,15 +90,15 @@ export const CartScreen: React.FC = () => {
       {items.length > 0 && (
         <View style={styles.footer}>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tổng cộng</Text>
+            <Text style={styles.totalLabel}>{t('total_price')}</Text>
             <View style={styles.totalValueContainer}>
-                <Text style={styles.totalAmount}>{formatVND(total)}</Text>
-                <Text style={styles.vatText}>(Đã bao gồm VAT)</Text>
+                <Text style={styles.totalAmount}>{formatCurrency(total, currency)}</Text>
+                <Text style={styles.vatText}>{t('vat_included')}</Text>
             </View>
           </View>
           <Pressable style={styles.checkoutBtn}>
             <CreditCard size={20} color="#ffffff" style={{ marginRight: 8 }} />
-            <Text style={styles.checkoutBtnText}>THANH TOÁN NGAY</Text>
+            <Text style={styles.checkoutBtnText}>{t('checkout_now')}</Text>
           </Pressable>
         </View>
       )}

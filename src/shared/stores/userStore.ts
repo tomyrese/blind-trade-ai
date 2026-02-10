@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { UserProfile, MOCK_USER, VipType } from '../../domain/models/User';
+import { UserProfile, MOCK_USER, VipType, AVAILABLE_TITLES } from '../../domain/models/User';
 
 interface UserState {
   profile: UserProfile;
@@ -9,6 +9,11 @@ interface UserState {
   addExp: (amount: number) => void;
   upgradeToVip: (type: VipType) => void;
   setAvatar: (avatarId: string) => void;
+  
+  // Titles
+  unlockTitle: (titleId: string) => void;
+  equipTitle: (titleId: string) => void;
+  checkTitleUnlocks: () => void;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -41,6 +46,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         },
       };
     });
+    get().checkTitleUnlocks();
   },
 
   upgradeToVip: (type) => {
@@ -60,6 +66,58 @@ export const useUserStore = create<UserState>((set, get) => ({
           vipExpiry: expiry,
           rank: state.profile.rank, // Keep existing rank, don't add "VIP" prefix
         },
+      };
+    });
+    get().checkTitleUnlocks();
+  },
+
+  checkTitleUnlocks: () => {
+    set((state) => {
+      const { level, collectionCount, isVip, unlockedTitles } = state.profile;
+      const newUnlocked = [...unlockedTitles];
+      let hasNew = false;
+
+      // Check conditions
+      if (level >= 50 && !newUnlocked.includes('elite')) { newUnlocked.push('elite'); hasNew = true; }
+      if (level >= 90 && !newUnlocked.includes('champion')) { newUnlocked.push('champion'); hasNew = true; }
+      if (collectionCount >= 50 && !newUnlocked.includes('collector')) { newUnlocked.push('collector'); hasNew = true; }
+      if (isVip && !newUnlocked.includes('vip_member')) { newUnlocked.push('vip_member'); hasNew = true; }
+      
+      // Default
+      if (!newUnlocked.includes('rookie')) { newUnlocked.push('rookie'); hasNew = true; }
+
+      if (!hasNew) return {};
+
+      return {
+        profile: {
+          ...state.profile,
+          unlockedTitles: newUnlocked,
+        }
+      };
+    });
+  },
+
+  unlockTitle: (titleId) => {
+    set((state) => {
+      if (state.profile.unlockedTitles.includes(titleId)) return {};
+      return {
+        profile: {
+          ...state.profile,
+          unlockedTitles: [...state.profile.unlockedTitles, titleId],
+        }
+      };
+    });
+  },
+
+  equipTitle: (titleId) => {
+    set((state) => {
+      const title = AVAILABLE_TITLES.find(t => t.id === titleId);
+      if (!title || !state.profile.unlockedTitles.includes(titleId)) return {};
+      return {
+        profile: {
+          ...state.profile,
+          equippedTitle: title,
+        }
       };
     });
   },

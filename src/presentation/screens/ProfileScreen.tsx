@@ -1,11 +1,86 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Animated, Switch, Alert, Image, NativeModules } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info } from 'lucide-react-native';
+import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
-import { VipType } from '../../domain/models/User';
+import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
+import { useTranslation } from '../../shared/utils/translations';
+import { formatCurrency } from '../../shared/utils/currency';
+import { PRESET_AVATARS } from '../../assets/images/avata';
+import { launchImageLibrary } from 'react-native-image-picker';
 
-// --- Local Toast Component ---
+// --- Sub-Components ---
+
+const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean, onClose: () => void, onSelect: (id: string) => void }) => {
+    const { t } = useTranslation();
+    
+    const handlePickFromGallery = async () => {
+        // react-native-image-picker uses 'ImagePicker' as module name
+        const legacyModule = NativeModules.ImagePicker;
+        const isTurboEnabled = (global as any).__turboModuleProxy != null;
+        
+        // The library itself will crash if its internal resolution returns null
+        // We do a pre-check here to avoid the crash and show diagnostics
+        if (typeof launchImageLibrary !== 'function' || (!legacyModule && !isTurboEnabled)) {
+            Alert.alert(
+                t('error'), 
+                `Native Module 'ImagePicker' not found.\n\nDiagnostics:\n- JS Function: ${typeof launchImageLibrary}\n- TurboModule Enabled: ${isTurboEnabled}\n- Legacy Module: ${legacyModule ? 'Detected' : 'MISSING'}\n\nPlease verify your 'npm run android' build succeeded.`
+            );
+            return;
+        }
+
+        const result = await launchImageLibrary({
+            mediaType: 'photo',
+            quality: 1,
+        });
+
+        if (result.didCancel) return;
+        if (result.errorCode) {
+            Alert.alert(t('error'), t('gallery_permission_denied'));
+            return;
+        }
+
+        if (result.assets && result.assets[0].uri) {
+            onSelect(result.assets[0].uri);
+            onClose();
+        }
+    };
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <ImageIcon size={24} color="#ef4444" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('change_avatar')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
+                    </View>
+
+                    <Text style={styles.sectionTitle}>{t('pick_from_gallery')}</Text>
+                    <TouchableOpacity style={styles.galleryPicker} onPress={handlePickFromGallery}>
+                        <View style={styles.galleryIconRow}>
+                            <Camera size={24} color="#3b82f6" />
+                            <Text style={styles.galleryPickerText}>{t('pick_from_gallery')}</Text>
+                        </View>
+                        <ChevronRight size={20} color="#cbd5e1" />
+                    </TouchableOpacity>
+
+                    <Text style={styles.sectionTitle}>{t('pick_preset')}</Text>
+                    <View style={styles.presetGrid}>
+                        {Object.entries(PRESET_AVATARS).map(([id, source]) => (
+                            <TouchableOpacity key={id} style={styles.presetItem} onPress={() => { onSelect(id); onClose(); }}>
+                                <Image source={source} style={styles.presetImage} />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
 const LocalToast = ({ visible, message, type, onHide }: { visible: boolean, message: string, type: 'success' | 'error' | 'info', onHide: () => void }) => {
     const opacity = useRef(new Animated.Value(0)).current;
 
@@ -17,7 +92,7 @@ const LocalToast = ({ visible, message, type, onHide }: { visible: boolean, mess
                 Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
             ]).start(() => onHide());
         }
-    }, [visible]);
+    }, [visible, message]);
 
     if (!visible) return null;
 
@@ -36,7 +111,56 @@ const LocalToast = ({ visible, message, type, onHide }: { visible: boolean, mess
     );
 };
 
-// --- Sub-Components ---
+const TitlesModal = ({ visible, onClose, unlockedTitles = [], equippedTitle, onEquip }: { visible: boolean, onClose: () => void, unlockedTitles?: string[], equippedTitle: Title | null, onEquip: (id: string) => void }) => {
+    const { t } = useTranslation();
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Award size={24} color="#f59e0b" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('titles')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
+                    </View>
+                    <Text style={styles.modalSubtitle}>Mở khóa danh hiệu để hiển thị đẳng cấp của bạn!</Text>
+
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 20}}>
+                        {AVAILABLE_TITLES.map((title) => {
+                            const isUnlocked = unlockedTitles?.includes(title.id);
+                            const isEquipped = equippedTitle?.id === title.id;
+
+                            return (
+                                <View key={title.id} style={[styles.titleItem, isEquipped && styles.titleItemEquipped, !isUnlocked && styles.titleItemLocked]}>
+                                    <View style={[styles.titleIcon, { backgroundColor: isUnlocked ? title.color : '#cbd5e1' }]}>
+                                        {isUnlocked ? <Star size={16} color="#fff" fill="#fff" /> : <Lock size={16} color="#fff" />}
+                                    </View>
+                                    <View style={styles.titleInfo}>
+                                        <Text style={[styles.titleName, !isUnlocked && { color: '#94a3b8' }]}>{title.name}</Text>
+                                        <Text style={styles.titleDesc}>{title.description}</Text>
+                                        {!isUnlocked && <Text style={styles.titleCondition}>Yêu cầu: {title.condition}</Text>}
+                                    </View>
+                                    {isUnlocked && (
+                                        <TouchableOpacity 
+                                            onPress={() => onEquip(title.id)} 
+                                            style={[styles.equipBtn, isEquipped ? { backgroundColor: '#def7ec' } : { backgroundColor: '#eff6ff' }]}
+                                            disabled={isEquipped}
+                                        >
+                                            <Text style={[styles.equipBtnText, isEquipped ? { color: '#059669' } : { color: '#3b82f6' }]}>
+                                                {isEquipped ? t('equipped') : t('equip')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            </View>
+        </Modal>
+    );
+};
 
 const ConfirmationModal = ({ visible, title, message, onConfirm, onCancel, confirmText = 'Xác Nhận', cancelText = 'Hủy', type = 'info' }: { visible: boolean, title: string, message: string, onConfirm: () => void, onCancel: () => void, confirmText?: string, cancelText?: string, type?: 'info' | 'danger' }) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
@@ -61,6 +185,7 @@ const ConfirmationModal = ({ visible, title, message, onConfirm, onCancel, confi
 );
 
 const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => {
+    const { t } = useTranslation();
     const [name, setName] = useState(initialProfile.name);
     const [email, setEmail] = useState(initialProfile.email);
     const [phone, setPhone] = useState(initialProfile.phone || '');
@@ -87,23 +212,23 @@ const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => 
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Sửa Hồ Sơ</Text>
+                        <Text style={styles.modalTitle}>{t('edit_profile')}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
                     </View>
                     <ScrollView showsVerticalScrollIndicator={false}>
-                        <Text style={styles.inputLabel}>Tên Trainer</Text>
+                        <Text style={styles.inputLabel}>{t('trainer_name')}</Text>
                         <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Tên trainer..." />
                         <Text style={styles.inputLabel}>Email</Text>
                         <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Email..." keyboardType="email-address" />
-                        <Text style={styles.inputLabel}>Số Điện Thoại</Text>
+                        <Text style={styles.inputLabel}>{t('phone')}</Text>
                         <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="Số điện thoại..." keyboardType="phone-pad" />
-                        <Text style={styles.inputLabel}>Địa Chỉ</Text>
+                        <Text style={styles.inputLabel}>{t('address')}</Text>
                         <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Địa chỉ..." />
-                        <Text style={styles.inputLabel}>Giới Thiệu</Text>
+                        <Text style={styles.inputLabel}>{t('bio')}</Text>
                         <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} value={bio} onChangeText={setBio} placeholder="Bio..." multiline />
                     </ScrollView>
                     <TouchableOpacity onPress={handleSave} style={styles.modalBtnSave} activeOpacity={0.8}>
-                        <Text style={styles.modalBtnTextSave}>Lưu Thay Đổi</Text>
+                        <Text style={styles.modalBtnTextSave}>{t('save_changes')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -111,7 +236,123 @@ const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => 
     );
 };
 
-const VipUpgradeModal = ({ visible, onClose, onUpgrade }: any) => {
+const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
+    const { t } = useTranslation();
+    const [notifications, setNotifications] = useState(profile.notificationsEnabled);
+    const [sound, setSound] = useState(profile.soundEnabled ?? true);
+    const [vibration, setVibration] = useState(profile.vibrationEnabled ?? true);
+    const [language, setLanguage] = useState(profile.language ?? 'vi');
+    const [currency, setCurrency] = useState(profile.currency ?? 'VND');
+
+    useEffect(() => {
+        if (visible) {
+            setNotifications(profile.notificationsEnabled);
+            setSound(profile.soundEnabled ?? true);
+            setVibration(profile.vibrationEnabled ?? true);
+            setLanguage(profile.language ?? 'vi');
+            setCurrency(profile.currency ?? 'VND');
+        }
+    }, [visible, profile]);
+
+    const handleSave = () => {
+        onUpdate({ 
+            notificationsEnabled: notifications,
+            soundEnabled: sound,
+            vibrationEnabled: vibration,
+            language,
+            currency
+        });
+        onClose();
+    };
+
+    const SettingRow = ({ label, children }: any) => (
+        <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>{label}</Text>
+            {children}
+        </View>
+    );
+
+    const OptionButton = ({ label, selected, onPress }: any) => (
+        <TouchableOpacity onPress={onPress} style={[styles.optionBtn, selected && styles.optionBtnSelected]} activeOpacity={0.8}>
+            <Text style={[styles.optionBtnText, selected && { color: '#fff' }]}>{label}</Text>
+        </TouchableOpacity>
+    );
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Settings size={24} color="#64748b" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('settings_title')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <Text style={styles.sectionTitle}>{t('general')}</Text>
+                        <SettingRow label={t('notifications')}>
+                            <Switch 
+                                value={notifications} 
+                                onValueChange={setNotifications} 
+                                trackColor={{ false: '#e2e8f0', true: '#bbf7d0' }}
+                                thumbColor={notifications ? '#10b981' : '#f1f5f9'}
+                            />
+                        </SettingRow>
+                        <SettingRow label={t('sound')}>
+                            <Switch 
+                                value={sound} 
+                                onValueChange={setSound} 
+                                trackColor={{ false: '#e2e8f0', true: '#bfdbfe' }}
+                                thumbColor={sound ? '#3b82f6' : '#f1f5f9'}
+                            />
+                        </SettingRow>
+                        <SettingRow label={t('vibration')}>
+                            <Switch 
+                                value={vibration} 
+                                onValueChange={setVibration} 
+                                trackColor={{ false: '#e2e8f0', true: '#bfdbfe' }}
+                                thumbColor={vibration ? '#3b82f6' : '#f1f5f9'}
+                            />
+                        </SettingRow>
+
+                        <Text style={styles.sectionTitle}>{t('options')}</Text>
+                        <SettingRow label={t('language')}>
+                            <View style={{flexDirection: 'row', gap: 8}}>
+                                <OptionButton label="Tiếng Việt" selected={language === 'vi'} onPress={() => setLanguage('vi')} />
+                                <OptionButton label="English" selected={language === 'en'} onPress={() => setLanguage('en')} />
+                            </View>
+                        </SettingRow>
+                        <SettingRow label={t('currency')}>
+                            <View style={{flexDirection: 'row', gap: 8}}>
+                                <OptionButton label="VND" selected={currency === 'VND'} onPress={() => setCurrency('VND')} />
+                                <OptionButton label="USD" selected={currency === 'USD'} onPress={() => setCurrency('USD')} />
+                            </View>
+                        </SettingRow>
+
+                        <Text style={styles.sectionTitle}>{t('data')}</Text>
+                        <TouchableOpacity style={styles.actionRow} onPress={() => Alert.alert(t('info'), t('cache_cleared'))}>
+                            <Text style={styles.actionRowText}>{t('clear_cache')}</Text>
+                            <ChevronRight size={20} color="#cbd5e1" />
+                        </TouchableOpacity>
+                        
+                    </ScrollView>
+
+                    <TouchableOpacity onPress={handleSave} style={styles.modalBtnSave} activeOpacity={0.8}>
+                        <Text style={styles.modalBtnTextSave}>{t('save_settings')}</Text>
+                    </TouchableOpacity>
+                    
+                    <Text style={[styles.versionText, { marginTop: 16 }]}>v3.1.0 build 20240520</Text>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const VipUpgradeModal = ({ visible, onClose, onUpgrade, currentVipType }: { visible: boolean, onClose: () => void, onUpgrade: (type: VipType) => void, currentVipType: VipType }) => {
+    const { t } = useTranslation();
+    const currency = useUserStore((state) => state.profile.currency);
     const [selected, setSelected] = useState<VipType | null>(null);
     const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -128,105 +369,184 @@ const VipUpgradeModal = ({ visible, onClose, onUpgrade }: any) => {
         }
     };
 
+    const isLifetime = currentVipType === 'lifetime';
+
     return (
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
             <View style={styles.modalOverlay}>
-                <View style={styles.vipModelContent}>
+                <View style={[styles.vipModelContent, isLifetime && { justifyContent: 'center', alignItems: 'center' }]}>
                     <TouchableOpacity onPress={onClose} style={styles.closeVipBtn}><X size={24} color="#64748b" /></TouchableOpacity>
-                    <View style={styles.vipHeaderTitle}>
-                        <Crown size={32} color="#fcd34d" fill="#fcd34d" />
-                        <Text style={styles.vipTitle}>Nâng Cấp VIP</Text>
-                    </View>
-                    <Text style={styles.vipSubtitle}>Mở khóa đặc quyền tối thượng!</Text>
+                    
+                    {isLifetime ? (
+                        <View style={{ alignItems: 'center', padding: 20 }}>
+                            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                                <Crown size={48} color="#f59e0b" fill="#f59e0b" />
+                            </View>
+                            <Text style={[styles.vipTitle, { textAlign: 'center', fontSize: 24, marginBottom: 10 }]}>{t('vip_member_forever')}</Text>
+                            <Text style={[styles.vipSubtitle, { fontSize: 16, lineHeight: 24 }]}>
+                                {t('vip_forever_desc')}
+                            </Text>
+                            <View style={{ marginTop: 20, padding: 16, backgroundColor: '#f0fdf4', borderRadius: 16, flexDirection: 'row', alignItems: 'center' }}>
+                                <CheckCircle size={24} color="#16a34a" />
+                                <Text style={{ marginLeft: 10, color: '#16a34a', fontWeight: '700', fontSize: 16 }}>{t('vip_activated')}</Text>
+                            </View>
+                        </View>
+                    ) : (
+                        <>
+                            <View style={styles.vipHeaderTitle}>
+                                <Crown size={32} color="#fcd34d" fill="#fcd34d" />
+                                <Text style={styles.vipTitle}>{t('upgrade_vip')}</Text>
+                            </View>
+                            <Text style={styles.vipSubtitle}>{t('vip_benefits')}</Text>
 
-                    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                        {/* Packages */}
-                        <VipPackageCard title="Gói Tháng" price="59.000 đ" duration="Tháng" features={['Khung Avatar Vàng', '+10% EXP']} selected={selected === 'monthly'} onPress={() => setSelected('monthly')} />
-                        <VipPackageCard title="Gói Năm" price="599.000 đ" duration="Năm" features={['Tất cả quyền lợi tháng', 'Khung Bạch Kim', '+20% EXP']} selected={selected === 'yearly'} onPress={() => setSelected('yearly')} badge="TIẾT KIỆM 15%" popular />
-                        <VipPackageCard title="Trọn Đời" price="1.999.000 đ" duration="Vĩnh viễn" features={['Không hết hạn', 'Badge Legend', '+50% EXP']} selected={selected === 'lifetime'} onPress={() => setSelected('lifetime')} badge="ƯU ĐÃI GIỚI HẠN" premium />
-                    </ScrollView>
+                            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                                <VipPackageCard 
+                                    title={t('vip_month')} 
+                                    price={formatCurrency(59000, currency)} 
+                                    duration={t('vip_month')} 
+                                    features={['Khung Avatar Vàng', '+10% EXP']} 
+                                    selected={selected === 'monthly'} 
+                                    onPress={() => setSelected('monthly')}
+                                    disabled={currentVipType === 'monthly'}
+                                />
+                                <VipPackageCard 
+                                    title={t('vip_year')} 
+                                    price={formatCurrency(599000, currency)} 
+                                    duration={t('vip_year')} 
+                                    features={['Tất cả quyền lợi tháng', 'Khung Bạch Kim', '+20% EXP']} 
+                                    selected={selected === 'yearly'} 
+                                    onPress={() => setSelected('yearly')} 
+                                    badge="TIẾT KIỆM 15%" 
+                                    popular 
+                                    disabled={currentVipType === 'yearly'}
+                                />
+                                <VipPackageCard 
+                                    title={t('vip_lifetime')} 
+                                    price={formatCurrency(1999000, currency)} 
+                                    duration={t('vip_lifetime')} 
+                                    features={['Không hết hạn', 'Badge Legend', '+50% EXP']} 
+                                    selected={selected === 'lifetime'} 
+                                    onPress={() => setSelected('lifetime')} 
+                                    badge="ƯU ĐÃI GIỚI HẠN" 
+                                    premium 
+                                />
+                            </ScrollView>
 
-                    <View style={styles.confirmButtonContainer}>
-                         <TouchableOpacity onPress={handlePreConfirm} disabled={!selected} style={[styles.confirmButton, !selected && styles.confirmButtonDisabled]} activeOpacity={0.8}>
-                            <Text style={styles.confirmButtonText}>{selected ? 'Xác Nhận Nâng Cấp' : 'Chọn Gói Để Tiếp Tục'}</Text>
-                        </TouchableOpacity>
-                    </View>
+                            <View style={styles.confirmButtonContainer}>
+                                <TouchableOpacity onPress={handlePreConfirm} disabled={!selected} style={[styles.confirmButton, !selected && styles.confirmButtonDisabled]} activeOpacity={0.8}>
+                                    <Text style={styles.confirmButtonText}>{selected ? t('confirm_upgrade') : t('select_package')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
                 </View>
             </View>
             
-            {/* Nested Confirmation for Purchase */}
             <ConfirmationModal 
                 visible={confirmVisible} 
-                title="Xác Nhận Thanh Toán" 
-                message={`Bạn chắc chắn muốn nâng cấp gói ${selected === 'lifetime' ? 'Trọn Đời' : selected === 'yearly' ? 'Năm' : 'Tháng'}?`}
+                title={t('vip_confirm_title')} 
+                message={`${t('vip_confirm_message')} ${selected === 'lifetime' ? t('vip_lifetime') : selected === 'yearly' ? t('vip_year') : t('vip_month')}?`}
                 onConfirm={handlePurchase} 
                 onCancel={() => setConfirmVisible(false)} 
-                confirmText="Thanh Toán Ngay"
+                confirmText={t('pay_now')}
                 type="info"
             />
         </Modal>
     );
 };
 
-const VipPackageCard = ({ title, price, duration, features, selected, onPress, badge, popular, premium }: any) => (
-    <TouchableOpacity onPress={onPress} style={[styles.vipPackage, selected && styles.vipPackageSelected, popular && styles.vipPackagePopular, premium && styles.vipPackagePremium, selected && premium && styles.vipPackagePremiumSelected]} activeOpacity={0.9}>
+const VipPackageCard = ({ title, price, duration, features, selected, onPress, badge, popular, premium, disabled }: any) => {
+    const { t } = useTranslation();
+    return (
+    <TouchableOpacity 
+        onPress={onPress} 
+        disabled={disabled}
+        style={[
+            styles.vipPackage, 
+            selected && styles.vipPackageSelected, 
+            popular && styles.vipPackagePopular, 
+            premium && styles.vipPackagePremium, 
+            selected && premium && styles.vipPackagePremiumSelected,
+            disabled && { opacity: 0.5, backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' }
+        ]} 
+        activeOpacity={0.9}
+    >
         {badge && <View style={[styles.popularBadge, premium && { backgroundColor: '#ec4899' }]}><Text style={styles.popularText}>{badge}</Text></View>}
         <View style={styles.vipPackageHeader}>
             <View>
-                <Text style={[styles.vipPackageTitle, premium && { color: '#fff' }]}>{title}</Text>
-                <Text style={[styles.vipDuration, premium && { color: 'rgba(255,255,255,0.7)' }]}>/ {duration}</Text>
+                <Text style={[styles.vipPackageTitle, premium && { color: '#fff' }, disabled && { color: '#94a3b8' }]}>{title}</Text>
+                <Text style={[styles.vipDuration, premium && { color: 'rgba(255,255,255,0.7)' }, disabled && { color: '#94a3b8' }]}>/ {duration}</Text>
             </View>
-            <Text style={[styles.vipPrice, premium && { color: '#fff' }]}>{price}</Text>
+            <Text style={[styles.vipPrice, premium && { color: '#fff' }, disabled && { color: '#94a3b8' }]}>{disabled ? t('vip_owned') : price}</Text>
         </View>
         <View style={[styles.vipDivider, premium && { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
         <View style={styles.vipFeatures}>{features.map((f: string, i: number) => (
-            <View key={i} style={styles.vipFeatureRow}><Check size={16} color={premium ? '#ec4899' : '#10b981'} /><Text style={[styles.vipFeature, premium && { color: '#fff' }]}>{f}</Text></View>
+            <View key={i} style={styles.vipFeatureRow}>
+                <Check size={16} color={disabled ? '#cbd5e1' : (premium ? '#ec4899' : '#10b981')} />
+                <Text style={[styles.vipFeature, premium && { color: '#fff' }, disabled && { color: '#94a3b8' }]}>{f}</Text>
+            </View>
         ))}</View>
     </TouchableOpacity>
-);
+    );
+};
 
 // --- Main Screen ---
 
 export const ProfileScreen: React.FC = () => {
+    const { t, language } = useTranslation();
     const profile = useUserStore((state) => state.profile);
     const updateProfile = useUserStore((state) => state.updateProfile);
     const upgradeToVip = useUserStore((state) => state.upgradeToVip);
     const setAvatar = useUserStore((state) => state.setAvatar);
+    const equipTitle = useUserStore((state) => state.equipTitle);
     
-    // Safety check
     if (!profile) return <View style={styles.container} />;
 
-    // Local Toast State
     const [toast, setToast] = useState<{ visible: boolean, message: string, type: 'success' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
 
     const showLocalToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToast({ visible: true, message, type });
     };
 
-    // Modal States
     const [editVisible, setEditVisible] = useState(false);
     const [vipVisible, setVipVisible] = useState(false);
+    const [titlesVisible, setTitlesVisible] = useState(false);
+    const [settingsVisible, setSettingsVisible] = useState(false);
+    const [avatarSelectionVisible, setAvatarSelectionVisible] = useState(false);
+
+    const handleEquipTitle = (id: string) => {
+        equipTitle(id);
+        showLocalToast(t('equip_success'), 'success');
+    };
     
-    // Confirmation States
     const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
-    const [avatarConfirmVisible, setAvatarConfirmVisible] = useState(false);
 
     const handleUpdateProfile = (data: any) => {
         updateProfile(data);
-        showLocalToast('Cập nhật hồ sơ thành công!', 'success');
+        showLocalToast(t('update_success'), 'success');
     };
 
     const handleUpgradeVip = (type: VipType) => {
         upgradeToVip(type);
-        showLocalToast('Nâng cấp VIP thành công!', 'success');
+        showLocalToast(t('vip_success'), 'success');
     };
 
-    const handleAvatarChange = () => {
-        const mockImages = ['default_red', 'blue', 'leaf', 'ethan', 'lyra'];
-        const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
-        setAvatar(randomImage);
-        showLocalToast('Đã cập nhật Avatar mới!', 'success');
-        setAvatarConfirmVisible(false);
+    const handleAvatarChange = (avatarId: string) => {
+        setAvatar(avatarId);
+        showLocalToast(t('avatar_success'), 'success');
+    };
+
+    const renderAvatarView = () => {
+        if (!profile.avatar) {
+            return <User size={48} color={profile.isVip ? '#fcd34d' : '#ffffff'} />;
+        }
+
+        const preset = (PRESET_AVATARS as any)[profile.avatar];
+        if (preset) {
+            return <Image source={preset} style={styles.fullAvatar} />;
+        }
+
+        return <Image source={{ uri: profile.avatar }} style={styles.fullAvatar} />;
     };
 
     return (
@@ -238,13 +558,19 @@ export const ProfileScreen: React.FC = () => {
                        <View style={styles.avatarContainer}>
                            <View style={[styles.avatarWrapper, profile.isVip && styles.vipAvatarWrapper]}>
                                <View style={[styles.avatar, profile.isVip && { borderColor: '#fcd34d' }]}>
-                                   <User size={48} color={profile.isVip ? '#fcd34d' : '#ffffff'} />
+                                   {renderAvatarView()}
                                </View>
-                               <TouchableOpacity onPress={() => setAvatarConfirmVisible(true)} style={[styles.editAvatarBtn, profile.isVip && { backgroundColor: '#fcd34d', borderColor: '#78350f' }]} activeOpacity={0.8}>
+                               <TouchableOpacity onPress={() => setAvatarSelectionVisible(true)} style={[styles.editAvatarBtn, profile.isVip && { backgroundColor: '#fcd34d', borderColor: '#78350f' }]} activeOpacity={0.8}>
                                    <Edit2 size={16} color={profile.isVip ? '#78350f' : '#ffffff'} />
                                </TouchableOpacity>
                            </View>
                            <Text style={styles.userName}>{profile.name}</Text>
+                           {profile.equippedTitle && (
+                               <View style={[styles.equippedTitleBadge, { borderColor: profile.equippedTitle.color, backgroundColor: 'rgba(0,0,0,0.25)', shadowColor: profile.equippedTitle.color, elevation: 5 }]}>
+                                   <Star size={12} color={profile.equippedTitle.color} fill={profile.equippedTitle.color} />
+                                   <Text style={[styles.equippedTitleText, { color: profile.equippedTitle.color }]}>{profile.equippedTitle.name}</Text>
+                               </View>
+                           )}
                            <Text style={styles.userEmail}>{profile.email}</Text>
                            <View style={styles.levelContainer}>
                                <View style={styles.levelBadge}><Text style={styles.levelText}>Lv. {profile.level}</Text></View>
@@ -258,7 +584,7 @@ export const ProfileScreen: React.FC = () => {
                            {!profile.isVip && (
                                <TouchableOpacity onPress={() => setVipVisible(true)} style={styles.headerUpgradeBtn} activeOpacity={0.8}>
                                    <Crown size={20} color="#fff" fill="#fcd34d" />
-                                   <Text style={styles.headerUpgradeText}>Nâng Cấp VIP</Text>
+                                   <Text style={styles.headerUpgradeText}>{t('upgrade_vip')}</Text>
                                    <ChevronRight size={16} color="#fff" />
                                </TouchableOpacity>
                            )}
@@ -267,26 +593,26 @@ export const ProfileScreen: React.FC = () => {
 
                     {/* Stats */}
                     <View style={styles.statsContainer}>
-                        <StatItem label="Sưu Tập" value={profile.collectionCount.toString()} icon={BookOpen} color="#3b82f6" />
-                        <StatItem label="Dex" value={`${profile.pokedexProgress}%`} icon={Medal} color="#ef4444" />
-                        <StatItem label="Hạng" value={profile.rank.replace('VIP ', '')} icon={Star} color="#f59e0b" />
+                        <StatItem label={t('my_collection')} value={profile.collectionCount.toString()} icon={BookOpen} color="#3b82f6" />
+                        <StatItem label={t('pokedex_progress')} value={`${profile.pokedexProgress}%`} icon={Medal} color="#ef4444" />
+                        <StatItem label={t('rank')} value={profile.rank.replace('VIP ', '')} icon={Star} color="#f59e0b" />
                     </View>
 
                     {/* Menu */}
                     <View style={styles.menuContainer}>
-                        <Text style={styles.menuTitle}>Cài Đặt</Text>
-                        <MenuItem icon={Edit2} label="Sửa Hồ Sơ" color="#ef4444" onPress={() => setEditVisible(true)} />
-                        <MenuItem icon={Award} label="Danh Hiệu" color="#f59e0b" onPress={() => showLocalToast('Đang phát triển', 'info')} />
-                        <MenuItem icon={Settings} label="Hệ Thống" color="#64748b" onPress={() => showLocalToast('Đang phát triển', 'info')} />
-                        <MenuItem icon={Bell} label="Thông Báo" color="#3b82f6" onPress={() => showLocalToast('Đang phát triển', 'info')} />
-                        <MenuItem icon={Crown} label="Gói VIP" color="#8b5cf6" onPress={() => setVipVisible(true)} />
-                        <MenuItem icon={Shield} label="Bảo Mật" color="#10b981" onPress={() => showLocalToast('Đang phát triển', 'info')} />
-                        <MenuItem icon={HelpCircle} label="Hỗ Trợ" color="#64748b" onPress={() => showLocalToast('Đang phát triển', 'info')} />
+                        <Text style={styles.menuTitle}>{t('settings_title')}</Text>
+                        <MenuItem icon={Edit2} label={t('edit_profile')} color="#ef4444" onPress={() => setEditVisible(true)} />
+                        <MenuItem icon={Award} label={t('titles')} color="#f59e0b" onPress={() => setTitlesVisible(true)} />
+                        <MenuItem icon={Settings} label={t('system_settings')} color="#64748b" onPress={() => setSettingsVisible(true)} />
+                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Crown} label={t('vip_packages')} color="#8b5cf6" onPress={() => setVipVisible(true)} />
+                        <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
+                        <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
                     </View>
 
                     <TouchableOpacity onPress={() => setLogoutConfirmVisible(true)} style={styles.logoutButton} activeOpacity={0.7}>
                         <LogOut size={20} color="#ef4444" />
-                        <Text style={styles.logoutText}>Đăng Xuất</Text>
+                        <Text style={styles.logoutText}>{t('logout')}</Text>
                     </TouchableOpacity>
                     
                     <Text style={styles.versionText}>v3.1.0 (VIP Edition)</Text>
@@ -294,28 +620,38 @@ export const ProfileScreen: React.FC = () => {
             </SafeAreaView>
 
             {/* Modals */}
+            <AvatarSelectionModal visible={avatarSelectionVisible} onClose={() => setAvatarSelectionVisible(false)} onSelect={handleAvatarChange} />
+            <TitlesModal
+                visible={titlesVisible}
+                onClose={() => setTitlesVisible(false)}
+                unlockedTitles={profile.unlockedTitles || []}
+                equippedTitle={profile.equippedTitle}
+                onEquip={handleEquipTitle}
+            />
             <EditProfileModal visible={editVisible} onClose={() => setEditVisible(false)} initialProfile={profile} onSave={handleUpdateProfile} />
-            <VipUpgradeModal visible={vipVisible} onClose={() => setVipVisible(false)} onUpgrade={handleUpgradeVip} />
+            <SettingsModal 
+                visible={settingsVisible} 
+                onClose={() => setSettingsVisible(false)} 
+                profile={profile} 
+                onUpdate={handleUpdateProfile} 
+            />
+            <VipUpgradeModal 
+                visible={vipVisible} 
+                onClose={() => setVipVisible(false)} 
+                onUpgrade={handleUpgradeVip} 
+                currentVipType={profile.vipType}
+            />
             
             <ConfirmationModal 
                 visible={logoutConfirmVisible} 
-                title="Đăng Xuất" 
-                message="Bạn có chắc chắn muốn rời khỏi Poké-Market?" 
-                onConfirm={() => { setLogoutConfirmVisible(false); showLocalToast('Đăng xuất thành công', 'info'); }} 
+                title={t('logout_confirm_title')} 
+                message={t('logout_confirm_message')} 
+                onConfirm={() => { setLogoutConfirmVisible(false); showLocalToast(t('logout'), 'info'); }} 
                 onCancel={() => setLogoutConfirmVisible(false)} 
-                confirmText="Đăng Xuất" 
+                confirmText={t('logout')} 
                 type="danger" 
             />
-             <ConfirmationModal 
-                visible={avatarConfirmVisible} 
-                title="Đổi Avatar" 
-                message="Chọn avatar ngẫu nhiên mới?" 
-                onConfirm={handleAvatarChange} 
-                onCancel={() => setAvatarConfirmVisible(false)} 
-                confirmText="Đổi Ngay" 
-            />
             
-            {/* Local Toast Render */}
             <LocalToast 
                 visible={toast.visible} 
                 message={toast.message} 
@@ -357,7 +693,8 @@ const styles = StyleSheet.create({
     avatarContainer: { alignItems: 'center', width: '100%' },
     avatarWrapper: { marginBottom: 16, position: 'relative' },
     vipAvatarWrapper: { elevation: 10, shadowColor: '#fcd34d', shadowRadius: 20 },
-    avatar: { width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' },
+    avatar: { width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff', overflow: 'hidden' },
+    fullAvatar: { width: '100%', height: '100%', resizeMode: 'cover' },
     editAvatarBtn: { position: 'absolute', bottom: 0, right: 0, width: 34, height: 34, borderRadius: 17, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
     userName: { fontSize: 26, fontWeight: '900', color: '#fff' },
     userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
@@ -388,7 +725,6 @@ const styles = StyleSheet.create({
     logoutText: { color: '#ef4444', fontWeight: '800', fontSize: 15, marginLeft: 8 },
     versionText: { textAlign: 'center', color: '#cbd5e1', fontSize: 10, fontWeight: '700' },
 
-    // Modal Common
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
     modalContent: { backgroundColor: '#fff', borderRadius: 24, padding: 20, maxHeight: '80%' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -399,7 +735,6 @@ const styles = StyleSheet.create({
     modalBtnSave: { backgroundColor: '#ef4444', padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 24 },
     modalBtnTextSave: { color: '#fff', fontWeight: '800', fontSize: 16 },
 
-    // Confirmation Modal
     confirmationContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' },
     iconContainer: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
     confirmTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
@@ -410,7 +745,6 @@ const styles = StyleSheet.create({
     confirmBtnTextCancel: { fontWeight: '700', color: '#64748b' },
     confirmBtnTextAction: { fontWeight: '700', color: '#fff' },
 
-    // VIP Specific
     vipModelContent: { backgroundColor: '#fff', borderRadius: 32, padding: 20, height: '85%', width: '100%' },
     closeVipBtn: { position: 'absolute', top: 20, right: 20, zIndex: 10, backgroundColor: '#f1f5f9', padding: 8, borderRadius: 20 },
     vipHeaderTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
@@ -436,7 +770,6 @@ const styles = StyleSheet.create({
     confirmButtonDisabled: { backgroundColor: '#cbd5e1' },
     confirmButtonText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 
-    // Local Toast Styles
     toastContainer: {
         position: 'absolute', top: 60, left: 20, right: 20,
         backgroundColor: '#10b981', padding: 16, borderRadius: 16,
@@ -445,5 +778,36 @@ const styles = StyleSheet.create({
         zIndex: 9999
     },
     toastText: { color: '#fff', fontSize: 14, fontWeight: '700', marginLeft: 12 },
-});
 
+    equippedTitleBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, marginTop: 8, marginBottom: 4 },
+    equippedTitleText: { fontSize: 12, fontWeight: '800', marginLeft: 6, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+    
+    modalSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 16 },
+    titleItem: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#f8fafc', marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+    titleItemEquipped: { borderColor: '#10b981', backgroundColor: '#f0fdf4' },
+    titleItemLocked: { opacity: 0.7, backgroundColor: '#f1f5f9' },
+    titleIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    titleInfo: { flex: 1 },
+    titleName: { fontSize: 14, fontWeight: '700', color: '#0f172a', marginBottom: 2 },
+    titleDesc: { fontSize: 12, color: '#64748b' },
+    titleCondition: { fontSize: 10, color: '#ef4444', marginTop: 2, fontWeight: '600' },
+    equipBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+    equipBtnText: { fontSize: 12, fontWeight: '700' },
+
+    sectionTitle: { fontSize: 14, fontWeight: '700', color: '#94a3b8', marginTop: 20, marginBottom: 12, textTransform: 'uppercase' },
+    settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    settingLabel: { fontSize: 16, fontWeight: '600', color: '#1e293b' },
+    optionBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
+    optionBtnSelected: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+    optionBtnText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+    actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    actionRowText: { fontSize: 16, fontWeight: '600', color: '#ef4444' },
+
+    // Avatar Selection Styles
+    galleryPicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0' },
+    galleryIconRow: { flexDirection: 'row', alignItems: 'center' },
+    galleryPickerText: { marginLeft: 12, fontSize: 15, fontWeight: '700', color: '#1e293b' },
+    presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 20 },
+    presetItem: { width: (Dimensions.get('window').width - 80) / 4, height: (Dimensions.get('window').width - 80) / 4, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#f1f5f9' },
+    presetImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+});

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Heart } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useFavoritesStore } from '../../shared/stores/favoritesStore';
+import { useTranslation } from '../../shared/utils/translations';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { useMarkets } from '../../shared/hooks/useMarkets';
 import { mapRarity } from '../../shared/utils/cardData';
@@ -12,6 +13,7 @@ export const FavoritesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { favoriteIds } = useFavoritesStore();
   const { data: markets, isLoading, refetch } = useMarkets();
+  const { t } = useTranslation();
   
   const favoriteCards = useMemo(() => {
     if (!markets) return [];
@@ -42,7 +44,7 @@ export const FavoritesScreen: React.FC = () => {
         <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
           <ChevronLeft size={24} color="#1e293b" />
         </Pressable>
-        <Text style={styles.headerTitle}>Yêu Thích ({favoriteCards.length})</Text>
+        <Text style={styles.headerTitle}>{t('favorites_title')} ({favoriteCards.length})</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -62,10 +64,8 @@ export const FavoritesScreen: React.FC = () => {
             <View style={styles.emptyIconContainer}>
                 <Heart size={48} color="#cbd5e1" fill="#f1f5f9" />
             </View>
-            <Text style={styles.emptyTitle}>Chưa có yêu thích</Text>
-            <Text style={styles.emptyDesc}>
-                Hãy thả tim những thẻ bài bạn quan tâm để lưu lại vào đây nhé!
-            </Text>
+            <Text style={styles.emptyTitle}>{t('no_favorites_title')}</Text>
+            <Text style={styles.emptyDesc}>{t('no_favorites_desc')}</Text>
           </View>
         }
       />

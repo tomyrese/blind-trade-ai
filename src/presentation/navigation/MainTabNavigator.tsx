@@ -9,10 +9,13 @@ import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { TradeUpScreen } from '../screens/TradeUpScreen';
 import { AIChatScreen } from '../features/scanner/screens/AIChatScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { useTranslation } from '../../shared/utils/translations';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainTabNavigator: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -39,7 +42,7 @@ export const MainTabNavigator: React.FC = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Trang Chủ',
+          tabBarLabel: t('nav_home'),
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
@@ -47,7 +50,7 @@ export const MainTabNavigator: React.FC = () => {
         name="Portfolio"
         component={PortfolioScreen}
         options={{
-          tabBarLabel: 'Bộ Sưu Tập',
+          tabBarLabel: t('nav_portfolio'),
           tabBarIcon: ({ color, size }) => <PieChart size={size} color={color} />,
         }}
       />
@@ -55,7 +58,7 @@ export const MainTabNavigator: React.FC = () => {
         name="TradeUp"
         component={TradeUpScreen}
         options={{
-          tabBarLabel: 'Hợp Nhất',
+          tabBarLabel: t('nav_tradeup'),
           tabBarIcon: ({ color, size }) => <Sparkles size={size} color={color} />,
         }}
       />
@@ -63,7 +66,7 @@ export const MainTabNavigator: React.FC = () => {
         name="AIChat"
         component={AIChatScreen}
         options={{
-          tabBarLabel: 'Poké-AI',
+          tabBarLabel: t('nav_aichat'),
           tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
         }}
       />
@@ -71,7 +74,7 @@ export const MainTabNavigator: React.FC = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Trainer',
+          tabBarLabel: t('nav_profile'),
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />

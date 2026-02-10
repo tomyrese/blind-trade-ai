@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, TrendingUp, ShoppingBag, Heart, MoreHorizontal } from 'lucide-react-native';
-import { formatVND } from '../../shared/utils/formatters';
+import { formatCurrency } from '../../shared/utils/currency';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { useCartStore } from '../../shared/stores/cartStore';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
+import { useUserStore } from '../../shared/stores/userStore';
+import { useTranslation } from '../../shared/utils/translations';
 import { useNavigation } from '@react-navigation/native';
 import { useFavoritesStore } from '../../shared/stores/favoritesStore';
 
@@ -16,6 +18,8 @@ export const PortfolioScreen: React.FC = () => {
   const totalValue = assets.reduce((sum, a) => sum + (a.value * a.amount), 0);
   const cartItemsCount = useCartStore((state) => state.totalItems());
   const favoritesCount = useFavoritesStore((state) => state.favoriteIds.length);
+  const currency = useUserStore((state) => state.profile.currency);
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -39,12 +43,12 @@ export const PortfolioScreen: React.FC = () => {
           </View>
           
           <View style={styles.balanceContent}>
-            <Text style={styles.balanceLabel}>Tổng Giá Trị Bộ Sưu Tập</Text>
-            <Text style={styles.balanceAmount}>{formatVND(totalValue)}</Text>
+            <Text style={styles.balanceLabel}>{t('portfolio_total_value')}</Text>
+            <Text style={styles.balanceAmount}>{formatCurrency(totalValue, currency)}</Text>
           </View>
 
           <View style={styles.cardFooter}>
-             <Text style={styles.footerText}>Cập nhật vừa xong</Text>
+             <Text style={styles.footerText}>{t('updated_just_now')}</Text>
           </View>
         </View>
 
@@ -54,7 +58,7 @@ export const PortfolioScreen: React.FC = () => {
             <View style={[styles.actionIcon, { backgroundColor: '#fef2f2' }]}>
               <ShoppingBag size={24} color="#ef4444" />
             </View>
-            <Text style={styles.actionLabel}>Giỏ Hàng</Text>
+            <Text style={styles.actionLabel}>{t('cart_title')}</Text>
             {cartItemsCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{cartItemsCount}</Text>
@@ -65,7 +69,7 @@ export const PortfolioScreen: React.FC = () => {
             <View style={[styles.actionIcon, { backgroundColor: '#fef2f2' }]}>
               <Heart size={24} color="#ef4444" />
             </View>
-            <Text style={styles.actionLabel}>Yêu Thích</Text>
+            <Text style={styles.actionLabel}>{t('favorites_title')}</Text>
             {favoritesCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{favoritesCount}</Text>
@@ -76,7 +80,7 @@ export const PortfolioScreen: React.FC = () => {
             <View style={[styles.actionIcon, { backgroundColor: '#f8fafc' }]}>
               <MoreHorizontal size={24} color="#64748b" />
             </View>
-            <Text style={styles.actionLabel}>Khác</Text>
+            <Text style={styles.actionLabel}>{t('options')}</Text>
           </Pressable>
         </View>
 
@@ -85,9 +89,9 @@ export const PortfolioScreen: React.FC = () => {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleRow}>
               <Star size={20} color="#ef4444" fill="#ef4444" />
-              <Text style={styles.sectionTitle}>Kho Thẻ Pokémon</Text>
+              <Text style={styles.sectionTitle}>{t('pokemon_inventory')}</Text>
             </View>
-            <Text style={styles.sectionCount}>{assets.length} loại</Text>
+            <Text style={styles.sectionCount}>{assets.length} {t('items')}</Text>
           </View>
           
           <View style={styles.denseGrid}>
@@ -115,7 +119,7 @@ export const PortfolioScreen: React.FC = () => {
           
           {assets.length === 0 && (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Bạn chưa sở hữu thẻ bài nào.</Text>
+              <Text style={styles.emptyText}>{t('no_assets_owned')}</Text>
             </View>
           )}
         </View>

@@ -8,17 +8,18 @@ import { useMarkets } from '../../../../shared/hooks/useMarkets';
 import { CardItem } from '../../tradeup/components/CardItem';
 import { Market } from '../../../../domain/models/Market';
 import { Card, mapRarity } from '../../../../shared/utils/cardData';
+import { useTranslation } from '../../../../shared/utils/translations';
 
 type TabType = 'Hot' | 'Normal';
 type ViewMode = 'grid' | 'list';
 
 // Memoized SearchBar to prevent re-renders when switching tabs
-const SearchBar = React.memo(({ value, onChange }: { value: string, onChange: (text: string) => void }) => (
+const SearchBar = React.memo(({ value, onChange, placeholder }: { value: string, onChange: (text: string) => void, placeholder: string }) => (
   <View style={styles.searchSection}>
     <View style={styles.searchBar}>
       <Search size={20} color="#94a3b8" />
       <TextInput
-        placeholder="Tìm kiếm Pokémon..."
+        placeholder={placeholder}
         placeholderTextColor="#94a3b8"
         style={styles.searchInput}
         value={value}
@@ -58,6 +59,7 @@ import { ArrowUpDown, X } from 'lucide-react-native';
 import { Modal } from 'react-native';
 
 export const MarketDashboardScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
@@ -158,7 +160,7 @@ export const MarketDashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top }]}>
-      <SearchBar value={inputText} onChange={setInputText} />
+      <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
 
       {/* Controls Row: Tabs + Sort + View */}
       <View style={styles.controlsRow}>
@@ -168,13 +170,13 @@ export const MarketDashboardScreen: React.FC = () => {
             style={[styles.tabItem, activeTab === 'Hot' && styles.activeTab]}
           >
             <Flame size={16} color={activeTab === 'Hot' ? '#ef4444' : '#64748b'} fill={activeTab === 'Hot' ? '#ef4444' : 'transparent'} />
-            <Text style={[styles.tabLabel, activeTab === 'Hot' && styles.activeTabLabel]}>Xu Hướng</Text>
+            <Text style={[styles.tabLabel, activeTab === 'Hot' && styles.activeTabLabel]}>{t('tab_hot')}</Text>
           </Pressable>
           <Pressable 
             onPress={() => setActiveTab('Normal')}
             style={[styles.tabItem, activeTab === 'Normal' && styles.activeTab]}
           >
-            <Text style={[styles.tabLabel, activeTab === 'Normal' && styles.activeTabLabel]}>Tất Cả</Text>
+            <Text style={[styles.tabLabel, activeTab === 'Normal' && styles.activeTabLabel]}>{t('tab_all')}</Text>
           </Pressable>
         </View>
 
@@ -231,7 +233,7 @@ export const MarketDashboardScreen: React.FC = () => {
           estimatedItemSize={viewMode === 'grid' ? 250 : 120}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không tìm thấy thẻ bài nào.</Text>
+              <Text style={styles.emptyText}>{t('no_cards_found')}</Text>
             </View>
           }
         />
@@ -250,7 +252,7 @@ export const MarketDashboardScreen: React.FC = () => {
         >
             <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
                 <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Sắp xếp theo</Text>
+                    <Text style={styles.modalTitle}>{t('sort_by')}</Text>
                     <Pressable onPress={() => setSortModalVisible(false)}>
                         <X size={24} color="#64748b" />
                     </Pressable>
@@ -273,7 +275,7 @@ export const MarketDashboardScreen: React.FC = () => {
                                 styles.sortOptionLabel,
                                 sortBy === option.id && styles.activeSortOptionLabel
                             ]}>
-                                {option.label}
+                                {t(('sort_' + option.id) as any)}
                             </Text>
                             {sortBy === option.id && (
                                 <View style={styles.activeDot} />
