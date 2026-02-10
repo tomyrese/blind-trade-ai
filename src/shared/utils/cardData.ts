@@ -14,9 +14,9 @@ export interface Card {
   cardMarketPrice?: number;
   imageUrl?: string;
   isFavorite?: boolean;
-  isFavorite?: boolean;
   listings?: Listing[];
   listedAt?: string;
+  amount?: number;
 }
 
 export const RARITY_COLORS: Record<CardRarity, string> = {
@@ -29,6 +29,18 @@ export const RARITY_COLORS: Record<CardRarity, string> = {
   special_illustration_rare: '#f97316', // Orange 500 - 2 Gold Stars
   secret_rare: '#eab308',      // Yellow 500 - 3 Gold Stars (Hyper Rare)
   promo: '#06b6d4',            // Cyan 500 - PROMO
+};
+
+export const RARITY_RANKS: Record<CardRarity, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  double_rare: 4,
+  ultra_rare: 5,
+  illustration_rare: 6,
+  special_illustration_rare: 7,
+  secret_rare: 8,
+  promo: 0,
 };
 
 export interface RarityConfigItem {
@@ -144,37 +156,61 @@ export const mockCards: Card[] = [
   { id: '10', name: 'Ralts', rarity: 'illustration_rare', value: 300000, tcgPlayerPrice: 320000, cardMarketPrice: 290000 },
 ];
 
-// Generate random reward based on input value for Fusion
-export const generateReward = (totalValue: number): Card => {
+// Probabilities and Weights for Fusion based on highest input rarity
+export interface fusionOdds {
+  upgrade: number;
+  same: number;
+  downgrade: number;
+}
+
+export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
+  if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
+  
+  // Find highest rarity rank
+  const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
+  
+  // Logic: Lower rarity is easier to upgrade. Higher rarity is harder.
+  // Rank 1 (Common) -> High upgrade chance
+  // Rank 8 (Secret Rare) -> Low upgrade chance
+  
+  if (highestRank <= 2) { // Common, Uncommon
+    return { upgrade: 0.60, same: 0.30, downgrade: 0.10 };
+  } else if (highestRank <= 4) { // Rare, Double Rare
+    return { upgrade: 0.40, same: 0.40, downgrade: 0.20 };
+  } else if (highestRank <= 6) { // Ultra Rare, Illus Rare
+    return { upgrade: 0.20, same: 0.50, downgrade: 0.30 };
+  } else { // SIR, Secret Rare
+    return { upgrade: 0.05, same: 0.45, downgrade: 0.50 };
+  }
+};
+
+// Generate random reward based on input cards for Fusion
+export const generateReward = (selectedCards: Card[]): Card => {
+  const totalValue = selectedCards.reduce((sum, c) => sum + c.value, 0);
+  const odds = getFusionProbabilities(selectedCards);
   const roll = Math.random();
-  let rarity: CardRarity = 'common';
+  
+  // Get unique rarities from input to determine "Same" and "Downgrade/Upgrade" paths
+  const ranks = Object.keys(RARITY_RANKS) as CardRarity[];
+  const highestRank = Math.max(...selectedCards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
+  
+  let targetRarity: CardRarity = 'common';
   let multiplier = 1.0;
 
-  // Fusion Success/Fail Logic with Upgrade/Downgrade Rates
-  if (roll > 0.98) {
-    rarity = 'secret_rare'; // Super Jackpot
-    multiplier = 5.0; 
-  } else if (roll > 0.95) {
-    rarity = 'special_illustration_rare';
-    multiplier = 3.0;
-  } else if (roll > 0.90) {
-    rarity = 'ultra_rare';
-    multiplier = 2.0;
-  } else if (roll > 0.80) {
-    rarity = 'double_rare';
-    multiplier = 1.5;
-  } else if (roll > 0.60) {
-    rarity = 'rare';
-    multiplier = 1.2;
-  } else if (roll > 0.40) {
-    rarity = 'uncommon';
-    multiplier = 1.0;
-  } else if (roll > 0.20) {
-    rarity = 'common';
-    multiplier = 0.8;
+  if (roll <= odds.upgrade) {
+    // SUCCESS: Move up 1-2 ranks
+    const targetRank = Math.min(8, highestRank + (Math.random() > 0.8 ? 2 : 1));
+    targetRarity = ranks.find(r => RARITY_RANKS[r] === targetRank) || 'rare';
+    multiplier = 1.5 + (Math.random() * 1.5); // 1.5x to 3.0x
+  } else if (roll <= odds.upgrade + odds.same) {
+    // STAY: Same rank
+    targetRarity = ranks.find(r => RARITY_RANKS[r] === highestRank) || 'common';
+    multiplier = 0.9 + (Math.random() * 0.4); // 0.9x to 1.3x
   } else {
-    rarity = 'common'; // Fail
-    multiplier = 0.5;
+    // FAIL: Downgrade
+    const targetRank = Math.max(1, highestRank - 1);
+    targetRarity = ranks.find(r => RARITY_RANKS[r] === targetRank) || 'common';
+    multiplier = 0.4 + (Math.random() * 0.4); // 0.4x to 0.8x
   }
 
   const rewardValue = Math.floor(totalValue * multiplier);
@@ -191,13 +227,13 @@ export const generateReward = (totalValue: number): Card => {
     promo: ['Pikachu (Promo)', 'Eevee (Promo)', 'Meowth (Promo)', 'Psyduck (Promo)'],
   };
 
-  const possibleNames = namesByRarity[rarity];
+  const possibleNames = namesByRarity[targetRarity];
   const name = possibleNames[Math.floor(Math.random() * possibleNames.length)];
 
   return {
     id: `fusion-${Date.now()}`,
     name: `${name} (Fusion)`,
-    rarity,
+    rarity: targetRarity,
     value: rewardValue,
     tcgPlayerPrice: Math.floor(rewardValue * 1.1),
     cardMarketPrice: Math.floor(rewardValue * 0.95),

@@ -4,6 +4,8 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 // Root Stack Navigator
 export type RootStackParamList = {
   Splash: undefined;
+  Login: undefined;
+  Register: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   MarketDetail: { symbol: string };
   TradeExecute: { symbol: string; type: 'buy' | 'sell' };
@@ -12,6 +14,7 @@ export type RootStackParamList = {
   Favorites: undefined;
   OtherCategory: undefined;
   TrainerEdit: undefined;
+  Payment: { items?: any[]; total?: number };
 };
 
 // Main Bottom Tab Navigator
@@ -21,6 +24,8 @@ export type MainTabParamList = {
   TradeUp: undefined;
   AIChat: undefined;
   Profile: undefined;
+  Cart: undefined;
+  Payment: { items?: any[]; total?: number };
 };
 
 // Navigation Props Helper Types

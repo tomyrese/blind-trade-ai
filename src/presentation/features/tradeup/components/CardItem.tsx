@@ -24,7 +24,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const addToCart = useCartStore((state) => state.addToCart);
     const { showToast } = useToast();
-    const currency = useUserStore((state) => state.profile.currency);
+    const user = useUserStore((state) => state.profile);
+    const currency = user?.currency || 'VND';
     const { t } = useTranslation();
 
     const isSmall = size === 'small';
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     position: 'relative',
-    overflow: 'hidden',
+    // Removed overflow: 'hidden' to allow selectionBadge to pop out
   },
   containerSmall: {
     aspectRatio: 1, // Square for cart thumbnail
@@ -284,9 +285,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20,

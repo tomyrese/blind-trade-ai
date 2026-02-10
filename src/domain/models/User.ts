@@ -2,48 +2,45 @@ export type VipType = 'none' | 'monthly' | 'yearly' | 'lifetime';
 
 export interface Title {
   id: string;
-  name: string;
-  description: string;
-  condition: string;
+  name: string; // This will now be a translation key
+  description: string; // Translation key
+  condition: string; // Translation key
   color: string;
 }
 
 export const AVAILABLE_TITLES: Title[] = [
-  { id: 'rookie', name: 'Tân Binh', description: 'Chào mừng đến với thế giới Pokémon!', condition: 'Mặc định', color: '#e2e8f0' },
-  { id: 'collector', name: 'Nhà Sưu Tập', description: 'Sở hữu 50 thẻ bài khác nhau', condition: 'Sở hữu 50 thẻ', color: '#3b82f6' },
-  { id: 'pro_trader', name: 'Thương Gia', description: 'Thực hiện thành công 10 giao dịch', condition: '10 Giao dịch', color: '#10b981' },
-  { id: 'elite', name: 'Tinh Anh', description: 'Đạt cấp độ 50', condition: 'Level 50', color: '#8b5cf6' },
-  { id: 'champion', name: 'Nhà Vô Địch', description: 'Đạt cấp độ 90', condition: 'Level 90', color: '#f59e0b' },
-  { id: 'vip_member', name: 'Thành Viên VIP', description: 'Dành riêng cho người dùng VIP', condition: 'Là VIP', color: '#fcd34d' },
-  { id: 'legendary', name: 'Huyền Thoại', description: 'Sở hữu thẻ bài cấp Legendary', condition: 'Sở hữu thẻ Legendary', color: '#ec4899' },
+  { id: 'rookie', name: 'title_rookie', description: 'desc_rookie', condition: 'cond_rookie', color: '#e2e8f0' },
+  { id: 'collector', name: 'title_collector', description: 'desc_collector', condition: 'cond_collector', color: '#3b82f6' },
+  { id: 'pro_trader', name: 'title_pro_trader', description: 'desc_pro_trader', condition: 'cond_pro_trader', color: '#10b981' },
+  { id: 'elite', name: 'title_elite', description: 'desc_elite', condition: 'cond_elite', color: '#8b5cf6' },
+  { id: 'champion', name: 'title_champion', description: 'desc_champion', condition: 'cond_champion', color: '#f59e0b' },
+  { id: 'vip_member', name: 'title_vip_member', description: 'desc_vip_member', condition: 'cond_vip_member', color: '#fcd34d' },
+  { id: 'legendary', name: 'title_legendary', description: 'desc_legendary', condition: 'cond_legendary', color: '#ec4899' },
 ];
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  avatar: string; // URL or ID of the avatar asset
+  avatar: string; 
   
-  // Progress
   level: number;
   currentExp: number;
   nextLevelExp: number;
   
-  // Stats
   collectionCount: number;
-  pokedexProgress: number; // Percentage 0-100
-  rank: string; // e.g., 'Rookie', 'Trainer', 'Gym Leader', 'Champion', 'Master'
+  pokedexProgress: number; 
+  rank: string; 
   
-  // Titles
   unlockedTitles: string[];
   equippedTitle: Title | null;
 
-  // VIP Status
   isVip: boolean;
   vipType: VipType;
-  vipExpiry?: Date;
+  vipExpiry?: Date | string; // Handle MMKV serialization
   
-  // Settings
+  balance: number; // Current virtual balance
+  
   notificationsEnabled: boolean;
   currency: 'VND' | 'USD';
   language: 'vi' | 'en';
@@ -70,6 +67,8 @@ export const MOCK_USER: UserProfile = {
 
   isVip: false,
   vipType: 'none',
+  
+  balance: 1000000, // Initial 1M VND for demo
   
   notificationsEnabled: true,
   currency: 'VND',

@@ -14,10 +14,11 @@ const translations = {
     confirm: 'Xác nhận',
     save: 'Lưu',
     close: 'Đóng',
+    condition: 'Yêu cầu',
     items: 'thẻ',
     
     // UI Labels
-    add_success: 'Đã thêm',
+    add_success: 'Đã thêm vào bộ sưu tập!',
     remove_success: 'Đã xóa',
     listed_by: 'Bán bởi',
     avatar_success: 'Cập nhật avatar thành công',
@@ -32,12 +33,26 @@ const translations = {
     nav_tradeup: 'Hợp Nhất',
     nav_aichat: 'Poké-AI',
     nav_profile: 'Trainer',
+    nav_cart: 'Giỏ Hàng',
+    nav_payment: 'Thanh Toán',
     
     // Portfolio
     portfolio_total_value: 'Tổng Giá Trị Bộ Sưu Tập',
     updated_just_now: 'Cập nhật vừa xong',
     pokemon_inventory: 'Kho Thẻ Pokémon',
     no_assets_owned: 'Bạn chưa sở hữu thẻ bài nào.',
+    profit: 'Lợi nhuận',
+    loss: 'Lỗ',
+    ai_valuation: 'Đánh giá AI',
+    recent_sales: 'Lịch sử giao dịch',
+    ai_analysis: 'Phân tích AI',
+    liquidity: 'Thanh khoản',
+    purchase_price: 'Giá lúc mua',
+    current_value: 'Giá hiện tại',
+    market_stats: 'Thị Trường',
+    view_details: 'Xem Chi Tiết',
+    quick_sell: 'Bán Nhanh',
+    send_to_fusion: 'Hợp Nhất Thẻ',
     
     // Trade Up
     fusion_value: 'Giá trị hợp nhất',
@@ -52,6 +67,7 @@ const translations = {
     fusion_limit_message: 'Bạn chỉ có thể chọn tối đa 10 thẻ để hợp nhất.',
     fusion_requirement_title: 'Yêu cầu',
     fusion_requirement_message: 'Bạn cần ít nhất 2 thẻ bài để bắt đầu hợp nhất.',
+    no_results_found: 'Không tìm thấy kết quả nào.',
     
     // Cart
     cart_title: 'Giỏ Hàng',
@@ -79,6 +95,7 @@ const translations = {
     bio: 'Giới Thiệu',
     save_changes: 'Lưu Thay Đổi',
     titles: 'Danh Hiệu',
+    titles_subtitle: 'Mở khóa danh hiệu để hiển thị đẳng cấp Trainer của bạn!',
     system_settings: 'Hệ Thống',
     notifications: 'Thông báo',
     info: 'Thông báo',
@@ -89,6 +106,17 @@ const translations = {
     vip_success: 'Nâng cấp VIP thành công!',
     logout_success: 'Đăng xuất thành công',
     coming_soon: 'Đang phát triển',
+    balance: 'Số dư',
+    deposit: 'Nạp tiền',
+    scratch_card: 'Thẻ cào',
+    bank_transfer: 'Ngân hàng',
+    deposit_success: 'Nạp tiền ảo thành công!',
+    deposit_virtual: 'Nạp ảo 500k',
+    insufficient_balance: 'Số dư không đủ để thanh toán!',
+    purchase_success: 'Thanh toán thành công!',
+    items_added_to_collection: 'Vật phẩm đã được thêm vào bộ sưu tập.',
+    view_portfolio: 'Về Bộ Sưu Tập',
+    total_paid: 'Tổng thanh toán',
     
     // Market
     search_placeholder: 'Tìm kiếm Pokémon...',
@@ -99,6 +127,7 @@ const translations = {
     sort_rarity_desc: 'Độ hiếm: Cao đến Thấp',
     sort_date_newest: 'Mới đăng bán',
     sort_date_oldest: 'Cũ nhất',
+    sort_name_asc: 'Tên: A-Z',
     tab_hot: 'Xu Hướng',
     tab_all: 'Tất Cả',
     no_cards_found: 'Không tìm thấy thẻ bài nào.',
@@ -122,6 +151,7 @@ const translations = {
     pay_now: 'Thanh Toán Ngay',
     select_package: 'Chọn Gói Để Tiếp Tục',
     confirm_upgrade: 'Xác Nhận Nâng Cấp',
+    payment_method: 'Phương thức thanh toán',
     
     // Settings
     settings_title: 'Cài Đặt Hệ Thống',
@@ -140,6 +170,51 @@ const translations = {
     equip: 'Trang bị',
     equipped: 'Đang dùng',
     locked: 'Chưa mở khóa',
+
+    // Auth
+    login: 'Đăng nhập',
+    register: 'Đăng ký',
+    email: 'Email',
+    password: 'Mật khẩu',
+    full_name: 'Họ và tên',
+    confirm_password: 'Xác nhận mật khẩu',
+    login_subtitle: 'Chào mừng trở lại, Nhà huấn luyện!',
+    register_subtitle: 'Bắt đầu cuộc hành trình ngay hôm nay!',
+    no_account: 'Chưa có tài khoản?',
+    register_now: 'Đăng ký ngay',
+    already_have_account: 'Đã có tài khoản?',
+    create_account: 'Tạo tài khoản',
+    please_fill_all_fields: 'Vui lòng điền đầy đủ thông tin',
+    passwords_do_not_match: 'Mật khẩu không khớp',
+    password_too_short: 'Mật khẩu phải có ít nhất 6 ký tự',
+    something_went_wrong: 'Đã có lỗi xảy ra',
+    invalid_credentials: 'Email hoặc mật khẩu không đúng',
+    registration_failed: 'Đăng ký thất bại',
+    registration_success: 'Tạo tài khoản thành công! Vui lòng đăng nhập.',
+    or: 'HOẶC',
+    login_demo: 'Sử dụng tài khoản Demo',
+    // Titles
+    title_rookie: 'Tân Binh',
+    desc_rookie: 'Chào mừng đến với thế giới Pokémon!',
+    cond_rookie: 'Mặc định',
+    title_collector: 'Nhà Sưu Tập',
+    desc_collector: 'Sở hữu 50 thẻ bài khác nhau',
+    cond_collector: 'Sở hữu 50 thẻ',
+    title_pro_trader: 'Thương Gia',
+    desc_pro_trader: 'Thực hiện thành công 10 giao dịch',
+    cond_pro_trader: '10 Giao dịch',
+    title_elite: 'Tinh Anh',
+    desc_elite: 'Đạt cấp độ 50',
+    cond_elite: 'Level 50',
+    title_champion: 'Nhà Vô Địch',
+    desc_champion: 'Đạt cấp độ 90',
+    cond_champion: 'Level 90',
+    title_vip_member: 'Thành Viên VIP',
+    desc_vip_member: 'Dành riêng cho người dùng VIP',
+    cond_vip_member: 'Là VIP',
+    title_legendary: 'Huyền Thoại',
+    desc_legendary: 'Sở hữu thẻ bài cấp Legendary',
+    cond_legendary: 'Sở hữu thẻ Legendary'
   },
   en: {
     // Common
@@ -151,10 +226,11 @@ const translations = {
     confirm: 'Confirm',
     save: 'Save',
     close: 'Close',
+    condition: 'Condition',
     items: 'items',
     
     // UI Labels
-    add_success: 'Added',
+    add_success: 'Added to collection!',
     remove_success: 'Removed',
     listed_by: 'Listed by',
     avatar_success: 'Avatar updated successfully',
@@ -169,12 +245,26 @@ const translations = {
     nav_tradeup: 'Trade Up',
     nav_aichat: 'Poké-AI',
     nav_profile: 'Trainer',
+    nav_cart: 'Cart',
+    nav_payment: 'Payment',
     
     // Portfolio
     portfolio_total_value: 'Total Collection Value',
     updated_just_now: 'Just updated',
     pokemon_inventory: 'Pokémon Inventory',
     no_assets_owned: 'You do not own any cards yet.',
+    profit: 'Profit',
+    loss: 'Loss',
+    ai_valuation: 'AI Valuation',
+    recent_sales: 'Recent Sales',
+    ai_analysis: 'AI Analysis',
+    liquidity: 'Liquidity',
+    purchase_price: 'Purchase Price',
+    current_value: 'Current Value',
+    market_stats: 'Market Stats',
+    view_details: 'View Details',
+    quick_sell: 'Quick Sell',
+    send_to_fusion: 'Send to Fusion',
     
     // Trade Up
     fusion_value: 'Fusion Value',
@@ -189,6 +279,7 @@ const translations = {
     fusion_limit_message: 'You can only select up to 10 cards for fusion.',
     fusion_requirement_title: 'Requirement',
     fusion_requirement_message: 'You need at least 2 cards to start fusion.',
+    no_results_found: 'No results found.',
     
     // Cart
     cart_title: 'Shopping Cart',
@@ -216,6 +307,7 @@ const translations = {
     bio: 'Bio',
     save_changes: 'Save Changes',
     titles: 'Titles',
+    titles_subtitle: 'Unlock titles to show off your Trainer class!',
     system_settings: 'System',
     notifications: 'Notifications',
     info: 'Info',
@@ -226,6 +318,17 @@ const translations = {
     vip_success: 'VIP upgrade successful!',
     logout_success: 'Logged out successfully',
     coming_soon: 'Coming soon',
+    balance: 'Balance',
+    deposit: 'Deposit',
+    scratch_card: 'Scratch Card',
+    bank_transfer: 'Bank Transfer',
+    deposit_success: 'Virtual deposit successful!',
+    deposit_virtual: 'Add 500k Virtual',
+    insufficient_balance: 'Insufficient balance!',
+    purchase_success: 'Purchase successful!',
+    items_added_to_collection: 'Items have been added to your collection.',
+    view_portfolio: 'View Collection',
+    total_paid: 'Total Paid',
 
     // Market
     search_placeholder: 'Search Pokémon...',
@@ -236,10 +339,12 @@ const translations = {
     sort_rarity_desc: 'Rarity: High to Low',
     sort_date_newest: 'Newest Listed',
     sort_date_oldest: 'Oldest',
+    sort_name_asc: 'Name: A-Z',
     tab_hot: 'Trending',
     tab_all: 'All',
     no_cards_found: 'No cards found.',
 
+    // Settings
     security: 'Security',
     support: 'Support',
     logout: 'Logout',
@@ -259,8 +364,8 @@ const translations = {
     pay_now: 'Pay Now',
     select_package: 'Select Package to Continue',
     confirm_upgrade: 'Confirm Upgrade',
+    payment_method: 'Payment Method',
     
-    // Settings
     settings_title: 'System Settings',
     general: 'General',
     sound: 'Sound',
@@ -277,11 +382,56 @@ const translations = {
     equip: 'Equip',
     equipped: 'Equipped',
     locked: 'Locked',
+
+    // Auth
+    login: 'Login',
+    register: 'Register',
+    email: 'Email',
+    password: 'Password',
+    full_name: 'Full Name',
+    confirm_password: 'Confirm Password',
+    login_subtitle: 'Welcome back, Trainer!',
+    register_subtitle: 'Start your journey today!',
+    no_account: "Don't have an account?",
+    register_now: 'Register Now',
+    already_have_account: 'Already have an account?',
+    create_account: 'Create Account',
+    please_fill_all_fields: 'Please fill all fields',
+    passwords_do_not_match: 'Passwords do not match',
+    password_too_short: 'Password must be at least 6 characters',
+    something_went_wrong: 'Something went wrong',
+    invalid_credentials: 'Invalid email or password',
+    registration_failed: 'Registration failed',
+    registration_success: 'Account created successfully! Please login.',
+    or: 'OR',
+    login_demo: 'Use Demo Account',
+    // Titles
+    title_rookie: 'Rookie',
+    desc_rookie: 'Welcome to the Pokémon world!',
+    cond_rookie: 'Default',
+    title_collector: 'Collector',
+    desc_collector: 'Own 50 different cards',
+    cond_collector: 'Own 50 cards',
+    title_pro_trader: 'Pro Trader',
+    desc_pro_trader: 'Complete 10 successful trades',
+    cond_pro_trader: '10 Trades',
+    title_elite: 'Elite',
+    desc_elite: 'Reach level 50',
+    cond_elite: 'Level 50',
+    title_champion: 'Champion',
+    desc_champion: 'Reach level 90',
+    cond_champion: 'Level 90',
+    title_vip_member: 'VIP Member',
+    desc_vip_member: 'Exclusive for VIP trainers',
+    cond_vip_member: 'Is VIP',
+    title_legendary: 'Legendary',
+    desc_legendary: 'Own a Legendary card',
+    cond_legendary: 'Own Legendary'
   }
 };
 
 export const useTranslation = () => {
-  const language = useUserStore((state) => state.profile.language) || 'vi';
+  const language = useUserStore((state) => state.language);
   
   const t = (key: keyof typeof translations['vi']) => {
     return translations[language][key] || key;

@@ -1,7 +1,7 @@
 // Bottom Tab Navigator
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, PieChart, Sparkles, MessageSquare, User } from 'lucide-react-native';
+import { Home, PieChart, Sparkles, MessageSquare, User, ShoppingCart, CreditCard } from 'lucide-react-native';
 
 import { MainTabParamList } from './types';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -9,6 +9,8 @@ import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { TradeUpScreen } from '../screens/TradeUpScreen';
 import { AIChatScreen } from '../features/scanner/screens/AIChatScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { CartScreen } from '../screens/CartScreen';
+import { PaymentScreen } from '../screens/PaymentScreen';
 import { useTranslation } from '../../shared/utils/translations';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -68,6 +70,14 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('nav_aichat'),
           tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          tabBarLabel: t('nav_cart'),
+          tabBarIcon: ({ color, size }) => <ShoppingCart size={size} color={color} />,
         }}
       />
       <Tab.Screen

@@ -8,8 +8,10 @@ export interface Asset {
   name: string;
   symbol: string; // e.g., "PKM-025"
   rarity: string;
+  rarityLabel?: string;
   amount: number;
-  value: number; // Current value in VND
+  value: number; // Current market value in VND
+  purchasePrice: number; // Price at which it was acquired
 }
 
 interface PortfolioState {
@@ -23,6 +25,8 @@ interface PortfolioState {
   updatePrices: (prices: Record<string, number>) => void;
   clearPortfolio: () => void;
   seedPortfolio: () => void;
+  addItems: (items: Asset[]) => void;
+  removeFromPortfolio: (id: string) => void;
 }
 
 export const usePortfolioStore = create<PortfolioState>()(
@@ -81,18 +85,58 @@ export const usePortfolioStore = create<PortfolioState>()(
       
       seedPortfolio: () => {
         const { mockCards } = require('../utils/cardData');
-        const demoAssets = mockCards.map((card: any) => ({
-          id: `demo-${card.id}`,
+        // Take a diverse set of 10 cards (e.g., every other card or a slice of interesting ones)
+        // For simplicity and quality, we'll take a specific slice or map carefully
+        const demoAssets = mockCards.slice(0, 10).map((card: any, index: number) => ({
+          id: `demo-${card.id}-${index}`, // Unique ID
           name: card.name,
           symbol: card.symbol || `PKM-${card.id.padStart(3, '0')}`,
           rarity: card.rarity,
-          amount: Math.floor(Math.random() * 3) + 1,
+          amount: index === 0 ? 3 : (index < 4 ? 2 : 1), // Varied amounts
           value: card.value
         }));
         
         const totalValue = demoAssets.reduce((sum: number, a: any) => sum + (a.value * a.amount), 0);
         set({ assets: demoAssets, totalValue });
       },
+      addItems: (newItems: Asset[]) => {
+        set((state) => {
+          const updatedAssets = [...state.assets];
+          
+          newItems.forEach((item: Asset) => {
+            const existingIndex = updatedAssets.findIndex(a => a.id === item.id || a.symbol === item.symbol);
+            if (existingIndex > -1) {
+              updatedAssets[existingIndex] = {
+                ...updatedAssets[existingIndex],
+                amount: updatedAssets[existingIndex].amount + item.amount,
+                value: item.value // Update to latest price
+              };
+            } else {
+              updatedAssets.push(item);
+            }
+          });
+          
+          const totalValue = updatedAssets.reduce((sum, a) => sum + (a.value * a.amount), 0);
+          return { assets: updatedAssets, totalValue };
+        });
+      },
+      removeFromPortfolio: (id) =>
+        set((state) => {
+          const asset = state.assets.find(a => a.id === id);
+          if (!asset) return state;
+          
+          let newAssets;
+          if (asset.amount > 1) {
+            newAssets = state.assets.map(a => 
+              a.id === id ? { ...a, amount: a.amount - 1 } : a
+            );
+          } else {
+            newAssets = state.assets.filter(a => a.id !== id);
+          }
+          
+          const totalValue = newAssets.reduce((sum, a) => sum + (a.value * a.amount), 0);
+          return { assets: newAssets, totalValue };
+        }),
     }),
     {
       name: 'portfolio-storage',

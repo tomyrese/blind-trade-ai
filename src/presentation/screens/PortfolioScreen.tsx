@@ -1,32 +1,96 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, useWindowDimensions, Pressable, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Star, TrendingUp, ShoppingBag, Heart, MoreHorizontal } from 'lucide-react-native';
+import { 
+  Star, 
+  TrendingUp, 
+  ShoppingBag, 
+  Heart, 
+  MoreHorizontal, 
+  Search, 
+  ArrowUpDown, 
+  LayoutGrid, 
+  List, 
+  X,
+  Package
+} from 'lucide-react-native';
+import { FlashList } from '@shopify/flash-list';
 import { formatCurrency } from '../../shared/utils/currency';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { useCartStore } from '../../shared/stores/cartStore';
-import { usePortfolioStore } from '../../shared/stores/portfolioStore';
-import { useUserStore } from '../../shared/stores/userStore';
-import { useTranslation } from '../../shared/utils/translations';
+import { useCartStore, usePortfolioStore, useUserStore, useTranslation, useFavoritesStore } from '../../shared/stores';
 import { useNavigation } from '@react-navigation/native';
-import { useFavoritesStore } from '../../shared/stores/favoritesStore';
+import { mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
 
 export const PortfolioScreen: React.FC = () => {
   const { width } = useWindowDimensions();
+  const isTablet = width > 768;
   const navigation = useNavigation<any>();
+
+  // Filtering & Search state
+  const [inputText, setInputText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<string>('value_desc');
+  const [isSortModalVisible, setSortModalVisible] = useState(false);
+  const [selectedAssetForOptions, setSelectedAssetForOptions] = useState<any>(null);
+  const [isOptionsModalVisible, setOptionsModalVisible] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(inputText), 350);
+    return () => clearTimeout(timer);
+  }, [inputText]);
+
   const assets = usePortfolioStore((state) => state.assets);
   const totalValue = assets.reduce((sum, a) => sum + (a.value * a.amount), 0);
+  const totalCost = assets.reduce((sum, a) => sum + (a.purchasePrice * a.amount), 0);
+  const totalProfit = totalValue - totalCost;
+  const profitPercentage = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+
   const cartItemsCount = useCartStore((state) => state.totalItems());
   const favoritesCount = useFavoritesStore((state) => state.favoriteIds.length);
-  const currency = useUserStore((state) => state.profile.currency);
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+  const isFavorite = useFavoritesStore((state) => state.isFavorite);
+  const sellAsset = usePortfolioStore((state) => state.removeFromPortfolio);
+  const updateBalance = useUserStore((state) => state.updateBalance);
+  const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const { t } = useTranslation();
 
-  return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
-        {/* Balance Card Premium Redesign */}
+  const SORT_OPTIONS = [
+    { id: 'value_desc', label: t('sort_price_desc') },
+    { id: 'value_asc', label: t('sort_price_asc') },
+    { id: 'rarity_desc', label: t('sort_rarity_desc') },
+    { id: 'rarity_asc', label: t('sort_rarity_asc') },
+  ];
+
+  const filteredAssets = useMemo(() => {
+    let result = [...assets];
+    
+    if (searchQuery) {
+      result = result.filter(a => 
+        a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'value_desc': return b.value - a.value;
+        case 'value_asc': return a.value - b.value;
+        case 'rarity_desc': return (RARITY_RANKS[mapRarity(b.rarity)] || 0) - (RARITY_RANKS[mapRarity(a.rarity)] || 0);
+        case 'rarity_asc': return (RARITY_RANKS[mapRarity(a.rarity)] || 0) - (RARITY_RANKS[mapRarity(b.rarity)] || 0);
+        case 'name_asc': return a.name.localeCompare(b.name);
+        default: return 0;
+      }
+    });
+
+    return result;
+  }, [assets, searchQuery, sortBy]);
+
+  const renderHeader = () => (
+    <View>
+        {/* Balance Card */}
         <View style={styles.balanceCard}>
-          {/* Background Decorations */}
           <View style={styles.cardDecorationCircle} />
           <View style={styles.cardDecorationStar}>
              <Star size={80} color="rgba(255, 255, 255, 0.05)" fill="white" />
@@ -36,9 +100,11 @@ export const PortfolioScreen: React.FC = () => {
             <View style={styles.iconContainer}>
                  <TrendingUp size={20} color="#ffffff" />
             </View>
-            <View style={styles.trendBadge}>
-                 <TrendingUp size={12} color="#10b981" />
-                 <Text style={styles.trendText}>+12.5%</Text>
+            <View style={[styles.trendBadge, { backgroundColor: totalProfit >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
+                 <TrendingUp size={12} color={totalProfit >= 0 ? '#10b981' : '#ef4444'} style={{ transform: [{ rotate: totalProfit >= 0 ? '0deg' : '180deg' }] }} />
+                 <Text style={[styles.trendText, { color: totalProfit >= 0 ? '#10b981' : '#ef4444' }]}>
+                   {totalProfit >= 0 ? '+' : ''}{profitPercentage.toFixed(1)}%
+                 </Text>
             </View>
           </View>
           
@@ -48,23 +114,15 @@ export const PortfolioScreen: React.FC = () => {
           </View>
 
           <View style={styles.cardFooter}>
-             <Text style={styles.footerText}>{t('updated_just_now')}</Text>
+             <Text style={styles.footerText}>
+               {totalProfit >= 0 ? t('profit') : t('loss')}: {formatCurrency(Math.abs(totalProfit), currency)}
+             </Text>
+             <Text style={styles.footerDate}>{t('updated_just_now')}</Text>
           </View>
         </View>
 
-        {/* Quick Actions / Categories */}
+        {/* Quick Actions */}
         <View style={styles.actionsRow}>
-          <Pressable onPress={() => navigation.navigate('Cart')} style={styles.actionItem}>
-            <View style={[styles.actionIcon, { backgroundColor: '#fef2f2' }]}>
-              <ShoppingBag size={24} color="#ef4444" />
-            </View>
-            <Text style={styles.actionLabel}>{t('cart_title')}</Text>
-            {cartItemsCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{cartItemsCount}</Text>
-              </View>
-            )}
-          </Pressable>
           <Pressable onPress={() => navigation.navigate('Favorites')} style={styles.actionItem}>
             <View style={[styles.actionIcon, { backgroundColor: '#fef2f2' }]}>
               <Heart size={24} color="#ef4444" />
@@ -77,6 +135,12 @@ export const PortfolioScreen: React.FC = () => {
             )}
           </Pressable>
           <Pressable onPress={() => {}} style={styles.actionItem}>
+            <View style={[styles.actionIcon, { backgroundColor: '#f1f5f9' }]}>
+              <TrendingUp size={24} color="#475569" />
+            </View>
+            <Text style={styles.actionLabel}>{t('market_stats')}</Text>
+          </Pressable>
+          <Pressable onPress={() => {}} style={styles.actionItem}>
             <View style={[styles.actionIcon, { backgroundColor: '#f8fafc' }]}>
               <MoreHorizontal size={24} color="#64748b" />
             </View>
@@ -84,53 +148,272 @@ export const PortfolioScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        {/* Owned Assets Grid */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Star size={20} color="#ef4444" fill="#ef4444" />
-              <Text style={styles.sectionTitle}>{t('pokemon_inventory')}</Text>
-            </View>
-            <Text style={styles.sectionCount}>{assets.length} {t('items')}</Text>
-          </View>
-          
-          <View style={styles.denseGrid}>
-            {assets.map((asset) => (
-              <Pressable 
-                key={asset.id} 
-                style={styles.denseGridItem}
-                onPress={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
-              >
-                <CardItem 
-                  card={{
-                    id: asset.id,
-                    name: asset.name,
-                    rarity: asset.rarity as any,
-                    value: asset.value,
-                    symbol: asset.symbol,
-                  }}
-                  size="small"
-                  showActions={false}
-                  onToggle={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
+        {/* Search & Filters */}
+        <View style={styles.filterSection}>
+            <View style={styles.searchBar}>
+                <Search size={20} color="#94a3b8" />
+                <TextInput
+                    placeholder={t('search_placeholder')}
+                    placeholderTextColor="#94a3b8"
+                    style={styles.searchInput}
+                    value={inputText}
+                    onChangeText={setInputText}
                 />
-              </Pressable>
-            ))}
-          </View>
-          
-          {assets.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{t('no_assets_owned')}</Text>
             </View>
-          )}
+
+            <View style={styles.controlsRow}>
+                <Pressable onPress={() => setSortModalVisible(true)} style={styles.controlBtn}>
+                    <ArrowUpDown size={20} color="#1e293b" />
+                </Pressable>
+
+                <View style={styles.viewSwitcher}>
+                    <Pressable 
+                        onPress={() => setViewMode('grid')}
+                        style={[styles.viewIconBtn, viewMode === 'grid' && styles.activeViewIcon]}
+                    >
+                        <LayoutGrid size={20} color={viewMode === 'grid' ? '#0f172a' : '#94a3b8'} />
+                    </Pressable>
+                    <View style={styles.vDivider} />
+                    <Pressable 
+                        onPress={() => setViewMode('list')}
+                        style={[styles.viewIconBtn, viewMode === 'list' && styles.activeViewIcon]}
+                    >
+                        <List size={20} color={viewMode === 'list' ? '#0f172a' : '#94a3b8'} />
+                    </Pressable>
+                </View>
+            </View>
         </View>
-      </ScrollView>
+
+        <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+                <Star size={20} color="#ef4444" fill="#ef4444" />
+                <Text style={styles.sectionTitle}>{t('pokemon_inventory')}</Text>
+            </View>
+            <Text style={styles.sectionCount}>{filteredAssets.length} {t('items')}</Text>
+        </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <FlashList<any>
+        data={filteredAssets}
+        keyExtractor={item => item.id}
+        key={viewMode}
+        numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
+        ListHeaderComponent={renderHeader}
+        contentContainerStyle={styles.listContent}
+        estimatedItemSize={200}
+        renderItem={({ item: asset }) => (
+            <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
+                <Pressable 
+                  onPress={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
+                  onLongPress={() => {
+                      setSelectedAssetForOptions(asset);
+                      setOptionsModalVisible(true);
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <CardItem 
+                    card={{
+                      id: asset.id,
+                      name: asset.name,
+                      rarity: mapRarity(asset.rarity),
+                      value: asset.value,
+                      symbol: asset.symbol,
+                    }}
+                    showActions={false}
+                    size={viewMode === 'grid' ? 'normal' : 'list'}
+                    onToggle={() => {
+                        setSelectedAssetForOptions(asset);
+                        setOptionsModalVisible(true);
+                    }}
+                  />
+                </Pressable>
+                {asset.amount > 1 && (
+                  <View style={styles.amountBadge}>
+                    <Text style={styles.amountText}>x{asset.amount}</Text>
+                  </View>
+                )}
+                <View style={[styles.itemProfitBadge, { backgroundColor: asset.value >= asset.purchasePrice ? '#10b981' : '#ef4444' }]}>
+                   <Text style={styles.itemProfitText}>
+                     {asset.value >= asset.purchasePrice ? '+' : ''}
+                     {(((asset.value - asset.purchasePrice) / (asset.purchasePrice || 1)) * 100).toFixed(0)}%
+                   </Text>
+                </View>
+                
+                {/* Options Menu Trigger for List View */}
+                {viewMode === 'list' && (
+                  <Pressable 
+                    style={styles.listMoreBtn}
+                    onPress={() => {
+                        setSelectedAssetForOptions(asset);
+                        setOptionsModalVisible(true);
+                    }}
+                  >
+                    <MoreHorizontal size={20} color="#94a3b8" />
+                  </Pressable>
+                )}
+            </View>
+        )}
+        ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+                <Package size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyText}>{t('no_assets_owned')}</Text>
+            </View>
+        }
+      />
+
+      <Modal
+        visible={isSortModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSortModalVisible(false)}
+        statusBarTranslucent={true}
+      >
+        <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setSortModalVisible(false)}
+        >
+            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{t('sort_by')}</Text>
+                    <Pressable onPress={() => setSortModalVisible(false)}>
+                        <X size={24} color="#64748b" />
+                    </Pressable>
+                </View>
+                
+                <View style={styles.modalBody}>
+                    {SORT_OPTIONS.map((option) => (
+                        <Pressable
+                            key={option.id}
+                            style={[
+                                styles.sortOptionItem,
+                                sortBy === option.id && styles.activeSortOptionItem
+                            ]}
+                            onPress={() => {
+                                setSortBy(option.id);
+                                setSortModalVisible(false);
+                            }}
+                        >
+                            <Text style={[
+                                styles.sortOptionLabel,
+                                sortBy === option.id && styles.activeSortOptionLabel
+                            ]}>
+                                {option.label}
+                            </Text>
+                            {sortBy === option.id && (
+                                <View style={styles.activeDot} />
+                            )}
+                        </Pressable>
+                    ))}
+                </View>
+            </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Asset Options Modal */}
+      <Modal
+        visible={isOptionsModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setOptionsModalVisible(false)}
+        statusBarTranslucent={true}
+      >
+        <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setOptionsModalVisible(false)}
+        >
+            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalHeader}>
+                    <View>
+                        <Text style={styles.modalTitle}>{selectedAssetForOptions?.name || t('options')}</Text>
+                        <Text style={styles.modalSubtitle}>{selectedAssetForOptions?.symbol || ''}</Text>
+                    </View>
+                    <Pressable onPress={() => setOptionsModalVisible(false)}>
+                        <X size={24} color="#64748b" />
+                    </Pressable>
+                </View>
+                
+                <View style={styles.modalBody}>
+                    <Pressable
+                        style={styles.optionActionItem}
+                        onPress={() => {
+                            setOptionsModalVisible(false);
+                            navigation.navigate('CardDetail', { symbol: selectedAssetForOptions?.symbol || selectedAssetForOptions?.id });
+                        }}
+                    >
+                        <View style={[styles.optionIconBox, { backgroundColor: '#eff6ff' }]}>
+                            <Search size={20} color="#3b82f6" />
+                        </View>
+                        <Text style={styles.optionActionLabel}>{t('view_details')}</Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.optionActionItem}
+                        onPress={() => {
+                            toggleFavorite(selectedAssetForOptions?.id);
+                        }}
+                    >
+                        <View style={[styles.optionIconBox, { backgroundColor: '#fef2f2' }]}>
+                            <Heart 
+                                size={20} 
+                                color="#ef4444" 
+                                fill={isFavorite(selectedAssetForOptions?.id) ? '#ef4444' : 'transparent'} 
+                            />
+                        </View>
+                        <Text style={styles.optionActionLabel}>
+                            {isFavorite(selectedAssetForOptions?.id) ? t('remove_success') : t('favorites_title')}
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.optionActionItem}
+                        onPress={() => {
+                            setOptionsModalVisible(false);
+                            navigation.navigate('MainTabs', { 
+                                screen: 'TradeUp',
+                                params: { preSelectedId: selectedAssetForOptions?.id }
+                            });
+                        }}
+                    >
+                        <View style={[styles.optionIconBox, { backgroundColor: '#f5f3ff' }]}>
+                            <TrendingUp size={20} color="#8b5cf6" />
+                        </View>
+                        <Text style={styles.optionActionLabel}>{t('send_to_fusion')}</Text>
+                    </Pressable>
+
+                    <View style={styles.optionDivider} />
+
+                    <Pressable
+                        style={styles.optionActionItem}
+                        onPress={() => {
+                            if (!selectedAssetForOptions) return;
+                            const sellPrice = Math.floor(selectedAssetForOptions.value * 0.75);
+                            sellAsset(selectedAssetForOptions.id);
+                            updateBalance(sellPrice);
+                            setOptionsModalVisible(false);
+                        }}
+                    >
+                        <View style={[styles.optionIconBox, { backgroundColor: '#fef2f2' }]}>
+                            <TrendingUp size={20} color="#ef4444" style={{ transform: [{ rotate: '180deg'}] }} />
+                        </View>
+                        <View>
+                            <Text style={[styles.optionActionLabel, { color: '#ef4444' }]}>{t('quick_sell')}</Text>
+                            <Text style={styles.sellHint}>{t('liquidity')}: {formatCurrency(Math.floor((selectedAssetForOptions?.value || 0) * 0.75), currency)}</Text>
+                        </View>
+                    </Pressable>
+                </View>
+            </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#ffffff' },
-  container: { paddingBottom: 40, marginTop: 20 },
+  listContent: { paddingBottom: 40, paddingTop: 20 },
   balanceCard: {
     marginHorizontal: 20,
     backgroundColor: '#0f172a',
@@ -147,6 +430,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     minHeight: 180,
     justifyContent: 'space-between',
+    marginBottom: 24,
   },
   cardDecorationCircle: {
       position: 'absolute',
@@ -182,14 +466,12 @@ const styles = StyleSheet.create({
   trendBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 20,
       gap: 4,
   },
   trendText: {
-      color: '#10b981',
       fontSize: 13,
       fontWeight: '800',
   },
@@ -215,42 +497,237 @@ const styles = StyleSheet.create({
       borderTopWidth: 1,
       borderTopColor: 'rgba(255,255,255,0.1)',
       paddingTop: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
   },
   footerText: {
+      fontSize: 13,
+      fontWeight: '800',
+  },
+  footerDate: {
       color: '#64748b',
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600',
   },
-  balanceInfo: { flex: 1 },
-  balanceTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    gap: 4,
-    marginBottom: 4,
+  actionsRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
+    marginBottom: 32 
   },
-  balanceTagText: { color: '#10b981', fontSize: 13, fontWeight: '800' },
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20, marginTop: 24 },
   actionItem: { alignItems: 'center', position: 'relative' },
   actionIcon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  actionLabel: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  actionLabel: { fontSize: 13, fontWeight: '800', color: '#1e293b' },
   badge: {
     position: 'absolute', top: -4, right: -4,
     backgroundColor: '#ef4444', width: 22, height: 22,
     borderRadius: 11, alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: '#ffffff',
   },
-  badgeText: { color: '#ffffff', fontSize: 11, fontWeight: '900' },
-  section: { marginTop: 32, paddingHorizontal: 20 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  badgeText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
+  
+  filterSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  controlBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  viewSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    padding: 4,
+    alignItems: 'center',
+  },
+  viewIconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  activeViewIcon: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  vDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 4,
+  },
+  sectionHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  sectionCount: { fontSize: 14, color: '#94a3b8', fontWeight: '700' },
-  denseGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
-  denseGridItem: { width: '33.33%', padding: 4 },
-  emptyContainer: { padding: 40, alignItems: 'center' },
+  sectionCount: { fontSize: 13, color: '#94a3b8', fontWeight: '700' },
+  gridItem: { padding: 8, position: 'relative' },
+  listItem: { paddingHorizontal: 20, paddingVertical: 8, position: 'relative' },
+  amountBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 10,
+  },
+  amountText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
+  itemProfitBadge: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    zIndex: 10,
+  },
+  itemProfitText: { color: '#ffffff', fontSize: 9, fontWeight: '900' },
+  emptyContainer: { padding: 60, alignItems: 'center' },
   emptyText: { color: '#94a3b8', fontSize: 15, fontWeight: '700' },
+  modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+  },
+  modalContent: {
+      backgroundColor: 'white',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 40,
+  },
+  modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+  },
+  modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#0f172a',
+  },
+  modalBody: { gap: 8 },
+  sortOptionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: 16,
+      backgroundColor: '#f8fafc',
+  },
+  activeSortOptionItem: {
+      backgroundColor: '#fef2f2',
+      borderWidth: 1,
+      borderColor: '#fee2e2',
+  },
+  sortOptionLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#475569',
+  },
+  activeSortOptionLabel: {
+      color: '#ef4444',
+      fontWeight: '700',
+  },
+  activeDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#ef4444',
+  },
+  modalSubtitle: {
+      fontSize: 14,
+      color: '#64748b',
+      fontWeight: '600',
+      marginTop: 2,
+  },
+  optionActionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 16,
+  },
+  optionIconBox: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+  optionActionLabel: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#1e293b',
+  },
+  sellHint: {
+      fontSize: 12,
+      color: '#94a3b8',
+      fontWeight: '600',
+      marginTop: 2,
+  },
+  optionDivider: {
+      height: 1,
+      backgroundColor: '#f1f5f9',
+      marginVertical: 8,
+  },
+  listMoreBtn: {
+      position: 'absolute',
+      right: 20,
+      top: '50%',
+      marginTop: -20,
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 20,
+  },
 });

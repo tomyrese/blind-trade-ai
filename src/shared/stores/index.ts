@@ -3,7 +3,7 @@ export {
   usePortfolioStore,
   usePortfolioAssets,
   usePortfolioValue,
-  useAssetBySymbol,
+  useAssetById,
 } from './portfolioStore';
 
 export {
@@ -28,6 +28,11 @@ export {
   useNotificationsEnabled,
   useCurrency,
 } from './uiPreferencesStore';
+
+export { useCartStore } from './cartStore';
+export { useUserStore } from './userStore';
+export { useFavoritesStore } from './favoritesStore';
+export { useTranslation } from '../utils/translations';
 
 // Re-export types
 export type { Asset } from './portfolioStore';

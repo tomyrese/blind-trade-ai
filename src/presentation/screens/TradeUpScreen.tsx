@@ -1,26 +1,55 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Layers, Zap, Info, ArrowRight, Sparkles, Filter } from 'lucide-react-native';
+import { 
+  Layers, 
+  Zap, 
+  Info, 
+  ArrowRight, 
+  Sparkles, 
+  Filter, 
+  Search, 
+  ArrowUpDown, 
+  LayoutGrid, 
+  List, 
+  X,
+  Package
+} from 'lucide-react-native';
+import { TextInput, Modal } from 'react-native';
+import { mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { LootboxAnimation } from '../features/tradeup/components/LootboxAnimation';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
-import { generateReward, mockCards, Card } from '../../shared/utils/cardData';
+import { generateReward, getFusionProbabilities, mockCards, Card } from '../../shared/utils/cardData';
 import { formatCurrency } from '../../shared/utils/currency';
+import { useNavigation } from '@react-navigation/native';
 
 export const TradeUpScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const assets = usePortfolioStore((state) => state.assets);
   const addAsset = usePortfolioStore((state) => state.addAsset);
   const removeAsset = usePortfolioStore((state) => state.removeAsset);
-  const currency = useUserStore((state) => state.profile.currency);
+  const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const { t } = useTranslation();
   
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isOpening, setIsOpening] = useState(false);
   const [reward, setReward] = useState<Card | null>(null);
+
+  // Filtering & Search state
+  const [inputText, setInputText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<string>('value_desc');
+  const [isSortModalVisible, setSortModalVisible] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(inputText), 350);
+    return () => clearTimeout(timer);
+  }, [inputText]);
 
   const isTablet = width > 768;
 
@@ -29,11 +58,43 @@ export const TradeUpScreen: React.FC = () => {
     return assets.map(a => ({
       id: a.id,
       name: a.name,
-      rarity: a.rarity as any,
+      rarity: mapRarity(a.rarity),
       value: a.value,
       symbol: a.symbol,
+      amount: a.amount,
     }));
   }, [assets]);
+
+  const SORT_OPTIONS = [
+    { id: 'value_desc', label: t('sort_price_desc') },
+    { id: 'value_asc', label: t('sort_price_asc') },
+    { id: 'rarity_desc', label: t('sort_rarity_desc') },
+    { id: 'rarity_asc', label: t('sort_rarity_asc') },
+  ];
+
+  const filteredCards = useMemo(() => {
+    let result = [...ownedCards];
+    
+    if (searchQuery) {
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'value_desc': return b.value - a.value;
+        case 'value_asc': return a.value - b.value;
+        case 'rarity_desc': return (RARITY_RANKS[b.rarity] || 0) - (RARITY_RANKS[a.rarity] || 0);
+        case 'rarity_asc': return (RARITY_RANKS[a.rarity] || 0) - (RARITY_RANKS[b.rarity] || 0);
+        case 'name_asc': return a.name.localeCompare(b.name);
+        default: return 0;
+      }
+    });
+
+    return result;
+  }, [ownedCards, searchQuery, sortBy]);
 
   const totalValue = useMemo(() => {
     return ownedCards
@@ -42,13 +103,17 @@ export const TradeUpScreen: React.FC = () => {
   }, [ownedCards, selectedCards]);
 
   const fusionChances = useMemo(() => {
-    const count = selectedCards.length;
-    if (count === 0) return { upgrade: 0, fail: 0 };
-    // Probability estimation based on count
-    const upgrade = Math.min(15 + count * 5, 90);
-    const fail = Math.max(20 - count * 2, 5);
-    return { upgrade, fail };
-  }, [selectedCards]);
+    const cards = ownedCards.filter(c => selectedCards.includes(c.id));
+    if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
+    
+    // Use the logic from cardData.ts
+    const odds = getFusionProbabilities(cards);
+    return {
+        upgrade: Math.round(odds.upgrade * 100),
+        same: Math.round(odds.same * 100),
+        risk: Math.round(odds.downgrade * 100)
+    };
+  }, [ownedCards, selectedCards]);
 
   const handleToggleCard = useCallback((id: string) => {
     setSelectedCards((prev) => {
@@ -69,7 +134,8 @@ export const TradeUpScreen: React.FC = () => {
       return;
     }
 
-    const newReward = generateReward(totalValue);
+    const cardsToFuse = ownedCards.filter(c => selectedCards.includes(c.id));
+    const newReward = generateReward(cardsToFuse);
     setReward(newReward);
     setIsOpening(true);
 
@@ -78,10 +144,11 @@ export const TradeUpScreen: React.FC = () => {
     addAsset({
       id: newReward.id,
       name: newReward.name,
-      symbol: newReward.name.substring(0, 3).toUpperCase(),
+      symbol: newReward.symbol || newReward.name.substring(0, 3).toUpperCase(),
       rarity: newReward.rarity,
       amount: 1,
       value: newReward.value,
+      purchasePrice: totalValue / selectedCards.length, // Rough estimation for profit tracking
     });
     
     setSelectedCards([]);
@@ -103,8 +170,12 @@ export const TradeUpScreen: React.FC = () => {
                 <Text style={styles.chanceText}>{t('fusion_upgrade')}: {fusionChances.upgrade}%</Text>
               </View>
               <View style={styles.chanceItem}>
+                <Layers size={14} color="#64748b" />
+                <Text style={styles.chanceText}>{t('condition')}: {fusionChances.same}%</Text>
+              </View>
+              <View style={styles.chanceItem}>
                 <Zap size={14} color="#ef4444" />
-                <Text style={styles.chanceText}>{t('fusion_risk')}: {fusionChances.fail}%</Text>
+                <Text style={styles.chanceText}>{t('fusion_risk')}: {fusionChances.risk}%</Text>
               </View>
             </View>
           </View>
@@ -125,11 +196,9 @@ export const TradeUpScreen: React.FC = () => {
                     </View>
                   ) : null;
                 })}
-                {selectedCards.length > 5 && (
                   <View style={styles.moreBadge}>
                     <Text style={styles.moreText}>+{selectedCards.length - 5}</Text>
                   </View>
-                )}
               </View>
             )}
           </View>
@@ -148,28 +217,75 @@ export const TradeUpScreen: React.FC = () => {
         <View style={styles.listSection}>
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>{t('your_inventory')}</Text>
-            <View style={styles.filterBtn}>
-              <Filter size={16} color="#64748b" />
-              <Text style={styles.filterText}>{t('filter')}</Text>
-            </View>
+          </View>
+
+          {/* Search & Filters */}
+          <View style={styles.filterSection}>
+              <View style={styles.searchBar}>
+                  <Search size={20} color="#94a3b8" />
+                  <TextInput
+                      placeholder={t('search_placeholder')}
+                      placeholderTextColor="#94a3b8"
+                      style={styles.searchInput}
+                      value={inputText}
+                      onChangeText={setInputText}
+                  />
+              </View>
+
+              <View style={styles.controlsRow}>
+                  <Pressable onPress={() => setSortModalVisible(true)} style={styles.controlBtn}>
+                      <ArrowUpDown size={20} color="#1e293b" />
+                  </Pressable>
+
+                  <View style={styles.viewSwitcher}>
+                      <Pressable 
+                          onPress={() => setViewMode('grid')}
+                          style={[styles.viewIconBtn, viewMode === 'grid' && styles.activeViewIcon]}
+                      >
+                          <LayoutGrid size={20} color={viewMode === 'grid' ? '#0f172a' : '#94a3b8'} />
+                      </Pressable>
+                      <View style={styles.vDivider} />
+                      <Pressable 
+                          onPress={() => setViewMode('list')}
+                          style={[styles.viewIconBtn, viewMode === 'list' && styles.activeViewIcon]}
+                      >
+                          <List size={20} color={viewMode === 'list' ? '#0f172a' : '#94a3b8'} />
+                      </Pressable>
+                  </View>
+              </View>
           </View>
           
           <View style={styles.cardGrid}>
-            {ownedCards.map((card) => (
-              <View key={card.id} style={styles.gridItem}>
+            {filteredCards.map((card) => (
+              <View 
+                key={card.id} 
+                style={[
+                    viewMode === 'grid' ? styles.gridItem : styles.listItem, 
+                    viewMode === 'grid' && { width: isTablet ? '33.33%' : '50%' }
+                ]}
+              >
                 <CardItem
                   card={card}
                   selected={selectedCards.includes(card.id)}
                   onToggle={handleToggleCard}
-                  size="small"
+                  size={viewMode === 'grid' ? 'normal' : 'list'}
                 />
+                {(card.amount !== undefined && card.amount > 1) && (
+                  <View style={styles.amountBadge}>
+                    <Text style={styles.amountText}>x{card.amount}</Text>
+                  </View>
+                )}
               </View>
             ))}
           </View>
           
-          {ownedCards.length === 0 && (
+          {filteredCards.length === 0 && (
             <View style={styles.emptyInventory}>
-              <Text style={styles.emptyInventoryText}>{t('no_cards_to_fuse')}</Text>
+              {searchQuery ? (
+                <Text style={styles.emptyInventoryText}>{t('no_results_found')}</Text>
+              ) : (
+                <Text style={styles.emptyInventoryText}>{t('no_cards_to_fuse')}</Text>
+              )}
             </View>
           )}
         </View>
@@ -186,6 +302,53 @@ export const TradeUpScreen: React.FC = () => {
           reward={reward}
         />
       )}
+      {/* Sort Modal */}
+      <Modal
+        visible={isSortModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setSortModalVisible(false)}
+        >
+            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{t('sort_by')}</Text>
+                    <Pressable onPress={() => setSortModalVisible(false)}>
+                        <X size={24} color="#64748b" />
+                    </Pressable>
+                </View>
+                
+                <View style={styles.modalBody}>
+                    {SORT_OPTIONS.map((option) => (
+                        <Pressable
+                            key={option.id}
+                            style={[
+                                styles.sortOptionItem,
+                                sortBy === option.id && styles.activeSortOptionItem
+                            ]}
+                            onPress={() => {
+                                setSortBy(option.id);
+                                setSortModalVisible(false);
+                            }}
+                        >
+                            <Text style={[
+                                styles.sortOptionLabel,
+                                sortBy === option.id && styles.activeSortOptionLabel
+                            ]}>
+                                {option.label}
+                            </Text>
+                            {sortBy === option.id && (
+                                <View style={styles.activeDot} />
+                            )}
+                        </Pressable>
+                    ))}
+                </View>
+            </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -238,13 +401,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   valueLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     color: '#64748b',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   valueAmount: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: '900',
     color: '#10b981',
   },
@@ -343,7 +506,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   listTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     color: '#1e293b',
   },
@@ -364,12 +527,25 @@ const styles = StyleSheet.create({
   cardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -6,
+    marginHorizontal: -8, // Increased negative margin for better spacing with gridItem padding
   },
   gridItem: {
-    width: '33.33%',
-    padding: 6,
+    padding: 8, // Standard padding to match Portfolio
+    position: 'relative'
   },
+  amountBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 10,
+  },
+  amountText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
   emptyInventory: {
     padding: 40,
     alignItems: 'center',
@@ -378,5 +554,129 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 14,
     textAlign: 'center',
+  },
+  
+  // Filter Section
+  filterSection: {
+    marginBottom: 20,
+    gap: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  controlBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  viewSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    padding: 4,
+    alignItems: 'center',
+  },
+  viewIconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  activeViewIcon: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  vDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 4,
+  },
+  listItem: { paddingVertical: 8, position: 'relative' },
+
+  // Sort Modal Styles
+  modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+  },
+  modalContent: {
+      backgroundColor: 'white',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 40,
+  },
+  modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+  },
+  modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#0f172a',
+  },
+  modalBody: { gap: 8 },
+  sortOptionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: 16,
+      backgroundColor: '#f8fafc',
+  },
+  activeSortOptionItem: {
+      backgroundColor: '#fef2f2',
+      borderWidth: 1,
+      borderColor: '#fee2e2',
+  },
+  sortOptionLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#475569',
+  },
+  activeSortOptionLabel: {
+      color: '#ef4444',
+      fontWeight: '700',
+  },
+  activeDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#ef4444',
   },
 });

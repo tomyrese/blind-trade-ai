@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Animated, Switch, Alert, Image, NativeModules } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera } from 'lucide-react-native';
+import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
 import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
 import { useTranslation } from '../../shared/utils/translations';
@@ -17,7 +17,7 @@ const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean
     const handlePickFromGallery = async () => {
         // react-native-image-picker uses 'ImagePicker' as module name
         const legacyModule = NativeModules.ImagePicker;
-        const isTurboEnabled = (global as any).__turboModuleProxy != null;
+        const isTurboEnabled = (globalThis as any).__turboModuleProxy != null;
         
         // The library itself will crash if its internal resolution returns null
         // We do a pre-check here to avoid the crash and show diagnostics
@@ -124,7 +124,7 @@ const TitlesModal = ({ visible, onClose, unlockedTitles = [], equippedTitle, onE
                         </View>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
                     </View>
-                    <Text style={styles.modalSubtitle}>Mở khóa danh hiệu để hiển thị đẳng cấp của bạn!</Text>
+                    <Text style={styles.modalSubtitle}>{t('titles_subtitle')}</Text>
 
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 20}}>
                         {AVAILABLE_TITLES.map((title) => {
@@ -137,9 +137,9 @@ const TitlesModal = ({ visible, onClose, unlockedTitles = [], equippedTitle, onE
                                         {isUnlocked ? <Star size={16} color="#fff" fill="#fff" /> : <Lock size={16} color="#fff" />}
                                     </View>
                                     <View style={styles.titleInfo}>
-                                        <Text style={[styles.titleName, !isUnlocked && { color: '#94a3b8' }]}>{title.name}</Text>
-                                        <Text style={styles.titleDesc}>{title.description}</Text>
-                                        {!isUnlocked && <Text style={styles.titleCondition}>Yêu cầu: {title.condition}</Text>}
+                                        <Text style={[styles.titleName, !isUnlocked && { color: '#94a3b8' }]}>{t(title.name as any)}</Text>
+                                        <Text style={styles.titleDesc}>{t(title.description as any)}</Text>
+                                        {!isUnlocked && <Text style={styles.titleCondition}>{t('condition') || 'Yêu cầu'}: {t(title.condition as any)}</Text>}
                                     </View>
                                     {isUnlocked && (
                                         <TouchableOpacity 
@@ -352,7 +352,7 @@ const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
 
 const VipUpgradeModal = ({ visible, onClose, onUpgrade, currentVipType }: { visible: boolean, onClose: () => void, onUpgrade: (type: VipType) => void, currentVipType: VipType }) => {
     const { t } = useTranslation();
-    const currency = useUserStore((state) => state.profile.currency);
+    const currency = useUserStore((state) => state.profile?.currency || 'VND');
     const [selected, setSelected] = useState<VipType | null>(null);
     const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -498,7 +498,9 @@ export const ProfileScreen: React.FC = () => {
     const updateProfile = useUserStore((state) => state.updateProfile);
     const upgradeToVip = useUserStore((state) => state.upgradeToVip);
     const setAvatar = useUserStore((state) => state.setAvatar);
+    const deposit = useUserStore((state) => state.deposit);
     const equipTitle = useUserStore((state) => state.equipTitle);
+    const logout = useUserStore((state) => state.logout);
     
     if (!profile) return <View style={styles.container} />;
 
@@ -568,7 +570,7 @@ export const ProfileScreen: React.FC = () => {
                            {profile.equippedTitle && (
                                <View style={[styles.equippedTitleBadge, { borderColor: profile.equippedTitle.color, backgroundColor: 'rgba(0,0,0,0.25)', shadowColor: profile.equippedTitle.color, elevation: 5 }]}>
                                    <Star size={12} color={profile.equippedTitle.color} fill={profile.equippedTitle.color} />
-                                   <Text style={[styles.equippedTitleText, { color: profile.equippedTitle.color }]}>{profile.equippedTitle.name}</Text>
+                                   <Text style={[styles.equippedTitleText, { color: profile.equippedTitle.color }]}>{t(profile.equippedTitle.name as any)}</Text>
                                </View>
                            )}
                            <Text style={styles.userEmail}>{profile.email}</Text>
@@ -593,9 +595,40 @@ export const ProfileScreen: React.FC = () => {
 
                     {/* Stats */}
                     <View style={styles.statsContainer}>
+                        <StatItem label={t('balance')} value={formatCurrency(profile.balance || 0, profile.currency)} icon={Wallet} color="#10b981" />
                         <StatItem label={t('my_collection')} value={profile.collectionCount.toString()} icon={BookOpen} color="#3b82f6" />
-                        <StatItem label={t('pokedex_progress')} value={`${profile.pokedexProgress}%`} icon={Medal} color="#ef4444" />
                         <StatItem label={t('rank')} value={profile.rank.replace('VIP ', '')} icon={Star} color="#f59e0b" />
+                    </View>
+
+                    {/* Deposit Section */}
+                    <View style={styles.menuContainer}>
+                        <Text style={styles.menuTitle}>{t('deposit')}</Text>
+                        <View style={styles.depositRow}>
+                            <TouchableOpacity 
+                                style={styles.depositItem} 
+                                onPress={() => showLocalToast(t('coming_soon'), 'info')}
+                            >
+                                <View style={[styles.depositIcon, { backgroundColor: '#fef3c7' }]}><CreditCard size={20} color="#f59e0b" /></View>
+                                <Text style={styles.depositLabel}>{t('scratch_card')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.depositItem} 
+                                onPress={() => showLocalToast(t('coming_soon'), 'info')}
+                            >
+                                <View style={[styles.depositIcon, { backgroundColor: '#eff6ff' }]}><Banknote size={20} color="#3b82f6" /></View>
+                                <Text style={styles.depositLabel}>{t('bank_transfer')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.depositItem, { backgroundColor: '#f0fdf4' }]} 
+                                onPress={() => {
+                                    deposit(500000);
+                                    showLocalToast(t('deposit_success'), 'success');
+                                }}
+                            >
+                                <View style={[styles.depositIcon, { backgroundColor: '#dcfce7' }]}><Wallet size={20} color="#10b981" /></View>
+                                <Text style={[styles.depositLabel, { color: '#16a34a' }]}>{t('deposit_virtual')}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Menu */}
@@ -646,7 +679,7 @@ export const ProfileScreen: React.FC = () => {
                 visible={logoutConfirmVisible} 
                 title={t('logout_confirm_title')} 
                 message={t('logout_confirm_message')} 
-                onConfirm={() => { setLogoutConfirmVisible(false); showLocalToast(t('logout'), 'info'); }} 
+                onConfirm={() => { setLogoutConfirmVisible(false); logout(); }} 
                 onCancel={() => setLogoutConfirmVisible(false)} 
                 confirmText={t('logout')} 
                 type="danger" 
@@ -720,6 +753,11 @@ const styles = StyleSheet.create({
     menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
     menuIconContainer: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
     menuLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
+    
+    depositRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
+    depositItem: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+    depositIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+    depositLabel: { fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' },
     
     logoutButton: { marginHorizontal: 20, padding: 16, backgroundColor: '#fef2f2', borderRadius: 16, borderWidth: 1, borderColor: '#fee2e2', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
     logoutText: { color: '#ef4444', fontWeight: '800', fontSize: 15, marginLeft: 8 },

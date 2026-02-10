@@ -1,20 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ShoppingBag, Trash2, Minus, Plus, CreditCard } from 'lucide-react-native';
+import { 
+  ChevronLeft, 
+  ShoppingBag, 
+  Trash2, 
+  Minus, 
+  Plus, 
+  CreditCard, 
+  CheckCircle2, 
+  AlertTriangle,
+  XCircle,
+  Activity,
+  Package 
+} from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useCartStore } from '../../shared/stores/cartStore';
-import { useUserStore } from '../../shared/stores/userStore';
-import { useTranslation } from '../../shared/utils/translations';
+import { useCartStore, useUserStore, usePortfolioStore, useTranslation } from '../../shared/stores';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { formatCurrency } from '../../shared/utils/currency';
+import Animated, { FadeInUp, FadeIn, ZoomIn } from 'react-native-reanimated';
 
 export const CartScreen: React.FC = () => {
   const navigation = useNavigation();
+  const [checkoutStatus, setCheckoutStatus] = React.useState<'idle' | 'processing' | 'success' | 'insufficient_balance' | 'error'>('idle');
   const { items, removeFromCart, updateQuantity, clearCart } = useCartStore();
-  const total = items.reduce((sum, item) => sum + (item.card.value * item.quantity), 0);
-  const currency = useUserStore((state) => state.profile.currency);
+  const spend = useUserStore((state: any) => state.spend);
+  const addItems = usePortfolioStore((state: any) => state.addItems);
+  const total = items.reduce((sum: number, item: any) => sum + (item.card.value * item.quantity), 0);
+  const user = useUserStore((state: any) => state.profile);
+  const currency = user?.currency || 'VND';
   const { t } = useTranslation();
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+    
+    const checkoutItems = items.map(item => ({
+        id: item.card.id,
+        name: item.card.name,
+        symbol: item.card.symbol || '',
+        rarity: item.card.rarity,
+        quantity: item.quantity,
+        price: item.card.value,
+    }));
+    
+    (navigation as any).navigate('Payment', {
+        items: checkoutItems,
+        total: total
+    });
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cartItemWrapper}>
@@ -96,12 +129,23 @@ export const CartScreen: React.FC = () => {
                 <Text style={styles.vatText}>{t('vat_included')}</Text>
             </View>
           </View>
-          <Pressable style={styles.checkoutBtn}>
-            <CreditCard size={20} color="#ffffff" style={{ marginRight: 8 }} />
-            <Text style={styles.checkoutBtnText}>{t('checkout_now')}</Text>
+          <Pressable 
+            style={[styles.checkoutBtn, checkoutStatus === 'processing' && styles.checkoutBtnDisabled]} 
+            onPress={handleCheckout}
+            disabled={checkoutStatus === 'processing'}
+          >
+            {checkoutStatus === 'processing' ? (
+                <Activity size={20} color="#ffffff" style={{ marginRight: 8 }} />
+            ) : (
+                <CreditCard size={20} color="#ffffff" style={{ marginRight: 8 }} />
+            )}
+            <Text style={styles.checkoutBtnText}>
+                {checkoutStatus === 'processing' ? t('loading') : t('checkout_now')}
+            </Text>
           </Pressable>
         </View>
       )}
+
     </SafeAreaView>
   );
 };
@@ -346,5 +390,111 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  checkoutBtnDisabled: {
+    backgroundColor: '#94a3b8',
+    shadowOpacity: 0,
+  },
+  notificationOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    zIndex: 1000,
+  },
+  notificationModal: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 32,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.2,
+    shadowRadius: 40,
+    elevation: 20,
+  },
+  statusIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  statusTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#0f172a',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  statusSubtitle: {
+    fontSize: 15,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 32,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  summaryBox: {
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  btnRow: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  actionBtn: {
+    width: '100%',
+    height: 60,
+    borderRadius: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  secondaryBtn: {
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryBtnText: {
+    color: '#64748b',
+    fontSize: 16,
+    fontWeight: '800',
   },
 });
