@@ -1,97 +1,99 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# PokéMarket - Blind Trade & AI Valuation App
 
-# Getting Started
+PokéMarket is a premium React Native mobile application designed for Pokémon Card collectors and traders. It mimics a high-end marketplace with features like blind box trading ("Trade Up"), AI-powered card scanning/valuation, and real-time market data visualization.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+![PokéMarket Screenshot](./assets/screenshot_demo.png)
 
-## Step 1: Start Metro
+## 🌟 Key Features
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### 1. Market Dashboard (Trang Chủ)
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Live Market Feed**: Real-time ticker of card prices, trends, and "Hot" items.
+- **Advanced Search**: Instant search with Vietnamese Telex/VNI support.
+- **FlashList Grid**: Optimized 60fps scrolling performance for massive card lists.
+- **Rarity Glows**: Dynamic visual effects (Neon Blue, Purple, Gold) based on card rarity.
 
-```sh
-# Using npm
-npm start
+### 2. AI Scanner & Chat (Poké-AI)
 
-# OR using Yarn
-yarn start
-```
+- **AI Assistant**: A chatbot capable of answering questions about card prices, rarity, and investment advice.
+- **Visual Recognition**: (Planned) Scan physical cards to identify and value them.
+- **Contextual Awareness**: Remembers conversation history for natural dialogue.
 
-## Step 2: Build and run your app
+### 3. Portfolio Management (Bộ Sưu Tập)
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+- **Inventory Tracking**: Manage your card collection with valuation tracking.
+- **Virtual Account**: Includes a "Demo Mode" to seed your portfolio with test cards.
+- **Total Value**: Real-time calculation of your collection's net worth.
 
-### Android
+### 4. Trade Up / Blind Box (Hợp Nhất)
 
-```sh
-# Using npm
-npm run android
+- **Gamified Trading**: Combine lower-rarity cards for a chance to win Legendary cards.
+- **Lootbox Animation**: Exciting reveal animations with particle effects and feedback.
 
-# OR using Yarn
-yarn android
-```
+### 5. Trainer Profile & VIP (Hồ Sơ Trainer)
 
-### iOS
+- **Rank System**: Level up your trainer rank from Rookie to Master based on collection value and activity.
+- **VIP Membership**: Subscribers get exclusive perks, gold/platinum avatar frames, and bonus XP.
+- **Stats Overview**: Track your Pokedex progress and collection stats.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## 🛠 Tech Stack
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+- **Core**: React Native (0.76+), TypeScript
+- **State Management**: Zustand (Persistence via MMKV)
+- **Navigation**: React Navigation (Stack + Bottom Tabs)
+- **Styling**: NativeWind (TailwindCSS for RN) + Reanimated 3
+- **Performance**: @shopify/flash-list, React.memo optimization
+- **AI/Backend Integration**: Custom Hook architecture (Mocked for Demo)
 
-```sh
-bundle install
-```
+## 🚀 Getting Started
 
-Then, and every time you update your native dependencies, run:
+### Prerequisites
 
-```sh
-bundle exec pod install
-```
+- Node.js v24.12.0
+- npm 11.6.2
+- JDK 21
+- Android Studio / Xcode
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Installation
 
-```sh
-# Using npm
-npm run ios
+1. **Clone the repository**
 
-# OR using Yarn
-yarn ios
-```
+   ```bash
+   git clone https://github.com/tomyrese/blind-trade-ai.git
+   cd blind-trade-ai
+   ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+2. **Install dependencies**
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-## Step 3: Modify your app
+3. **Run the application**
 
-Now that you have successfully run the app, let's make changes!
+   ```bash
+   # Android
+   npm run android
+   ```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## 📱 Developer Notes
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### Virtual Account Setup
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+To populate your portfolio with test data:
 
-## Congratulations! :tada:
+1. Go to the **Trainer** tab.
+2. The `usePortfolioStore` exposes a `seedPortfolio()` action (triggered automatically in demo mode).
 
-You've successfully run and modified your React Native App. :partying_face:
+### Folder Structure
 
-### Now what?
+- `src/presentation`: UI Layer (Screens, Components)
+- `src/domain`: Business Logic (Models)
+- `src/data`: API Repositories (Mocked)
+- `src/shared`: Utilities, Stores, Hooks
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+---
 
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+_Built with ❤️ for Pokémon TCG Fans._
