@@ -1,97 +1,109 @@
-# PokéMarket - Blind Trade & AI Valuation App
+# PokéMarket - Ứng Dụng Định Giá & Giao Dịch Blind Box
 
-PokéMarket is a premium React Native mobile application designed for Pokémon Card collectors and traders. It mimics a high-end marketplace with features like blind box trading ("Trade Up"), AI-powered card scanning/valuation, and real-time market data visualization.
+PokéMarket là một ứng dụng di động React Native cao cấp được thiết kế dành cho những người sưu tập và giao dịch Thẻ Pokémon. Ứng dụng mô phỏng một thị trường chuyên nghiệp với các tính năng như giao dịch hộp mù ("Trade Up"), quét/định giá thẻ bài bằng AI và hiển thị dữ liệu thị trường theo thời gian thực.
 
-## 🌟 Key Features
+## 🌟 Tính Năng Chính
 
-### 1. Market Dashboard (Trang Chủ)
+### 1. Bảng Tin Thị Trường (Trang Chủ)
 
-- **Live Market Feed**: Real-time ticker of card prices, trends, and "Hot" items.
-- **Advanced Search**: Instant search with Vietnamese Telex/VNI support.
-- **FlashList Grid**: Optimized 60fps scrolling performance for massive card lists.
-- **Rarity Glows**: Dynamic visual effects (Neon Blue, Purple, Gold) based on card rarity.
+- **Dữ Liệu Trực Tiếp**: Cập nhật giá thẻ, xu hướng và các vật phẩm "Hot" theo thời gian thực.
+- **Tìm Kiếm Nâng Cao**: Tìm kiếm tức thì hỗ trợ gõ tiếng Việt (Telex/VNI).
+- **Danh Sách FlashList**: Hiệu năng cuộn 60fps mượt mà cho danh sách thẻ khổng lồ.
+- **Hiệu Ứng Rarity**: Hiệu ứng phát sáng động (Xanh Neon, Tím, Vàng) dựa trên độ hiếm của thẻ.
 
-### 2. AI Scanner & Chat (Poké-AI)
+### 2. Chat (Poké-AI)
 
-- **AI Assistant**: A chatbot capable of answering questions about card prices, rarity, and investment advice.
-- **Visual Recognition**: (Planned) Scan physical cards to identify and value them.
-- **Contextual Awareness**: Remembers conversation history for natural dialogue.
+- **Trợ Lý AI**: Chatbot có khả năng trả lời các câu hỏi về giá thẻ, độ hiếm và lời khuyên đầu tư.
+- **Nhận Thức Ngữ Cảnh**: Ghi nhớ lịch sử hội thoại để đối thoại tự nhiên hơn.
 
-### 3. Portfolio Management (Bộ Sưu Tập)
+### 3. Quản Lý Danh Mục Đầu Tư (Bộ Sưu Tập)
 
-- **Inventory Tracking**: Manage your card collection with valuation tracking.
-- **Virtual Account**: Includes a "Demo Mode" to seed your portfolio with test cards.
-- **Total Value**: Real-time calculation of your collection's net worth.
+- **Theo Dõi Kho**: Quản lý bộ sưu tập thẻ của bạn với tính năng theo dõi định giá.
+- **Tài Khoản Ảo**: Bao gồm "Chế Độ Demo" để tạo sẵn danh mục đầu tư với các thẻ test.
+- **Tổng Giá Trị**: Tính toán giá trị ròng của bộ sưu tập theo thời gian thực.
 
 ### 4. Trade Up / Blind Box (Hợp Nhất)
 
-- **Gamified Trading**: Combine lower-rarity cards for a chance to win Legendary cards.
-- **Lootbox Animation**: Exciting reveal animations with particle effects and feedback.
+- **Giao Dịch Gamified**: Kết hợp các thẻ độ hiếm thấp để có cơ hội nhận thẻ Huyền Thoại.
+- **Hoạt Ảnh Lootbox**: Hiệu ứng mở thẻ hấp dẫn với các hạt hiệu ứng và phản hồi rung.
 
-### 5. Trainer Profile & VIP (Hồ Sơ Trainer)
+### 5. Hồ Sơ Trainer & VIP (Trainer Profile)
 
-- **Rank System**: Level up your trainer rank from Rookie to Master based on collection value and activity.
-- **VIP Membership**: Subscribers get exclusive perks, gold/platinum avatar frames, and bonus XP.
-- **Stats Overview**: Track your Pokedex progress and collection stats.
+- **Hệ Thống Rank**: Thăng cấp rank trainer từ Tân Binh (Rookie) lên Bậc Thầy (Master) dựa trên giá trị bộ sưu tập.
+- **Thành Viên VIP**: Người đăng ký nhận đặc quyền, khung avatar vàng/bạch kim và bonus XP.
+- **Tổng Quan Chỉ Số**: Theo dõi tiến độ Pokedex và các chỉ số bộ sưu tập.
 
-## 🛠 Tech Stack
+## ⚙️ Cấu Hình API AI (Quan Trọng)
+
+Để sử dụng tính năng Chat AI (Poké-AI), bạn cần cung cấp API Key từ Google Gemini.
+
+1. **Lấy API Key**: Truy cập [OpenRouter](https://openrouter.ai/) để tạo khóa mới.
+2. **Cấu Hình**:
+   - Mở file: `src/shared/services/GeminiService.ts`
+   - Tìm biến `OPENROUTER_API_KEY` (dòng 5).
+   - Thay thế `'API_KEY'` bằng khóa thực của bạn:
+     ```typescript
+     const OPENROUTER_API_KEY = 'YOUR_ACTUAL_API_KEY_HERE';
+     ```
+
+## 🛠 Công Nghệ Sử Dụng
 
 - **Core**: React Native (0.76+), TypeScript
-- **State Management**: Zustand (Persistence via MMKV)
-- **Navigation**: React Navigation (Stack + Bottom Tabs)
-- **Styling**: NativeWind (TailwindCSS for RN) + Reanimated 3
-- **Performance**: @shopify/flash-list, React.memo optimization
-- **AI/Backend Integration**: Custom Hook architecture (Mocked for Demo)
+- **Quản Lý State**: Zustand (Lưu trữ qua MMKV)
+- **Điều Hướng**: React Navigation (Stack + Bottom Tabs)
+- **Giao Diện**: NativeWind (TailwindCSS cho RN) + Reanimated 3
+- **Hiệu Năng**: @shopify/flash-list, Tối ưu hóa React.memo
+- **Tích Hợp AI/Backend**: Kiến trúc Custom Hook (Mocked cho Demo)
 
-## 🚀 Getting Started
+## 🚀 Bắt Đầu
 
-### Prerequisites
+### Yêu Cầu
 
 - Node.js v24.12.0
 - npm 11.6.2
 - JDK 21
 - Android Studio / Xcode
 
-### Installation
+### Cài Đặt
 
-1. **Clone the repository**
+1. **Clone repository**
 
    ```bash
    git clone https://github.com/tomyrese/blind-trade-ai.git
    cd blind-trade-ai
    ```
 
-2. **Install dependencies**
+2. **Cài đặt thư viện**
 
    ```bash
    npm install
-   # or
+   # hoặc
    yarn install
    ```
 
-3. **Run the application**
+3. **Chạy ứng dụng**
 
    ```bash
    # Android
    npm run android
    ```
 
-## 📱 Developer Notes
+## 📱 Ghi Chú Cho Nhà Phát Triển
 
-### Virtual Account Setup
+### Thiết Lập Tài Khoản Ảo
 
-To populate your portfolio with test data:
+Để điền dữ liệu test vào danh mục đầu tư:
 
-1. Go to the **Trainer** tab.
-2. The `usePortfolioStore` exposes a `seedPortfolio()` action (triggered automatically in demo mode).
+1. Vào tab **Trainer**.
+2. `usePortfolioStore` cung cấp action `seedPortfolio()` (tự động kích hoạt trong chế độ demo).
 
-### Folder Structure
+### Cấu Trúc Thư Mục
 
-- `src/presentation`: UI Layer (Screens, Components)
+- `src/presentation`: Tầng UI (Màn hình, Components)
 - `src/domain`: Business Logic (Models)
 - `src/data`: API Repositories (Mocked)
 - `src/shared`: Utilities, Stores, Hooks
 
 ---
 
-_Built with ❤️ for Pokémon TCG Fans._
+_Xây dựng với ❤️ dành cho người hâm mộ Pokémon TCG._
