@@ -1,0 +1,461 @@
+{
+  "rarity_name": "Rare",
+  "query": "rarity:Rare -rarity:\"Rare Holo\" -rarity:\"Rare Rainbow\" -rarity:\"Rare Secret\"",
+  "total_cards": 5142,
+  "target_cards": 50,
+  "downloaded": 50,
+  "skipped": 0,
+  "errors": 0,
+  "cards": [
+    {
+      "page": 1,
+      "index": 1,
+      "card_name": "Entei",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:20.832169"
+    },
+    {
+      "page": 1,
+      "index": 2,
+      "card_name": "Coalossal",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:20.973847"
+    },
+    {
+      "page": 1,
+      "index": 3,
+      "card_name": "Pecharunt",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.112524"
+    },
+    {
+      "page": 1,
+      "index": 4,
+      "card_name": "Erika's Victreebel",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.279001"
+    },
+    {
+      "page": 1,
+      "index": 5,
+      "card_name": "Pikachu ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.424681"
+    },
+    {
+      "page": 1,
+      "index": 6,
+      "card_name": "Mega Audino ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.556717"
+    },
+    {
+      "page": 1,
+      "index": 7,
+      "card_name": "Mega Dragonite ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.690848"
+    },
+    {
+      "page": 1,
+      "index": 8,
+      "card_name": "Azumarill ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.830409"
+    },
+    {
+      "page": 1,
+      "index": 9,
+      "card_name": "Mega Eelektross ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:21.963996"
+    },
+    {
+      "page": 1,
+      "index": 10,
+      "card_name": "Mega Gengar ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.101530"
+    },
+    {
+      "page": 1,
+      "index": 11,
+      "card_name": "Mega Meganium ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.236178"
+    },
+    {
+      "page": 1,
+      "index": 12,
+      "card_name": "Mega Emboar ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.374016"
+    },
+    {
+      "page": 1,
+      "index": 13,
+      "card_name": "Voltorb ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.517994"
+    },
+    {
+      "page": 1,
+      "index": 14,
+      "card_name": "Cinderace ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.662993"
+    },
+    {
+      "page": 1,
+      "index": 15,
+      "card_name": "Lillie's Clefairy ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.795886"
+    },
+    {
+      "page": 1,
+      "index": 16,
+      "card_name": "N's Reshiram",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:22.937040"
+    },
+    {
+      "page": 1,
+      "index": 17,
+      "card_name": "Larry's Dudunsparce ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.077409"
+    },
+    {
+      "page": 1,
+      "index": 18,
+      "card_name": "Okidogi",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.232874"
+    },
+    {
+      "page": 1,
+      "index": 19,
+      "card_name": "Iono's Kilowattrel",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.372898"
+    },
+    {
+      "page": 1,
+      "index": 20,
+      "card_name": "Togekiss",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.503987"
+    },
+    {
+      "page": 1,
+      "index": 21,
+      "card_name": "Rayquaza",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.642048"
+    },
+    {
+      "page": 1,
+      "index": 22,
+      "card_name": "Groudon",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.787254"
+    },
+    {
+      "page": 1,
+      "index": 23,
+      "card_name": "N's Zekrom",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:23.932260"
+    },
+    {
+      "page": 1,
+      "index": 24,
+      "card_name": "Hop's Trevenant",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.094932"
+    },
+    {
+      "page": 1,
+      "index": 25,
+      "card_name": "Spectrier",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.227408"
+    },
+    {
+      "page": 1,
+      "index": 26,
+      "card_name": "Team Rocket's Spidops",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.353505"
+    },
+    {
+      "page": 1,
+      "index": 27,
+      "card_name": "Regice ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.480109"
+    },
+    {
+      "page": 1,
+      "index": 28,
+      "card_name": "Ethan's Magcargo",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.618579"
+    },
+    {
+      "page": 1,
+      "index": 29,
+      "card_name": "Erika's Vileplume ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.760025"
+    },
+    {
+      "page": 1,
+      "index": 30,
+      "card_name": "Team Rocket's Exeggutor",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:24.900759"
+    },
+    {
+      "page": 1,
+      "index": 31,
+      "card_name": "Mega Froslass ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.038399"
+    },
+    {
+      "page": 1,
+      "index": 32,
+      "card_name": "Hop's Pincurchin ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.181676"
+    },
+    {
+      "page": 1,
+      "index": 33,
+      "card_name": "Larry's Staraptor",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.312397"
+    },
+    {
+      "page": 1,
+      "index": 34,
+      "card_name": "Team Rocket's Mewtwo ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.456373"
+    },
+    {
+      "page": 1,
+      "index": 35,
+      "card_name": "Beautifly",
+      "rarity": "Illustration Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.607935"
+    },
+    {
+      "page": 1,
+      "index": 36,
+      "card_name": "Dustox",
+      "rarity": "Illustration Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.729381"
+    },
+    {
+      "page": 1,
+      "index": 37,
+      "card_name": "Dragapult ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:25.874045"
+    },
+    {
+      "page": 1,
+      "index": 38,
+      "card_name": "Mega Feraligatr ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.004570"
+    },
+    {
+      "page": 1,
+      "index": 39,
+      "card_name": "Mandibuzz ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.138557"
+    },
+    {
+      "page": 1,
+      "index": 40,
+      "card_name": "Zangoose ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.278037"
+    },
+    {
+      "page": 1,
+      "index": 41,
+      "card_name": "Ethan's Ho-Oh ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.421213"
+    },
+    {
+      "page": 1,
+      "index": 42,
+      "card_name": "Mega Gardevoir ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.553736"
+    },
+    {
+      "page": 1,
+      "index": 43,
+      "card_name": "Mismagius",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.694735"
+    },
+    {
+      "page": 1,
+      "index": 44,
+      "card_name": "Registeel ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.839506"
+    },
+    {
+      "page": 1,
+      "index": 45,
+      "card_name": "Lunatone",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:26.995694"
+    },
+    {
+      "page": 1,
+      "index": 46,
+      "card_name": "Munkidori",
+      "rarity": "Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:27.137857"
+    },
+    {
+      "page": 1,
+      "index": 47,
+      "card_name": "Team Rocket's Kangaskhan ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:27.276175"
+    },
+    {
+      "page": 1,
+      "index": 48,
+      "card_name": "Mega Lucario ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:27.408106"
+    },
+    {
+      "page": 1,
+      "index": 49,
+      "card_name": "Cynthia's Garchomp ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:27.552372"
+    },
+    {
+      "page": 1,
+      "index": 50,
+      "card_name": "Mega Charizard Y ex",
+      "rarity": "Double Rare",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:27.681841"
+    }
+  ]
+}

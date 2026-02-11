@@ -1,0 +1,461 @@
+{
+  "rarity_name": "Rare Holo",
+  "query": "rarity:\"Rare Holo\"",
+  "total_cards": 2695,
+  "target_cards": 50,
+  "downloaded": 50,
+  "skipped": 0,
+  "errors": 0,
+  "cards": [
+    {
+      "page": 1,
+      "index": 1,
+      "card_name": "Alakazam",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:34.404784"
+    },
+    {
+      "page": 1,
+      "index": 2,
+      "card_name": "Absol G",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:34.546333"
+    },
+    {
+      "page": 1,
+      "index": 3,
+      "card_name": "Alakazam",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:34.786221"
+    },
+    {
+      "page": 1,
+      "index": 4,
+      "card_name": "Venusaur V",
+      "rarity": "Rare Holo V",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.020335"
+    },
+    {
+      "page": 1,
+      "index": 5,
+      "card_name": "Blaine's Moltres",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.162471"
+    },
+    {
+      "page": 1,
+      "index": 6,
+      "card_name": "Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.307414"
+    },
+    {
+      "page": 1,
+      "index": 7,
+      "card_name": "Blaziken",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.450033"
+    },
+    {
+      "page": 1,
+      "index": 8,
+      "card_name": "Bellossom",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.588738"
+    },
+    {
+      "page": 1,
+      "index": 9,
+      "card_name": "Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.731270"
+    },
+    {
+      "page": 1,
+      "index": 10,
+      "card_name": "Dark Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:35.875780"
+    },
+    {
+      "page": 1,
+      "index": 11,
+      "card_name": "Clefable",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.017932"
+    },
+    {
+      "page": 1,
+      "index": 12,
+      "card_name": "Banette",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.161287"
+    },
+    {
+      "page": 1,
+      "index": 13,
+      "card_name": "Aggron",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.305510"
+    },
+    {
+      "page": 1,
+      "index": 14,
+      "card_name": "Rowlet & Alolan Exeggutor-GX",
+      "rarity": "Rare Holo GX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.441505"
+    },
+    {
+      "page": 1,
+      "index": 15,
+      "card_name": "Alakazam",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.602308"
+    },
+    {
+      "page": 1,
+      "index": 16,
+      "card_name": "Jirachi",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.739827"
+    },
+    {
+      "page": 1,
+      "index": 17,
+      "card_name": "Celebi V",
+      "rarity": "Rare Holo V",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:36.866833"
+    },
+    {
+      "page": 1,
+      "index": 18,
+      "card_name": "Azumarill",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.035488"
+    },
+    {
+      "page": 1,
+      "index": 19,
+      "card_name": "Butterfree V",
+      "rarity": "Rare Holo V",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.162294"
+    },
+    {
+      "page": 1,
+      "index": 20,
+      "card_name": "Aerodactyl",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.307827"
+    },
+    {
+      "page": 1,
+      "index": 21,
+      "card_name": "Arcanine",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.449293"
+    },
+    {
+      "page": 1,
+      "index": 22,
+      "card_name": "Dark Alakazam",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.588996"
+    },
+    {
+      "page": 1,
+      "index": 23,
+      "card_name": "Armaldo",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.704729"
+    },
+    {
+      "page": 1,
+      "index": 24,
+      "card_name": "Aerodactyl",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:37.841679"
+    },
+    {
+      "page": 1,
+      "index": 25,
+      "card_name": "Absol",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.032364"
+    },
+    {
+      "page": 1,
+      "index": 26,
+      "card_name": "Blaine's Arcanine",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.174934"
+    },
+    {
+      "page": 1,
+      "index": 27,
+      "card_name": "Venusaur & Snivy-GX",
+      "rarity": "Rare Holo GX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.314078"
+    },
+    {
+      "page": 1,
+      "index": 28,
+      "card_name": "Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.460889"
+    },
+    {
+      "page": 1,
+      "index": 29,
+      "card_name": "Blaziken",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.604183"
+    },
+    {
+      "page": 1,
+      "index": 30,
+      "card_name": "Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.747442"
+    },
+    {
+      "page": 1,
+      "index": 31,
+      "card_name": "Armaldo δ",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:38.895211"
+    },
+    {
+      "page": 1,
+      "index": 32,
+      "card_name": "Venusaur-EX",
+      "rarity": "Rare Holo EX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.041083"
+    },
+    {
+      "page": 1,
+      "index": 33,
+      "card_name": "Dratini",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.177044"
+    },
+    {
+      "page": 1,
+      "index": 34,
+      "card_name": "Espeon",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.320183"
+    },
+    {
+      "page": 1,
+      "index": 35,
+      "card_name": "Altaria",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.463578"
+    },
+    {
+      "page": 1,
+      "index": 36,
+      "card_name": "Aggron",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.615756"
+    },
+    {
+      "page": 1,
+      "index": 37,
+      "card_name": "Arcanine",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.755758"
+    },
+    {
+      "page": 1,
+      "index": 38,
+      "card_name": "Banette",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:39.919862"
+    },
+    {
+      "page": 1,
+      "index": 39,
+      "card_name": "Venusaur-EX",
+      "rarity": "Rare Holo EX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.054495"
+    },
+    {
+      "page": 1,
+      "index": 40,
+      "card_name": "Alakazam",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.190928"
+    },
+    {
+      "page": 1,
+      "index": 41,
+      "card_name": "Beedrill δ",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.346348"
+    },
+    {
+      "page": 1,
+      "index": 42,
+      "card_name": "Clefable",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.488315"
+    },
+    {
+      "page": 1,
+      "index": 43,
+      "card_name": "Charizard",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.630166"
+    },
+    {
+      "page": 1,
+      "index": 44,
+      "card_name": "Ampharos",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.778345"
+    },
+    {
+      "page": 1,
+      "index": 45,
+      "card_name": "Aggron",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:40.894643"
+    },
+    {
+      "page": 1,
+      "index": 46,
+      "card_name": "Pheromosa & Buzzwole-GX",
+      "rarity": "Rare Holo GX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:41.029329"
+    },
+    {
+      "page": 1,
+      "index": 47,
+      "card_name": "Beedrill",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:41.257589"
+    },
+    {
+      "page": 1,
+      "index": 48,
+      "card_name": "Team Aqua's Cacturne",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:41.376393"
+    },
+    {
+      "page": 1,
+      "index": 49,
+      "card_name": "Celebi & Venusaur-GX",
+      "rarity": "Rare Holo GX",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:41.508812"
+    },
+    {
+      "page": 1,
+      "index": 50,
+      "card_name": "Dialga",
+      "rarity": "Rare Holo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:41.670485"
+    }
+  ]
+}

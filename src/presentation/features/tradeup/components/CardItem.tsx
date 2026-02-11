@@ -1,7 +1,7 @@
 // Premium CardItem Design - Modern & Beautiful
 import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image } from 'lucide-react-native';
+import { Pressable, Text, View, StyleSheet, Image } from 'react-native';
+import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image as ImageIcon } from 'lucide-react-native';
 import { Card, RARITY_CONFIGS } from '../../../../shared/utils/cardData';
 import { formatCurrency } from '../../../../shared/utils/currency';
 import { useUserStore } from '../../../../shared/stores/userStore';
@@ -59,7 +59,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
         case 'zap':
           return <Zap size={iconSize} fill={color} color={color} />;
         case 'image':
-            return <Image size={iconSize} color={color} />;
+            return <ImageIcon size={iconSize} color={color} />;
         case 'text':
             return <Text style={{fontSize: 8, fontWeight: '900', color: color}}>{config.symbol}</Text>
         default:
@@ -137,8 +137,16 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     { backgroundColor: (isSmall || isList) ? config.borderColor : config.glowColor }, 
                     (isSmall || isList) && { opacity: 0.15 }
                 ]}>
-                    {!(isSmall || isList) && (
-                        <Text style={[styles.artworkLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
+                    {card.image ? (
+                        <Image 
+                            source={card.image} 
+                            style={{ width: '100%', height: '100%' }} 
+                            resizeMode="contain" 
+                        />
+                    ) : (
+                        !(isSmall || isList) && (
+                            <Text style={[styles.artworkLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
+                        )
                     )}
                 </View>
                 

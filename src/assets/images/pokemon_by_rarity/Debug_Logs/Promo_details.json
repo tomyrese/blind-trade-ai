@@ -1,0 +1,461 @@
+{
+  "rarity_name": "Promo",
+  "query": "rarity:Promo",
+  "total_cards": 1255,
+  "target_cards": 50,
+  "downloaded": 50,
+  "skipped": 0,
+  "errors": 0,
+  "cards": [
+    {
+      "page": 1,
+      "index": 1,
+      "card_name": "Pikachu",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.190014"
+    },
+    {
+      "page": 1,
+      "index": 2,
+      "card_name": "Ho-Oh",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.343895"
+    },
+    {
+      "page": 1,
+      "index": 3,
+      "card_name": "Rowlet",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.481602"
+    },
+    {
+      "page": 1,
+      "index": 4,
+      "card_name": "Snivy",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.640804"
+    },
+    {
+      "page": 1,
+      "index": 5,
+      "card_name": "Chespin",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.805671"
+    },
+    {
+      "page": 1,
+      "index": 6,
+      "card_name": "Sprigatito",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:11.928295"
+    },
+    {
+      "page": 1,
+      "index": 7,
+      "card_name": "Turtwig",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.068586"
+    },
+    {
+      "page": 1,
+      "index": 8,
+      "card_name": "Kyogre ex",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.211467"
+    },
+    {
+      "page": 1,
+      "index": 9,
+      "card_name": "Grookey",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.369168"
+    },
+    {
+      "page": 1,
+      "index": 10,
+      "card_name": "Electabuzz",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.529298"
+    },
+    {
+      "page": 1,
+      "index": 11,
+      "card_name": "Tepig",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.685399"
+    },
+    {
+      "page": 1,
+      "index": 12,
+      "card_name": "Litten",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.798824"
+    },
+    {
+      "page": 1,
+      "index": 13,
+      "card_name": "Scorbunny",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:12.959596"
+    },
+    {
+      "page": 1,
+      "index": 14,
+      "card_name": "Fennekin",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.111625"
+    },
+    {
+      "page": 1,
+      "index": 15,
+      "card_name": "Electabuzz",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.258249"
+    },
+    {
+      "page": 1,
+      "index": 16,
+      "card_name": "Fuecoco",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.375231"
+    },
+    {
+      "page": 1,
+      "index": 17,
+      "card_name": "Groudon ex",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.520789"
+    },
+    {
+      "page": 1,
+      "index": 18,
+      "card_name": "Chimchar",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.652568"
+    },
+    {
+      "page": 1,
+      "index": 19,
+      "card_name": "Hitmonchan",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.812015"
+    },
+    {
+      "page": 1,
+      "index": 20,
+      "card_name": "Lugia",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:13.966133"
+    },
+    {
+      "page": 1,
+      "index": 21,
+      "card_name": "Treecko",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.108836"
+    },
+    {
+      "page": 1,
+      "index": 22,
+      "card_name": "Pikachu",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.252754"
+    },
+    {
+      "page": 1,
+      "index": 23,
+      "card_name": "Piplup",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.386646"
+    },
+    {
+      "page": 1,
+      "index": 24,
+      "card_name": "Sobble",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.566069"
+    },
+    {
+      "page": 1,
+      "index": 25,
+      "card_name": "Oshawott",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.718209"
+    },
+    {
+      "page": 1,
+      "index": 26,
+      "card_name": "Quaxly",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:14.849063"
+    },
+    {
+      "page": 1,
+      "index": 27,
+      "card_name": "Professor Elm",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:15.003640"
+    },
+    {
+      "page": 1,
+      "index": 28,
+      "card_name": "Popplio",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:15.320854"
+    },
+    {
+      "page": 1,
+      "index": 29,
+      "card_name": "Mewtwo",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:16.188776"
+    },
+    {
+      "page": 1,
+      "index": 30,
+      "card_name": "Froakie",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:16.613832"
+    },
+    {
+      "page": 1,
+      "index": 31,
+      "card_name": "Pikachu",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:17.365276"
+    },
+    {
+      "page": 1,
+      "index": 32,
+      "card_name": "Pikachu",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:17.851285"
+    },
+    {
+      "page": 1,
+      "index": 33,
+      "card_name": "Reshiram",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:18.192058"
+    },
+    {
+      "page": 1,
+      "index": 34,
+      "card_name": "Sylveon",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:18.949040"
+    },
+    {
+      "page": 1,
+      "index": 35,
+      "card_name": "Grovyle",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:19.491884"
+    },
+    {
+      "page": 1,
+      "index": 36,
+      "card_name": "Wobbuffet",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:19.930419"
+    },
+    {
+      "page": 1,
+      "index": 37,
+      "card_name": "Pachirisu",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:20.295132"
+    },
+    {
+      "page": 1,
+      "index": 38,
+      "card_name": "Mimikyu ex",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:20.564230"
+    },
+    {
+      "page": 1,
+      "index": 39,
+      "card_name": "Rocket's Scizor",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:20.868190"
+    },
+    {
+      "page": 1,
+      "index": 40,
+      "card_name": "Meowth V",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:21.161497"
+    },
+    {
+      "page": 1,
+      "index": 41,
+      "card_name": "Meowth VMAX",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:21.473487"
+    },
+    {
+      "page": 1,
+      "index": 42,
+      "card_name": "Tropical Wind",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:21.649828"
+    },
+    {
+      "page": 1,
+      "index": 43,
+      "card_name": "Snorlax-GX",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:21.832261"
+    },
+    {
+      "page": 1,
+      "index": 44,
+      "card_name": "Zekrom",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.001934"
+    },
+    {
+      "page": 1,
+      "index": 45,
+      "card_name": "Hoothoot",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.202501"
+    },
+    {
+      "page": 1,
+      "index": 46,
+      "card_name": "Dragonite",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.382188"
+    },
+    {
+      "page": 1,
+      "index": 47,
+      "card_name": "Xerneas",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.537919"
+    },
+    {
+      "page": 1,
+      "index": 48,
+      "card_name": "Quaquaval",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.675474"
+    },
+    {
+      "page": 1,
+      "index": 49,
+      "card_name": "Rocket's Sneasel",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:22.850324"
+    },
+    {
+      "page": 1,
+      "index": 50,
+      "card_name": "Mudkip",
+      "rarity": "Promo",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:39:23.017404"
+    }
+  ]
+}

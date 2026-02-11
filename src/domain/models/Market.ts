@@ -3,11 +3,12 @@ export type CardRarity =
   | 'common'
   | 'uncommon'
   | 'rare'
-  | 'double_rare'
-  | 'ultra_rare'
-  | 'illustration_rare'
-  | 'special_illustration_rare'
-  | 'secret_rare'
+  | 'rare_holo'
+  | 'rare_holo_ex'
+  | 'rare_holo_gx'
+  | 'rare_holo_v'
+  | 'rare_rainbow'
+  | 'rare_secret'
   | 'promo';
 
 export interface Listing {
@@ -54,6 +55,7 @@ export interface Market {
   supply: number;
   rarity: CardRarity;
   rarityLabel?: string;
+  image?: any;
   listings?: Listing[];
   priceHistory?: PriceHistoryItem[];
   recentSales?: Transaction[];

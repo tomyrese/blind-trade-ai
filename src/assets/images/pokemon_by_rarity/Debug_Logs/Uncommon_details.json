@@ -1,0 +1,461 @@
+{
+  "rarity_name": "Uncommon",
+  "query": "rarity:Uncommon",
+  "total_cards": 4812,
+  "target_cards": 50,
+  "downloaded": 50,
+  "skipped": 0,
+  "errors": 0,
+  "cards": [
+    {
+      "page": 1,
+      "index": 1,
+      "card_name": "Beautifly",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.039186"
+    },
+    {
+      "page": 1,
+      "index": 2,
+      "card_name": "Bayleef",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.171317"
+    },
+    {
+      "page": 1,
+      "index": 3,
+      "card_name": "Heliolisk",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.310849"
+    },
+    {
+      "page": 1,
+      "index": 4,
+      "card_name": "Pignite",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.449715"
+    },
+    {
+      "page": 1,
+      "index": 5,
+      "card_name": "Noivern",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.588568"
+    },
+    {
+      "page": 1,
+      "index": 6,
+      "card_name": "N's Darmanitan",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.739279"
+    },
+    {
+      "page": 1,
+      "index": 7,
+      "card_name": "Erika's Weepinbell",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:09.881899"
+    },
+    {
+      "page": 1,
+      "index": 8,
+      "card_name": "Mawile",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.022102"
+    },
+    {
+      "page": 1,
+      "index": 9,
+      "card_name": "Delcatty",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.163663"
+    },
+    {
+      "page": 1,
+      "index": 10,
+      "card_name": "Golduck",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.311968"
+    },
+    {
+      "page": 1,
+      "index": 11,
+      "card_name": "Camerupt",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.445682"
+    },
+    {
+      "page": 1,
+      "index": 12,
+      "card_name": "Cynthia's Gabite",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.586529"
+    },
+    {
+      "page": 1,
+      "index": 13,
+      "card_name": "Vikavolt",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.724558"
+    },
+    {
+      "page": 1,
+      "index": 14,
+      "card_name": "Team Rocket's Watchtower",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.838629"
+    },
+    {
+      "page": 1,
+      "index": 15,
+      "card_name": "Croconaw",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:10.980790"
+    },
+    {
+      "page": 1,
+      "index": 16,
+      "card_name": "Dustox",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.124775"
+    },
+    {
+      "page": 1,
+      "index": 17,
+      "card_name": "Forest of Vitality",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.245690"
+    },
+    {
+      "page": 1,
+      "index": 18,
+      "card_name": "Slurpuff",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.384621"
+    },
+    {
+      "page": 1,
+      "index": 19,
+      "card_name": "Team Rocket's Petrel",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.497323"
+    },
+    {
+      "page": 1,
+      "index": 20,
+      "card_name": "Larry's Braviary",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.636423"
+    },
+    {
+      "page": 1,
+      "index": 21,
+      "card_name": "Team Rocket's Energy",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.751722"
+    },
+    {
+      "page": 1,
+      "index": 22,
+      "card_name": "Cynthia's Spiritomb",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.884717"
+    },
+    {
+      "page": 1,
+      "index": 23,
+      "card_name": "Boss's Orders",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:11.996988"
+    },
+    {
+      "page": 1,
+      "index": 24,
+      "card_name": "Clefable",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.132145"
+    },
+    {
+      "page": 1,
+      "index": 25,
+      "card_name": "Mightyena",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.273550"
+    },
+    {
+      "page": 1,
+      "index": 26,
+      "card_name": "Banette",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.419376"
+    },
+    {
+      "page": 1,
+      "index": 27,
+      "card_name": "Glastrier",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.568429"
+    },
+    {
+      "page": 1,
+      "index": 28,
+      "card_name": "Team Rocket's Mimikyu",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.707050"
+    },
+    {
+      "page": 1,
+      "index": 29,
+      "card_name": "Raichu",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.842243"
+    },
+    {
+      "page": 1,
+      "index": 30,
+      "card_name": "Haunter",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:12.971820"
+    },
+    {
+      "page": 1,
+      "index": 31,
+      "card_name": "Thick Scale",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.088609"
+    },
+    {
+      "page": 1,
+      "index": 32,
+      "card_name": "Prism Energy",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.211558"
+    },
+    {
+      "page": 1,
+      "index": 33,
+      "card_name": "Charmeleon",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.354030"
+    },
+    {
+      "page": 1,
+      "index": 34,
+      "card_name": "Drampa",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.487094"
+    },
+    {
+      "page": 1,
+      "index": 35,
+      "card_name": "N's PP Up",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.600446"
+    },
+    {
+      "page": 1,
+      "index": 36,
+      "card_name": "Team Rocket's Great Ball",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.721944"
+    },
+    {
+      "page": 1,
+      "index": 37,
+      "card_name": "Larry's Staravia",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.857395"
+    },
+    {
+      "page": 1,
+      "index": 38,
+      "card_name": "Team Rocket's Hypnotizer",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:13.974595"
+    },
+    {
+      "page": 1,
+      "index": 39,
+      "card_name": "Team Rocket's Dugtrio",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.121937"
+    },
+    {
+      "page": 1,
+      "index": 40,
+      "card_name": "Carbink",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.265353"
+    },
+    {
+      "page": 1,
+      "index": 41,
+      "card_name": "Salazzle",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.400641"
+    },
+    {
+      "page": 1,
+      "index": 42,
+      "card_name": "Air Balloon",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.512298"
+    },
+    {
+      "page": 1,
+      "index": 43,
+      "card_name": "Hop's Cramorant",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.637708"
+    },
+    {
+      "page": 1,
+      "index": 44,
+      "card_name": "Premium Power Pro",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.752918"
+    },
+    {
+      "page": 1,
+      "index": 45,
+      "card_name": "Light Ball",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.867727"
+    },
+    {
+      "page": 1,
+      "index": 46,
+      "card_name": "Iris's Fighting Spirit",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:14.980544"
+    },
+    {
+      "page": 1,
+      "index": 47,
+      "card_name": "Fighting Gong",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:15.099269"
+    },
+    {
+      "page": 1,
+      "index": 48,
+      "card_name": "Frosmoth",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:15.239439"
+    },
+    {
+      "page": 1,
+      "index": 49,
+      "card_name": "Eelektrik",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:15.373627"
+    },
+    {
+      "page": 1,
+      "index": 50,
+      "card_name": "Erika's Gloom",
+      "rarity": "Uncommon",
+      "success": true,
+      "message": "Downloaded",
+      "timestamp": "2026-02-11T10:38:15.514121"
+    }
+  ]
+}

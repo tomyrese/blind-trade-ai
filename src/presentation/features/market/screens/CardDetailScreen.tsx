@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Dimensions, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { ChevronLeft, Share2, Heart, TrendingUp, ShoppingCart, User, ShieldCheck, Zap } from 'lucide-react-native';
@@ -143,7 +143,15 @@ export const CardDetailScreen: React.FC = () => {
         {/* Visual Section */}
         <View style={styles.visualSection}>
           <View style={[styles.imagePlaceholder, { shadowColor: rarityColor, borderColor: rarityConfig.borderColor }]}>
-            <Text style={styles.cardSymbolText}>{market.symbol}</Text>
+            {market.image ? (
+                <Image 
+                    source={market.image} 
+                    style={{ width: '100%', height: '100%', borderRadius: 16 }} 
+                    resizeMode="contain" 
+                />
+            ) : (
+                <Text style={styles.cardSymbolText}>{market.symbol}</Text>
+            )}
           </View>
           <View style={styles.titleInfo}>
             <View style={[styles.rarityTag, { backgroundColor: rarityConfig.glowColor, borderColor: rarityConfig.borderColor }]}>
