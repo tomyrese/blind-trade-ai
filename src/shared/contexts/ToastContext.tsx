@@ -1,9 +1,9 @@
-// Toast Context Provider
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Toast, ToastType } from '../../presentation/components/Toast';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useUIStore, NotificationType } from '../stores/uiStore';
+import { NotificationToast } from '../../presentation/components/shared/NotificationToast';
 
 interface ToastContextType {
-  showToast: (message: string, type: ToastType) => void;
+  showToast: (message: string, type: NotificationType) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -21,24 +21,16 @@ interface ToastProviderProps {
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [visible, setVisible] = useState(false);
-  const [message, setMessage] = useState('');
-  const [type, setType] = useState<ToastType>('success');
+  const showNotification = useUIStore((state) => state.showNotification);
 
-  const showToast = (msg: string, toastType: ToastType = 'success') => {
-    setMessage(msg);
-    setType(toastType);
-    setVisible(true);
-  };
-
-  const hideToast = () => {
-    setVisible(false);
+  const showToast = (msg: string, toastType: NotificationType = 'success') => {
+    showNotification(msg, toastType);
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <Toast visible={visible} message={message} type={type} onDismiss={hideToast} />
+      <NotificationToast />
     </ToastContext.Provider>
   );
 };

@@ -12,19 +12,19 @@ function App(): React.JSX.Element {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <ToastProvider>
-      <QueryProvider>
-        <SafeAreaProvider>
-          <StatusBar
-            barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-            backgroundColor={isDarkMode ? '#000000' : '#FFFFFF'}
-          />
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </QueryProvider>
-    </ToastProvider>
+      <SafeAreaProvider>
+        <QueryProvider>
+          <ToastProvider>
+            <StatusBar
+              barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+              backgroundColor={isDarkMode ? '#000000' : '#FFFFFF'}
+            />
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </ToastProvider>
+        </QueryProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

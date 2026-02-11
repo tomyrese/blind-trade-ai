@@ -35,6 +35,11 @@ interface UserState {
   equipTitle: (titleId: string) => void;
   checkTitleUnlocks: () => void;
 
+  // Payment Methods
+  addPaymentMethod: (pm: Omit<import('../../domain/models/User').PaymentMethod, 'id'>) => void;
+  removePaymentMethod: (id: string) => void;
+  setDefaultPaymentMethod: (id: string) => void;
+
   _setHydrated: (val: boolean) => void;
 }
 
@@ -272,6 +277,52 @@ export const useUserStore = create<UserState>()(
           registeredUsers: syncProfileInState(state, newProfile)
         });
         return true;
+      },
+
+      addPaymentMethod: (pm) => {
+        set((state) => {
+          if (!state.profile) return state;
+          const newPm = { ...pm, id: `pm-${Date.now()}` };
+          const paymentMethods = [...state.profile.paymentMethods];
+          
+          if (newPm.isDefault) {
+            paymentMethods.forEach(p => p.isDefault = false);
+          }
+          
+          paymentMethods.push(newPm);
+          const newProfile = { ...state.profile, paymentMethods };
+          return {
+            profile: newProfile,
+            registeredUsers: syncProfileInState(state, newProfile)
+          };
+        });
+      },
+
+      removePaymentMethod: (id) => {
+        set((state) => {
+          if (!state.profile) return state;
+          const paymentMethods = state.profile.paymentMethods.filter(p => p.id !== id);
+          const newProfile = { ...state.profile, paymentMethods };
+          return {
+            profile: newProfile,
+            registeredUsers: syncProfileInState(state, newProfile)
+          };
+        });
+      },
+
+      setDefaultPaymentMethod: (id) => {
+        set((state) => {
+          if (!state.profile) return state;
+          const paymentMethods = state.profile.paymentMethods.map(p => ({
+            ...p,
+            isDefault: p.id === id
+          }));
+          const newProfile = { ...state.profile, paymentMethods };
+          return {
+            profile: newProfile,
+            registeredUsers: syncProfileInState(state, newProfile)
+          };
+        });
       },
     }),
     {

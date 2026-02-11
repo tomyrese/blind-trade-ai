@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, useWindowDimensions, TextInput, Pressable, Acti
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { Search, Flame, LayoutGrid, List } from 'lucide-react-native'; // Added List icon
+import { Search, Flame, LayoutGrid, List, ShoppingCart } from 'lucide-react-native'; // Added List icon
+import { useCartStore } from '../../../../shared/stores';
 import { useMarkets } from '../../../../shared/hooks/useMarkets';
 import { CardItem } from '../../tradeup/components/CardItem';
 import { Market } from '../../../../domain/models/Market';
@@ -65,6 +66,10 @@ export const MarketDashboardScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const marketsQuery = useMarkets();
   
+  // Cart Store for Badge
+  const cartItems = useCartStore((state: any) => state.items);
+  const cartCount = cartItems.length;
+  
   // Local state for the text input itself (uncontrolled-like for Vietnamese stability)
   const [inputText, setInputText] = useState('');
   // Parent state that actually triggers the memoized list filtering
@@ -99,7 +104,9 @@ export const MarketDashboardScreen: React.FC = () => {
     tcgPlayerPrice: market.tcgPlayerPrice,
     cardMarketPrice: market.cardMarketPrice,
     symbol: market.symbol,
+    image: market.image, // Pass image for display
     listedAt: market.listedAt, // Pass through listedAt
+    isTrending: market.isTrending, // Pass through isTrending
   });
 
   const filteredMarkets = useMemo(() => {
@@ -113,16 +120,13 @@ export const MarketDashboardScreen: React.FC = () => {
       );
     }
 
-    // 2. Filter by Tab (Hot = Trending/High Volume or Price Change)
+    // 2. Filter by Tab (Hot = Trending cards)
     if (activeTab === 'Hot') {
-        const resultHot = [...result].sort((a, b) => (b.priceChange24h || 0) - (a.priceChange24h || 0));
-        // Only Apply 'Topic' sorting if it's strictly the Hot tab, BUT if the user applied a specific sort, 
-        // we might want to respect that instead?
-        // Current requirement: Just add filter options. 
-        // Let's assume Explicit Sort overrides "Hot" default sort, OR "Hot" is just a pre-filter.
-        // For simplicity: If Tab is 'Hot', we filter to top movers or just keep all but default sort them?
-        // The original code was: result.sort((a, b) => (b.priceChange24h || 0) - (a.priceChange24h || 0));
-        // Let's keep "Hot" as a default behavior but allow overriding with the Sort Menu.
+        // Filter to only show items marked as trending
+        result = result.filter(m => m.isTrending);
+        
+        // Optional: Sort trending items by popularity or price change if data existed
+        // largely depends on backend, but for mock data we just show the subset
     }
 
     // 3. Apply Explicit Sorting
@@ -160,7 +164,22 @@ export const MarketDashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top }]}>
-      <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
+      <View style={styles.headerContainer}>
+          <View style={styles.searchContainer}>
+             <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
+          </View>
+          <Pressable 
+            style={styles.cartButton}
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <ShoppingCart size={24} color="#0f172a" />
+            {cartCount > 0 && (
+                <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+                </View>
+            )}
+          </Pressable>
+      </View>
 
       {/* Controls Row: Tabs + Sort + View */}
       <View style={styles.controlsRow}>
@@ -230,7 +249,6 @@ export const MarketDashboardScreen: React.FC = () => {
           key={viewMode} // Force re-render when switching view modes
           numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
           contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 24, paddingTop: 4 }}
-          estimatedItemSize={viewMode === 'grid' ? 250 : 120}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>{t('no_cards_found')}</Text>
@@ -486,5 +504,47 @@ const styles = StyleSheet.create({
       height: 8,
       borderRadius: 4,
       backgroundColor: '#ef4444',
+  },
+  
+  // Header Styles
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+  },
+  cartButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
   },
 });

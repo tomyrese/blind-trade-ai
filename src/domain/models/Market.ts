@@ -61,6 +61,7 @@ export interface Market {
   recentSales?: Transaction[];
   valuation?: ValuationAnalysis;
   listedAt?: string; // ISO Timestamp for sorting
+  isTrending?: boolean; // New property for Trending tab
 }
 
 export interface MarketTrend {

@@ -14,7 +14,9 @@ export type RootStackParamList = {
   Favorites: undefined;
   OtherCategory: undefined;
   TrainerEdit: undefined;
-  Payment: { items?: any[]; total?: number };
+  Payment: { items?: any[]; total?: number; fromCart?: boolean };
+  PurchaseHistory: undefined;
+  TransactionDetail: { transactionId: string };
 };
 
 // Main Bottom Tab Navigator

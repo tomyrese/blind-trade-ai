@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   ChevronLeft, 
@@ -12,7 +12,8 @@ import {
   AlertCircle
 } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useCartStore, useUserStore, useTranslation, usePortfolioStore } from '../../shared/stores';
+import { useCartStore, useUserStore, useTranslation, usePortfolioStore, useUIStore } from '../../shared/stores';
+import { useTransactionHistoryStore } from '../../shared/stores/transactionHistoryStore';
 import { formatCurrency } from '../../shared/utils/currency';
 
 export const PaymentScreen: React.FC = () => {
@@ -22,6 +23,8 @@ export const PaymentScreen: React.FC = () => {
   const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const balance = useUserStore((state) => state.profile?.balance || 0);
   const spend = useUserStore((state) => state.spend);
+  const addTransaction = useTransactionHistoryStore((state) => state.addTransaction);
+  const showNotification = useUIStore((state) => state.showNotification);
   
   const cartItems = useCartStore((state) => state.items);
   const cartTotal = useCartStore((state) => state.totalPrice());
@@ -32,15 +35,24 @@ export const PaymentScreen: React.FC = () => {
   const checkoutItems = route.params?.items || cartItems;
   const totalAmount = route.params?.total || cartTotal;
 
-  const [paymentMethod, setPaymentMethod] = useState<'balance' | 'card' | 'wallet'>('balance');
+  // Price breakdown calculations
+  const subtotal = totalAmount;
+  const tax = subtotal * 0.08; // 8% tax
+  const shipping = subtotal > 0 ? (currency === 'VND' ? 30000 : 5) : 0;
+  const finalTotal = subtotal + tax + shipping;
+
+  const profile = useUserStore((state) => state.profile);
+  const userPaymentMethods = profile?.paymentMethods || [];
+
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('balance');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handlePay = async () => {
-    if (totalAmount === 0) return;
+    if (finalTotal === 0) return;
 
-    if (paymentMethod === 'balance' && balance < totalAmount) {
-      Alert.alert(t('error'), t('insufficient_balance'));
+    if (paymentMethodId === 'balance' && balance < finalTotal) {
+      showNotification(t('insufficient_balance'), 'error');
       return;
     }
 
@@ -50,9 +62,27 @@ export const PaymentScreen: React.FC = () => {
     await new Promise<void>(resolve => setTimeout(resolve, 2000));
 
     try {
-      if (paymentMethod === 'balance') {
-        spend(totalAmount);
+      if (paymentMethodId === 'balance') {
+        spend(finalTotal);
       }
+
+      // Add transaction record
+      addTransaction({
+          id: `tx-${Date.now()}`,
+          type: 'buy',
+          amount: finalTotal,
+          currency,
+          date: new Date().toISOString(),
+          status: 'success',
+          items: checkoutItems.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              quantity: item.quantity || 1,
+              price: item.price,
+              image: item.image,
+          })),
+          description: `Purchase of ${checkoutItems.length} items`,
+      });
 
       // Add items to portfolio
       checkoutItems.forEach((item: any) => {
@@ -64,10 +94,11 @@ export const PaymentScreen: React.FC = () => {
           amount: item.quantity || 1,
           value: item.price,
           purchasePrice: item.price,
+          image: item.image, // Ensure image is passed
         });
       });
 
-      if (!route.params?.items) {
+      if (route.params?.fromCart) {
           clearCart();
       }
 
@@ -75,7 +106,7 @@ export const PaymentScreen: React.FC = () => {
       setShowSuccess(true);
     } catch (error) {
       setIsProcessing(false);
-      Alert.alert(t('error'), t('something_went_wrong'));
+      showNotification(t('something_went_wrong'), 'error');
     }
   };
 
@@ -90,7 +121,7 @@ export const PaymentScreen: React.FC = () => {
         
         <Pressable 
           style={styles.successButton}
-          onPress={() => navigation.navigate('Portfolio')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Portfolio' })}
         >
           <Text style={styles.successButtonText}>{t('view_portfolio')}</Text>
         </Pressable>
@@ -115,16 +146,45 @@ export const PaymentScreen: React.FC = () => {
           <View style={styles.orderCard}>
             {checkoutItems.map((item: any, idx: number) => (
               <View key={idx} style={[styles.orderItem, idx === 0 && { borderTopWidth: 0 }]}>
-                <View>
-                  <Text style={styles.itemName}>{item.name}</Text>
+                <View style={styles.itemImageContainer}>
+                  {item.image && (
+                      <Image 
+                        source={typeof item.image === 'string' ? { uri: item.image } : item.image}
+                        style={styles.itemImage}
+                        resizeMode="contain"
+                      />
+                  )}
+                </View>
+
+                {/* Details */}
+                <View style={styles.itemDetails}>
+                  <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
                   <Text style={styles.itemQty}>x{item.quantity || 1}</Text>
                 </View>
+
+                {/* Price */}
                 <Text style={styles.itemPrice}>{formatCurrency(item.price * (item.quantity || 1), currency)}</Text>
               </View>
             ))}
+            
+            <View style={styles.breakdown}>
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>{t('subtotal' as any) || 'Tạm tính'}</Text>
+                <Text style={styles.breakdownValue}>{formatCurrency(subtotal, currency)}</Text>
+              </View>
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>{t('tax' as any) || 'Thuế (8%)'}</Text>
+                <Text style={styles.breakdownValue}>{formatCurrency(tax, currency)}</Text>
+              </View>
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>{t('shipping' as any) || 'Phí vận chuyển'}</Text>
+                <Text style={styles.breakdownValue}>{formatCurrency(shipping, currency)}</Text>
+              </View>
+            </View>
+
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{t('total_price')}</Text>
-              <Text style={styles.totalPrice}>{formatCurrency(totalAmount, currency)}</Text>
+              <Text style={styles.totalPrice}>{formatCurrency(finalTotal, currency)}</Text>
             </View>
           </View>
         </View>
@@ -134,8 +194,8 @@ export const PaymentScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>{t('payment_method') || 'Payment Method'}</Text>
           <View style={styles.methodList}>
             <Pressable 
-              onPress={() => setPaymentMethod('balance')}
-              style={[styles.methodItem, paymentMethod === 'balance' && styles.activeMethod]}
+              onPress={() => setPaymentMethodId('balance')}
+              style={[styles.methodItem, paymentMethodId === 'balance' && styles.activeMethod]}
             >
               <View style={[styles.methodIcon, { backgroundColor: '#eff6ff' }]}>
                 <Wallet size={20} color="#3b82f6" />
@@ -144,22 +204,29 @@ export const PaymentScreen: React.FC = () => {
                 <Text style={styles.methodName}>{t('balance')}</Text>
                 <Text style={styles.methodDesc}>{t('current_value')}: {formatCurrency(balance, currency)}</Text>
               </View>
-              <View style={[styles.radio, paymentMethod === 'balance' && styles.radioActive]} />
+              <View style={[styles.radio, paymentMethodId === 'balance' && styles.radioActive]}>
+                {paymentMethodId === 'balance' && <View style={styles.radioInner} />}
+              </View>
             </Pressable>
 
-            <Pressable 
-              onPress={() => setPaymentMethod('card')}
-              style={[styles.methodItem, paymentMethod === 'card' && styles.activeMethod]}
-            >
-              <View style={[styles.methodIcon, { backgroundColor: '#fef2f2' }]}>
-                <CreditCard size={20} color="#ef4444" />
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodName}>Visa / Mastercard</Text>
-                <Text style={styles.methodDesc}>**** **** **** 4242</Text>
-              </View>
-              <View style={[styles.radio, paymentMethod === 'card' && styles.radioActive]} />
-            </Pressable>
+            {userPaymentMethods.map((pm: any) => (
+              <Pressable 
+                key={pm.id}
+                onPress={() => setPaymentMethodId(pm.id)}
+                style={[styles.methodItem, paymentMethodId === pm.id && styles.activeMethod]}
+              >
+                <View style={[styles.methodIcon, { backgroundColor: '#fef2f2' }]}>
+                  <CreditCard size={20} color="#ef4444" />
+                </View>
+                <View style={styles.methodInfo}>
+                  <Text style={styles.methodName}>{pm.provider} Card</Text>
+                  <Text style={styles.methodDesc}>**** **** **** {pm.lastFour}</Text>
+                </View>
+                <View style={[styles.radio, paymentMethodId === pm.id && styles.radioActive]}>
+                  {paymentMethodId === pm.id && <View style={styles.radioInner} />}
+                </View>
+              </Pressable>
+            ))}
           </View>
         </View>
 
@@ -173,12 +240,12 @@ export const PaymentScreen: React.FC = () => {
       <View style={styles.footer}>
         <View style={styles.footerInfo}>
           <Text style={styles.footerLabel}>{t('total_price')}</Text>
-          <Text style={styles.footerPrice}>{formatCurrency(totalAmount, currency)}</Text>
+          <Text style={styles.footerPrice}>{formatCurrency(finalTotal, currency)}</Text>
         </View>
         <Pressable 
-          style={[styles.payBtn, (isProcessing || totalAmount === 0) && styles.payBtnDisabled]}
+          style={[styles.payBtn, (isProcessing || finalTotal === 0) && styles.payBtnDisabled]}
           onPress={handlePay}
-          disabled={isProcessing || totalAmount === 0}
+          disabled={isProcessing || finalTotal === 0}
         >
           {isProcessing ? (
             <Text style={styles.payBtnText}>{t('loading')}</Text>
@@ -235,10 +302,31 @@ const styles = StyleSheet.create({
   },
   orderItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
+  },
+  itemImageContainer: {
+    width: 42,
+    height: 60, // Portrait
+    marginRight: 12,
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  itemImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+  },
+  itemDetails: {
+    flex: 1,
+    marginRight: 12,
   },
   itemName: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
   itemQty: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
@@ -310,6 +398,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    position: 'absolute', // Fix footer to bottom
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   footerInfo: { flex: 1 },
   footerLabel: { fontSize: 13, color: '#64748b', fontWeight: '600' },
@@ -353,4 +445,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successButtonText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+
+  // New Styles
+  breakdown: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    gap: 8,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  breakdownLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  breakdownValue: {
+    fontSize: 14,
+    color: '#1e293b',
+    fontWeight: '700',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+  },
 });

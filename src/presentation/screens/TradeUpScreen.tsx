@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Layers, 
@@ -22,6 +22,7 @@ import { LootboxAnimation } from '../features/tradeup/components/LootboxAnimatio
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
+import { useUIStore } from '../../shared/stores/uiStore';
 import { generateReward, getFusionProbabilities, mockCards, Card } from '../../shared/utils/cardData';
 import { formatCurrency } from '../../shared/utils/currency';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +34,7 @@ export const TradeUpScreen: React.FC = () => {
   const removeAsset = usePortfolioStore((state) => state.removeAsset);
   const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const { t } = useTranslation();
+  const showNotification = useUIStore((state) => state.showNotification);
   
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isOpening, setIsOpening] = useState(false);
@@ -62,6 +64,7 @@ export const TradeUpScreen: React.FC = () => {
       value: a.value,
       symbol: a.symbol,
       amount: a.amount,
+      image: a.image,
     }));
   }, [assets]);
 
@@ -121,7 +124,7 @@ export const TradeUpScreen: React.FC = () => {
         return prev.filter((i) => i !== id);
       }
       if (prev.length >= 10) {
-        Alert.alert(t('fusion_limit_title'), t('fusion_limit_message'));
+        showNotification(t('fusion_limit_message'), 'warning');
         return prev;
       }
       return [...prev, id];
@@ -130,7 +133,7 @@ export const TradeUpScreen: React.FC = () => {
 
   const handleFusion = () => {
     if (selectedCards.length < 2) {
-      Alert.alert(t('fusion_requirement_title'), t('fusion_requirement_message'));
+      showNotification(t('fusion_requirement_message'), 'info');
       return;
     }
 
@@ -255,13 +258,13 @@ export const TradeUpScreen: React.FC = () => {
               </View>
           </View>
           
-          <View style={styles.cardGrid}>
+          <View style={viewMode === 'grid' ? styles.cardGrid : styles.cardList}>
             {filteredCards.map((card) => (
               <View 
                 key={card.id} 
                 style={[
                     viewMode === 'grid' ? styles.gridItem : styles.listItem, 
-                    viewMode === 'grid' && { width: isTablet ? '33.33%' : '50%' }
+                    viewMode === 'grid' ? { width: isTablet ? '33.33%' : '50%' } : { width: '100%' }
                 ]}
               >
                 <CardItem
@@ -269,6 +272,8 @@ export const TradeUpScreen: React.FC = () => {
                   selected={selectedCards.includes(card.id)}
                   onToggle={handleToggleCard}
                   size={viewMode === 'grid' ? 'normal' : 'list'}
+                  largeImage={true} // Use larger image in TradeUp Grid
+                  showActions={false}
                 />
                 {(card.amount !== undefined && card.amount > 1) && (
                   <View style={styles.amountBadge}>
@@ -528,6 +533,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -8, // Increased negative margin for better spacing with gridItem padding
+  },
+  cardList: {
+    flexDirection: 'column',
+    width: '100%',
+    // marginHorizontal: -20, // Removed negative margin to ensure inside parent bounds
   },
   gridItem: {
     padding: 8, // Standard padding to match Portfolio

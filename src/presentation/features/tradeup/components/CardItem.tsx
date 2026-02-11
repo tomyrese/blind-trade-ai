@@ -2,6 +2,7 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet, Image } from 'react-native';
 import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image as ImageIcon } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Card, RARITY_CONFIGS } from '../../../../shared/utils/cardData';
 import { formatCurrency } from '../../../../shared/utils/currency';
 import { useUserStore } from '../../../../shared/stores/userStore';
@@ -16,10 +17,12 @@ interface CardItemProps {
   onToggle?: (id: string) => void;
   disabled?: boolean;
   showActions?: boolean;
+  showRarity?: boolean; // New prop
   size?: 'normal' | 'small' | 'list';
+  largeImage?: boolean; // New prop for controlling image size in grid
 }
 
-export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, size = 'normal' }) => {
+export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, showRarity = true, size = 'normal', largeImage = false }) => {
     const isFavorite = useFavoritesStore((state) => state.isFavorite(card.id));
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const addToCart = useCartStore((state) => state.addToCart);
@@ -67,192 +70,237 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
       }
     };
 
+    const ContainerComponent = config.borderGradient ? LinearGradient : View;
+    const containerProps = config.borderGradient ? {
+        colors: config.borderGradient,
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 1 },
+        style: [
+            styles.gradientBorder,
+            isSmall && styles.containerSmall,
+            isList && styles.containerList,
+            {
+                borderRadius: 16,
+                padding: 2, // Width of the gradient border
+                aspectRatio: (!isSmall && !isList) ? 0.65 : undefined,
+            },
+            selected && styles.selectedContainer,
+            disabled && styles.disabledContainer,
+        ]
+    } : {
+        style: [
+            styles.container,
+            isSmall && styles.containerSmall,
+            isList && styles.containerList,
+            { 
+                borderColor: config.borderColor,
+                shadowColor: config.shadowColor || config.color,
+                aspectRatio: (!isSmall && !isList) ? 0.65 : undefined,
+            },
+            selected && styles.selectedContainer,
+            disabled && styles.disabledContainer,
+        ]
+    };
+
     return (
       <Pressable
         onPress={onToggle ? () => onToggle(card.id) : undefined}
         disabled={disabled}
         style={[
-          styles.container,
-          isSmall && styles.containerSmall,
-          isList && styles.containerList,
-          { 
-            borderColor: config.borderColor,
-            shadowColor: config.shadowColor || config.color,
-          },
-          selected && styles.selectedContainer,
-          disabled && styles.disabledContainer,
+            // Outer Pressable style needs to handle layout mostly
+            { width: '100%' },
+            // For list view, we need flex row behavior on the PRESSABLE itself if we want the whole thing clickable area
+            // ACTUALLY, simpler to render Pressable INSIDE. But we want whole card clickable.
+            // Let's keep Pressable as wrapper but apply styles to inner Container.
+            // WAIT, duplicates style usage.
+            // Let's wrap Pressable around the Gradient/View.
         ]}
       >
-        {/* Selection Indicator */}
-        {selected && (
-          <View style={[styles.selectionBadge, { backgroundColor: config.borderColor }]}>
-            <Check size={12} color="#ffffff" strokeWidth={3} />
-          </View>
-        )}
-
-        {/* Top Actions Bar - Hidden in List Mode (Moves to bottom/side) */}
-        {showActions && !isSmall && !isList && (
-          <View style={styles.topBar}>
-             <View style={[styles.rarityTag, { borderColor: config.borderColor, backgroundColor: config.glowColor }]}>
-                {renderRarityIcon()}
-                <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
-             </View>
-
-            <Pressable 
-              onPress={() => {
-                const wasFavorite = isFavorite;
-                toggleFavorite(card.id);
-                showToast(
-                  wasFavorite 
-                    ? `${t('remove_success')} ${card.name}`
-                    : `${t('add_success')} ${card.name}`,
-                  'favorite'
-                );
-              }}
-              style={styles.iconButton}
-            >
-              <Heart 
-                size={14} 
-                color={isFavorite ? '#ef4444' : '#94a3b8'} 
-                fill={isFavorite ? '#ef4444' : 'transparent'}
-                strokeWidth={2}
-              />
-            </Pressable>
-          </View>
-        )}
-
-        {/* Artwork Section */}
-        <View style={[
-            isSmall ? styles.artworkWrapperSmall : styles.artworkWrapper,
-            isList && styles.artworkWrapperList
-        ]}>
-          <View style={[
-            styles.artworkContainer, 
-            { borderColor: config.borderColor },
-            (isSmall || isList) && styles.artworkContainerSmall
-          ]}>
-             {/* Gradient Background for Holo effect if applicable */}
-                <View style={[
-                    styles.artworkBackground, 
-                    { backgroundColor: (isSmall || isList) ? config.borderColor : config.glowColor }, 
-                    (isSmall || isList) && { opacity: 0.15 }
-                ]}>
-                    {card.image ? (
-                        <Image 
-                            source={card.image} 
-                            style={{ width: '100%', height: '100%' }} 
-                            resizeMode="contain" 
-                        />
-                    ) : (
-                        !(isSmall || isList) && (
-                            <Text style={[styles.artworkLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
-                        )
-                    )}
-                </View>
+        <ContainerComponent {...containerProps as any}>
+            <View style={[
+                styles.innerContent, 
+                config.borderGradient && { borderRadius: 14, backgroundColor: '#ffffff' }, // Slightly smaller radius for inner content
+                isList && { flexDirection: 'row', alignItems: 'center', padding: 10, width: '100%' } // Restore logic for list layout
+            ]}>
                 
-                {/* Thumbnail Icon/Symbol for Small/List Cards */}
-                {(isSmall || isList) && (
-                    <View style={styles.thumbnailCenter}>
-                        <Text style={[styles.thumbnailLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
-                    </View>
-                )}
-          </View>
-        </View>
-
-        {/* Detailed Information Section */}
-        {!isSmall && (
-          <View style={[styles.detailsSection, isList && styles.detailsSectionList]}>
-            <View>
-                {/* List Mode Rarity Tag */}
-                {isList && (
-                    <View style={[styles.rarityTag, { 
-                        borderColor: config.borderColor, 
-                        backgroundColor: config.glowColor,
-                        alignSelf: 'flex-start',
-                        marginBottom: 4,
-                        marginTop: 10, // Add margin top to prevent touching border
-                    }]}>
-                        {renderRarityIcon()}
-                        <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
-                    </View>
-                )}
-
-                {/* Card Name */}
-                <Text style={[styles.cardTitle, isList && { fontSize: 14 }]} numberOfLines={1}>
-                {card.name}
-                </Text>
-
-                {/* Product ID & Seller Info Row */}
-                <View style={isList ? { flexDirection: 'row', alignItems: 'center', gap: 8 } : undefined}>
-                    <Text style={styles.productId} numberOfLines={1}>
-                    ID: {card.id.substring(0, 8)}
-                    </Text>
-                    
-                    {/* List Mode Seller Info */}
-                    {isList && (
-                        <Text style={[styles.sellerInfo, { fontSize: 10, marginTop: 3 }]} numberOfLines={1}>
-                            • {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
-                        </Text>
-                    )}
+                {/* Selection Indicator */}
+                {selected && (
+                <View style={[styles.selectionBadge, { backgroundColor: config.borderColor }]}>
+                    <Check size={12} color="#ffffff" strokeWidth={3} />
                 </View>
-            </View>
-
-            {/* Grid Mode Seller Info */}
-            {!isList && (
-                <Text style={styles.sellerInfo} numberOfLines={1}>
-                {t('listed_by')}: {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
-                </Text>
-            )}
-
-            {/* Spacer */}
-            {!isList && <View style={{ flex: 1 }} />}
-
-            {/* Price & Action Row */}
-            <View style={[styles.bottomRow, isList && { marginTop: 0 }]}>
-              <View style={[styles.priceWrapper, isList && { flexDirection: 'row', alignItems: 'baseline', gap: 6 }]}>
-                <Text style={[styles.mainPrice, isList && { fontSize: 16 }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatCurrency(card.value, currency)}
-                </Text>
-                {card.tcgPlayerPrice && (
-                  <Text style={[styles.subPrice, isList && { marginTop: 0 }]} numberOfLines={1}>
-                    TCG: {formatCurrency(card.tcgPlayerPrice, currency)}
-                  </Text>
                 )}
-              </View>
 
-              {showActions && (
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {isList && (
-                         <Pressable 
-                            onPress={() => {
-                                const wasFavorite = isFavorite;
-                                toggleFavorite(card.id);
-                                showToast(wasFavorite ? t('remove_success') : t('add_success'), 'favorite');
-                            }}
-                            style={styles.iconButton}
-                         >
-                            <Heart 
-                                size={14} 
-                                color={isFavorite ? '#ef4444' : '#94a3b8'} 
-                                fill={isFavorite ? '#ef4444' : 'transparent'}
-                                strokeWidth={2}
-                            />
-                         </Pressable>
+                {/* Top Actions Bar - Hidden in List Mode (Moves to bottom/side) */}
+                {(!isSmall && !isList) && (
+                <View style={[styles.topBar, !showActions && { justifyContent: 'flex-start' }]}> 
+                    {showRarity && (
+                        <View style={[styles.rarityTag, { borderColor: config.borderColor, backgroundColor: config.glowColor }]}>
+                            {renderRarityIcon()}
+                            <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
+                        </View>
                     )}
+
+                    {showActions && (
                     <Pressable 
                     onPress={() => {
-                        addToCart(card);
-                        showToast(`${t('add_success')} ${card.name}`, 'cart');
+
+                        const wasFavorite = isFavorite;
+                        toggleFavorite(card.id);
+                        showToast(
+                        wasFavorite 
+                            ? `${t('remove_success')} ${card.name}`
+                            : `${t('add_success')} ${card.name}`,
+                        'favorite'
+                        );
                     }}
-                    style={[styles.cartIconButton, { backgroundColor: config.glowColor }]}
+                    style={styles.iconButton}
                     >
-                    <ShoppingCart size={13} color={config.color} strokeWidth={2} />
+                    <Heart 
+                        size={14} 
+                        color={isFavorite ? '#ef4444' : '#94a3b8'} 
+                        fill={isFavorite ? '#ef4444' : 'transparent'}
+                        strokeWidth={2}
+                    />
                     </Pressable>
+                    )}
                 </View>
-              )}
+                )}
+
+                {/* Artwork Section */}
+                <View style={[
+                    isSmall ? styles.artworkWrapperSmall : styles.artworkWrapper,
+                    isList && styles.artworkWrapperList
+                ]}>
+                <View style={[
+                    styles.artworkContainer, 
+                    { borderColor: config.borderColor },
+                    (isSmall || isList) && styles.artworkContainerSmall,
+                    largeImage && !isList && !isSmall && { width: '65%' } // Reduced from 75% to prevent overflow
+                ]}>
+                    {/* Gradient Background for Holo effect if applicable */}
+                        <View style={[
+                            styles.artworkBackground, 
+                            { backgroundColor: (isSmall || isList) ? config.borderColor : config.glowColor }, 
+                            (isSmall || isList) && { opacity: 0.15 }
+                        ]}>
+                            {card.image ? (
+                                <Image 
+                                    source={card.image} 
+                                    style={{ width: '100%', height: '100%' }} 
+                                    resizeMode="contain" 
+                                />
+                            ) : (
+                                !(isSmall || isList) && (
+                                    <Text style={[styles.artworkLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
+                                )
+                            )}
+                        </View>
+                        
+                        {/* Thumbnail Icon/Symbol for Small/List Cards */}
+                        {(isSmall || isList) && !card.image && (
+                            <View style={styles.thumbnailCenter}>
+                                <Text style={[styles.thumbnailLetter, { color: config.color }]}>{card.name.charAt(0)}</Text>
+                            </View>
+                        )}
+                </View>
+                </View>
+
+                {/* Detailed Information Section */}
+                {!isSmall && (
+                <View style={[styles.detailsSection, isList && styles.detailsSectionList]}>
+                    <View>
+                        {/* List Mode Rarity Tag */}
+                        {isList && (
+                            <View style={[styles.rarityTag, { 
+                                borderColor: config.borderColor, 
+                                backgroundColor: config.glowColor,
+                                alignSelf: 'flex-start',
+                                marginBottom: 4,
+                                marginTop: 10, // Add margin top to prevent touching border
+                            }]}>
+                                {renderRarityIcon()}
+                                <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
+                            </View>
+                        )}
+
+                        {/* Card Name */}
+                        <Text style={[styles.cardTitle, isList && { fontSize: 14 }]} numberOfLines={1}>
+                        {card.name}
+                        </Text>
+
+                        {/* Product ID & Seller Info Row */}
+                        <View style={isList ? { flexDirection: 'row', alignItems: 'center', gap: 8 } : undefined}>
+                            <Text style={styles.productId} numberOfLines={1}>
+                            ID: {card.id.substring(0, 8)}
+                            </Text>
+                            
+                            {/* List Mode Seller Info */}
+                            {isList && (
+                                <Text style={[styles.sellerInfo, { fontSize: 10, marginTop: 3 }]} numberOfLines={1}>
+                                    • {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
+                                </Text>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Grid Mode Seller Info */}
+                    {!isList && (
+                        <Text style={styles.sellerInfo} numberOfLines={1}>
+                        {t('listed_by')}: {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
+                        </Text>
+                    )}
+
+                    {/* Spacer */}
+                    {!isList && <View style={{ flex: 1 }} />}
+
+                    {/* Price & Action Row */}
+                    <View style={[styles.bottomRow, isList && { marginTop: 0 }]}>
+                    <View style={[styles.priceWrapper, isList && { flexDirection: 'row', alignItems: 'baseline', gap: 6 }]}>
+                        <Text style={[styles.mainPrice, isList && { fontSize: 16 }]} numberOfLines={1} adjustsFontSizeToFit>
+                        {formatCurrency(card.value, currency)}
+                        </Text>
+                        {card.tcgPlayerPrice && (
+                        <Text style={[styles.subPrice, isList && { marginTop: 0 }]} numberOfLines={1}>
+                            TCG: {formatCurrency(card.tcgPlayerPrice, currency)}
+                        </Text>
+                        )}
+                    </View>
+
+                    {showActions && (
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            {isList && (
+                                <Pressable 
+                                    onPress={() => {
+                                        const wasFavorite = isFavorite;
+                                        toggleFavorite(card.id);
+                                        showToast(wasFavorite ? t('remove_success') : t('add_success'), 'favorite');
+                                    }}
+                                    style={styles.iconButton}
+                                >
+                                    <Heart 
+                                        size={14} 
+                                        color={isFavorite ? '#ef4444' : '#94a3b8'} 
+                                        fill={isFavorite ? '#ef4444' : 'transparent'}
+                                        strokeWidth={2}
+                                    />
+                                </Pressable>
+                            )}
+                            <Pressable 
+                            onPress={() => {
+                                addToCart(card);
+                                showToast(`${t('add_success')} ${card.name}`, 'cart');
+                            }}
+                            style={[styles.cartIconButton, { backgroundColor: config.glowColor }]}
+                            >
+                            <ShoppingCart size={13} color={config.color} strokeWidth={2} />
+                            </Pressable>
+                        </View>
+                    )}
+                    </View>
+                </View>
+                )}
             </View>
-          </View>
-        )}
+        </ContainerComponent>
       </Pressable>
     );
 };
@@ -267,13 +315,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     padding: 10,
-    aspectRatio: 0.65, // Taller card to show all content including price
+    // aspectRatio: 0.65, // Moved to inline style logic to avoid list view issues
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
     position: 'relative',
     // Removed overflow: 'hidden' to allow selectionBadge to pop out
+  },
+  gradientBorder: {
+      width: '100%',
+      // Padding handles the border thickness
+      borderRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 10,
+      position: 'relative',
+  },
+  innerContent: {
+      flex: 1,
+      backgroundColor: '#ffffff',
+      borderRadius: 13, // 16 - 2(padding) - 1(visual correction)
+      padding: 8,
+      overflow: 'hidden',
   },
   containerSmall: {
     aspectRatio: 1, // Square for cart thumbnail
@@ -357,7 +422,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   artworkContainer: {
-    width: '60%', // Smaller image - 60% of card width
+    width: '60%', // Default small image
     aspectRatio: 0.75, // Taller potrait aspect ratio
     borderRadius: 12,
     borderWidth: 2,
@@ -369,8 +434,8 @@ const styles = StyleSheet.create({
     width: '100%', // Fill the square container
     height: '100%',
     borderRadius: 14, // Match outer radius roughly
-    borderWidth: 0, // Remove inner border for cleaner look
-    padding: 0,
+    borderWidth: 1, // Restore inner border
+    padding: 1,
     backgroundColor: 'transparent',
   },
   artworkBackground: {
@@ -461,17 +526,19 @@ const styles = StyleSheet.create({
   containerList: {
     flexDirection: 'row',
     aspectRatio: undefined, // Remove fixed aspect ratio
-    height: 100, // Reduced height
-    alignItems: 'center',
-    padding: 8, // Reduced padding
+    minHeight: 100, // Allow flexible height
+    // alignItems: 'center', // Handled by innerContent
+    padding: 0, // Gradient border handles padding
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   
   // Artwork wrappers
   artworkWrapperList: {
-      width: 70, // Smaller thumbnail
-      height: 70,
+      width: 60, // Portrait ratio
+      height: 84, // ~0.7 ratio * 1.4 scale
       marginBottom: 0,
-      marginRight: 12,
+      marginRight: 16,
   },
   
   // Details list specific

@@ -18,6 +18,15 @@ export const AVAILABLE_TITLES: Title[] = [
   { id: 'legendary', name: 'title_legendary', description: 'desc_legendary', condition: 'cond_legendary', color: '#ec4899' },
 ];
 
+export interface PaymentMethod {
+  id: string;
+  type: 'card' | 'wallet' | 'bank';
+  provider: string; // e.g., 'Visa', 'Momo', 'Vietcombank'
+  lastFour?: string;
+  expiryDate?: string;
+  isDefault: boolean;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -40,6 +49,7 @@ export interface UserProfile {
   vipExpiry?: Date | string; // Handle MMKV serialization
   
   balance: number; // Current virtual balance
+  paymentMethods: PaymentMethod[];
   
   notificationsEnabled: boolean;
   currency: 'VND' | 'USD';
@@ -69,6 +79,16 @@ export const MOCK_USER: UserProfile = {
   vipType: 'none',
   
   balance: 1000000, // Initial 1M VND for demo
+  paymentMethods: [
+    {
+      id: 'pm1',
+      type: 'card',
+      provider: 'Visa',
+      lastFour: '4242',
+      expiryDate: '12/26',
+      isDefault: true
+    }
+  ],
   
   notificationsEnabled: true,
   currency: 'VND',

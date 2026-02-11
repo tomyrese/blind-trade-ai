@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Animated, Switch, Alert, Image, NativeModules } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Switch, Image, NativeModules, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote } from 'lucide-react-native';
+import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
+import { useUIStore } from '../../shared/stores/uiStore';
 import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
 import { useTranslation } from '../../shared/utils/translations';
 import { formatCurrency } from '../../shared/utils/currency';
@@ -13,6 +14,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 
 const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean, onClose: () => void, onSelect: (id: string) => void }) => {
     const { t } = useTranslation();
+    const showNotification = useUIStore((state) => state.showNotification);
     
     const handlePickFromGallery = async () => {
         // react-native-image-picker uses 'ImagePicker' as module name
@@ -22,10 +24,7 @@ const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean
         // The library itself will crash if its internal resolution returns null
         // We do a pre-check here to avoid the crash and show diagnostics
         if (typeof launchImageLibrary !== 'function' || (!legacyModule && !isTurboEnabled)) {
-            Alert.alert(
-                t('error'), 
-                `Native Module 'ImagePicker' not found.\n\nDiagnostics:\n- JS Function: ${typeof launchImageLibrary}\n- TurboModule Enabled: ${isTurboEnabled}\n- Legacy Module: ${legacyModule ? 'Detected' : 'MISSING'}\n\nPlease verify your 'npm run android' build succeeded.`
-            );
+            showNotification(`Native Module 'ImagePicker' not found.`, 'error');
             return;
         }
 
@@ -36,7 +35,7 @@ const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean
 
         if (result.didCancel) return;
         if (result.errorCode) {
-            Alert.alert(t('error'), t('gallery_permission_denied'));
+            showNotification(t('gallery_permission_denied'), 'error');
             return;
         }
 
@@ -78,36 +77,6 @@ const AvatarSelectionModal = ({ visible, onClose, onSelect }: { visible: boolean
                 </View>
             </View>
         </Modal>
-    );
-};
-
-const LocalToast = ({ visible, message, type, onHide }: { visible: boolean, message: string, type: 'success' | 'error' | 'info', onHide: () => void }) => {
-    const opacity = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        if (visible) {
-            Animated.sequence([
-                Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-                Animated.delay(2500),
-                Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-            ]).start(() => onHide());
-        }
-    }, [visible, message]);
-
-    if (!visible) return null;
-
-    const bgColors = { success: '#10b981', error: '#ef4444', info: '#3b82f6' };
-    const icons = { 
-        success: <CheckCircle size={20} color="#fff" />, 
-        error: <AlertTriangle size={20} color="#fff" />, 
-        info: <Info size={20} color="#fff" /> 
-    };
-
-    return (
-        <Animated.View style={[styles.toastContainer, { opacity, backgroundColor: bgColors[type] || bgColors.info }]}>
-            {icons[type] || icons.info}
-            <Text style={styles.toastText}>{message}</Text>
-        </Animated.View>
     );
 };
 
@@ -238,6 +207,7 @@ const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => 
 
 const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
     const { t } = useTranslation();
+    const showNotification = useUIStore((state) => state.showNotification);
     const [notifications, setNotifications] = useState(profile.notificationsEnabled);
     const [sound, setSound] = useState(profile.soundEnabled ?? true);
     const [vibration, setVibration] = useState(profile.vibrationEnabled ?? true);
@@ -332,7 +302,7 @@ const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
                         </SettingRow>
 
                         <Text style={styles.sectionTitle}>{t('data')}</Text>
-                        <TouchableOpacity style={styles.actionRow} onPress={() => Alert.alert(t('info'), t('cache_cleared'))}>
+                        <TouchableOpacity style={styles.actionRow} onPress={() => showNotification(t('cache_cleared' as any), 'success')}>
                             <Text style={styles.actionRowText}>{t('clear_cache')}</Text>
                             <ChevronRight size={20} color="#cbd5e1" />
                         </TouchableOpacity>
@@ -349,6 +319,7 @@ const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
         </Modal>
     );
 };
+
 
 const VipUpgradeModal = ({ visible, onClose, onUpgrade, currentVipType }: { visible: boolean, onClose: () => void, onUpgrade: (type: VipType) => void, currentVipType: VipType }) => {
     const { t } = useTranslation();
@@ -455,6 +426,207 @@ const VipUpgradeModal = ({ visible, onClose, onUpgrade, currentVipType }: { visi
     );
 };
 
+const PaymentMethodsModal = ({ visible, onClose, paymentMethods, onAdd, onRemove, onSetDefault }: any) => {
+    const { t } = useTranslation();
+    const [showAdd, setShowAdd] = useState(false);
+    const [newCard, setNewCard] = useState({ provider: 'Visa', lastFour: '', expiryDate: '', isDefault: false });
+
+    const handleAdd = () => {
+        if (newCard.lastFour.length === 4 && newCard.expiryDate.length === 5) {
+            onAdd({
+                type: 'card',
+                provider: newCard.provider,
+                lastFour: newCard.lastFour,
+                expiryDate: newCard.expiryDate,
+                isDefault: newCard.isDefault
+            });
+            setShowAdd(false);
+            setNewCard({ provider: 'Visa', lastFour: '', expiryDate: '', isDefault: false });
+        }
+    };
+
+    return (
+        <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>{showAdd ? t('add_payment_method') : t('payment_method')}</Text>
+                        <TouchableOpacity onPress={() => showAdd ? setShowAdd(false) : onClose()} style={styles.closeBtn}>
+                            <X size={24} color="#0f172a" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {showAdd ? (
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <Text style={styles.inputLabel}>{t('card_number')}</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="**** **** **** 1234" 
+                                maxLength={4} 
+                                keyboardType="numeric"
+                                value={newCard.lastFour}
+                                onChangeText={(val) => setNewCard({...newCard, lastFour: val})}
+                            />
+                            <Text style={styles.inputLabel}>{t('expiry_date')}</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="MM/YY" 
+                                maxLength={5}
+                                value={newCard.expiryDate}
+                                onChangeText={(val) => setNewCard({...newCard, expiryDate: val})}
+                            />
+                            <TouchableOpacity style={styles.modalBtnSave} onPress={handleAdd}>
+                                <Text style={styles.modalBtnTextSave}>{t('confirm')}</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    ) : (
+                        <>
+                            <FlatList
+                                data={paymentMethods}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <View style={[styles.pmItem, item.isDefault && styles.pmItemDefault]}>
+                                        <View style={styles.pmInfo}>
+                                            <CreditCard size={20} color={item.isDefault ? '#3b82f6' : '#64748b'} />
+                                            <View style={{ marginLeft: 12 }}>
+                                                <Text style={styles.pmProvider}>{item.provider} **** {item.lastFour}</Text>
+                                                <Text style={styles.pmExpiry}>{t('expiry_date')}: {item.expiryDate}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={styles.pmActions}>
+                                            {!item.isDefault && (
+                                                <TouchableOpacity onPress={() => onSetDefault(item.id)} style={styles.pmActionBtn}>
+                                                    <Star size={16} color="#94a3b8" />
+                                                </TouchableOpacity>
+                                            )}
+                                            <TouchableOpacity onPress={() => onRemove(item.id)} style={styles.pmActionBtn}>
+                                                <Trash2 size={16} color="#ef4444" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                )}
+                                ListEmptyComponent={<Text style={styles.emptyText}>{t('no_results_found')}</Text>}
+                            />
+                            <TouchableOpacity style={styles.addPmBtn} onPress={() => setShowAdd(true)}>
+                                <Plus size={20} color="#3b82f6" />
+                                <Text style={styles.addPmText}>{t('add_payment_method')}</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const DepositModal = ({ visible, onClose, type, onDeposit }: { visible: boolean, onClose: () => void, type: 'bank' | 'scratch' | 'virtual', onDeposit: (amount: number) => void }) => {
+    const { t } = useTranslation();
+    const [amount, setAmount] = useState('100000');
+    const [code, setCode] = useState('');
+    const [cardType, setCardType] = useState<'viettel' | 'mobifone' | 'vinaphone' | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleConfirm = () => {
+        if (type === 'scratch') {
+            if (!cardType) {
+                setError(t('please_select_card_type' as any));
+                return;
+            }
+            if (!code) {
+                setError(t('please_enter_card_code' as any));
+                return;
+            }
+            if (code.length < 12) {
+                setError(t('invalid_card_code' as any));
+                return;
+            }
+        }
+
+        const numAmount = parseInt(amount);
+        if (!isNaN(numAmount) && numAmount > 0) {
+            onDeposit(numAmount);
+            onClose();
+            // Reset state
+            setCode('');
+            setCardType(null);
+            setError(null);
+        }
+    };
+
+    return (
+        <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>{type === 'bank' ? t('bank_transfer') : type === 'scratch' ? t('scratch_card') : t('deposit')}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#0f172a" /></TouchableOpacity>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        {type === 'scratch' && (
+                            <>
+                                <Text style={styles.inputLabel}>{t('card_type' as any)}</Text>
+                                <View style={styles.providerGrid}>
+                                    {['viettel', 'mobifone', 'vinaphone'].map((p) => (
+                                        <TouchableOpacity 
+                                            key={p} 
+                                            style={[styles.providerBtn, cardType === p && styles.providerBtnSelected]}
+                                            onPress={() => { setCardType(p as any); setError(null); }}
+                                        >
+                                            <Text style={[styles.providerText, cardType === p && styles.providerTextSelected]}>{t(p as any)}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </>
+                        )}
+
+                        <Text style={styles.inputLabel}>{type === 'scratch' ? t('card_value' as any) : t('total_price')}</Text>
+                        <View style={styles.amountPresets}>
+                            {['10000', '20000', '50000', '100000', '200000', '500000'].map((a) => (
+                                <TouchableOpacity 
+                                    key={a} 
+                                    style={[styles.presetAmount, amount === a && styles.presetAmountSelected]}
+                                    onPress={() => setAmount(a)}
+                                >
+                                    <Text style={[styles.presetAmountText, amount === a && styles.presetAmountTextSelected]}>{parseInt(a)/1000}k</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        
+                        {type === 'scratch' && (
+                            <>
+                                <Text style={styles.inputLabel}>{t('enter_card_code' as any)}</Text>
+                                <TextInput 
+                                    style={[styles.input, error && { borderColor: '#ef4444', borderWidth: 1 }]} 
+                                    placeholder="---- ---- ----" 
+                                    value={code}
+                                    onChangeText={(val) => { setCode(val.replace(/[^0-9]/g, '').slice(0, 12)); setError(null); }}
+                                    keyboardType="numeric"
+                                    maxLength={12}
+                                />
+                                {error && <Text style={styles.errorLabel}>{error}</Text>}
+                            </>
+                        )}
+
+                        {type === 'bank' && (
+                            <View style={styles.bankInfo}>
+                                <Text style={styles.bankText}>{t('bank_transfer_desc')}:</Text>
+                                <Text style={styles.bankDetails}>{t('account_number' as any)}: 1234567890</Text>
+                                <Text style={styles.bankDetails}>{t('bank_name' as any)}: Poké-Bank</Text>
+                                <Text style={styles.bankDetails}>{t('account_holder' as any)}: ADMIN</Text>
+                            </View>
+                        )}
+
+                        <TouchableOpacity style={styles.modalBtnSave} onPress={handleConfirm}>
+                            <Text style={styles.modalBtnTextSave}>{t('confirm')}</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
 const VipPackageCard = ({ title, price, duration, features, selected, onPress, badge, popular, premium, disabled }: any) => {
     const { t } = useTranslation();
     return (
@@ -492,50 +664,56 @@ const VipPackageCard = ({ title, price, duration, features, selected, onPress, b
 
 // --- Main Screen ---
 
+import { useNavigation } from '@react-navigation/native';
+
+// ...
+
 export const ProfileScreen: React.FC = () => {
+    const navigation = useNavigation<any>();
     const { t, language } = useTranslation();
     const profile = useUserStore((state) => state.profile);
     const updateProfile = useUserStore((state) => state.updateProfile);
     const upgradeToVip = useUserStore((state) => state.upgradeToVip);
     const setAvatar = useUserStore((state) => state.setAvatar);
-    const deposit = useUserStore((state) => state.deposit);
     const equipTitle = useUserStore((state) => state.equipTitle);
+    const showNotification = useUIStore((state) => state.showNotification);
+    const addPaymentMethod = useUserStore((state) => state.addPaymentMethod);
+    const removePaymentMethod = useUserStore((state) => state.removePaymentMethod);
+    const setDefaultPM = useUserStore((state) => state.setDefaultPaymentMethod);
+    const updateBalance = useUserStore((state) => state.updateBalance);
     const logout = useUserStore((state) => state.logout);
     
     if (!profile) return <View style={styles.container} />;
-
-    const [toast, setToast] = useState<{ visible: boolean, message: string, type: 'success' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
-
-    const showLocalToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-        setToast({ visible: true, message, type });
-    };
 
     const [editVisible, setEditVisible] = useState(false);
     const [vipVisible, setVipVisible] = useState(false);
     const [titlesVisible, setTitlesVisible] = useState(false);
     const [settingsVisible, setSettingsVisible] = useState(false);
     const [avatarSelectionVisible, setAvatarSelectionVisible] = useState(false);
+    const [pmVisible, setPmVisible] = useState(false);
+    const [depositVisible, setDepositVisible] = useState(false);
+    const [depositType, setDepositType] = useState<'bank' | 'scratch' | 'virtual'>('virtual');
 
     const handleEquipTitle = (id: string) => {
         equipTitle(id);
-        showLocalToast(t('equip_success'), 'success');
+        showNotification(t('equip_success'), 'success');
     };
     
     const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
     const handleUpdateProfile = (data: any) => {
         updateProfile(data);
-        showLocalToast(t('update_success'), 'success');
+        showNotification(t('update_success'), 'success');
     };
 
     const handleUpgradeVip = (type: VipType) => {
         upgradeToVip(type);
-        showLocalToast(t('vip_success'), 'success');
+        showNotification(t('vip_success'), 'success');
     };
 
     const handleAvatarChange = (avatarId: string) => {
         setAvatar(avatarId);
-        showLocalToast(t('avatar_success'), 'success');
+        showNotification(t('avatar_success'), 'success');
     };
 
     const renderAvatarView = () => {
@@ -600,20 +778,44 @@ export const ProfileScreen: React.FC = () => {
                         <StatItem label={t('rank')} value={profile.rank.replace('VIP ', '')} icon={Star} color="#f59e0b" />
                     </View>
 
+
+                    {/* Shopping & Finance */}
+                    <View style={styles.menuContainer}>
+                        <Text style={styles.menuTitle}>{t('finance_shopping' as any) || 'Mua sắm & Giao dịch'}</Text>
+                        <MenuItem 
+                            icon={ShoppingCart} 
+                            label={t('nav_cart')} 
+                            color="#f59e0b" 
+                            onPress={() => navigation.navigate('Cart')} 
+                        />
+                        <MenuItem 
+                            icon={CreditCard} 
+                            label={t('payment_method' as any) || 'Thanh toán'} 
+                            color="#10b981" 
+                            onPress={() => setPmVisible(true)} 
+                        />
+                        <MenuItem 
+                            icon={Clock} 
+                            label={t('purchase_history' as any) || 'Lịch sử mua hàng'} 
+                            color="#3b82f6" 
+                            onPress={() => navigation.navigate('PurchaseHistory')} 
+                        />
+                    </View>
+
                     {/* Deposit Section */}
                     <View style={styles.menuContainer}>
                         <Text style={styles.menuTitle}>{t('deposit')}</Text>
                         <View style={styles.depositRow}>
                             <TouchableOpacity 
                                 style={styles.depositItem} 
-                                onPress={() => showLocalToast(t('coming_soon'), 'info')}
+                                onPress={() => { setDepositType('scratch'); setDepositVisible(true); }}
                             >
                                 <View style={[styles.depositIcon, { backgroundColor: '#fef3c7' }]}><CreditCard size={20} color="#f59e0b" /></View>
                                 <Text style={styles.depositLabel}>{t('scratch_card')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 style={styles.depositItem} 
-                                onPress={() => showLocalToast(t('coming_soon'), 'info')}
+                                onPress={() => { setDepositType('bank'); setDepositVisible(true); }}
                             >
                                 <View style={[styles.depositIcon, { backgroundColor: '#eff6ff' }]}><Banknote size={20} color="#3b82f6" /></View>
                                 <Text style={styles.depositLabel}>{t('bank_transfer')}</Text>
@@ -621,8 +823,8 @@ export const ProfileScreen: React.FC = () => {
                             <TouchableOpacity 
                                 style={[styles.depositItem, { backgroundColor: '#f0fdf4' }]} 
                                 onPress={() => {
-                                    deposit(500000);
-                                    showLocalToast(t('deposit_success'), 'success');
+                                    updateBalance(500000);
+                                    showNotification(t('deposit_success'), 'success');
                                 }}
                             >
                                 <View style={[styles.depositIcon, { backgroundColor: '#dcfce7' }]}><Wallet size={20} color="#10b981" /></View>
@@ -637,10 +839,10 @@ export const ProfileScreen: React.FC = () => {
                         <MenuItem icon={Edit2} label={t('edit_profile')} color="#ef4444" onPress={() => setEditVisible(true)} />
                         <MenuItem icon={Award} label={t('titles')} color="#f59e0b" onPress={() => setTitlesVisible(true)} />
                         <MenuItem icon={Settings} label={t('system_settings')} color="#64748b" onPress={() => setSettingsVisible(true)} />
-                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showNotification(t('coming_soon'), 'info')} />
                         <MenuItem icon={Crown} label={t('vip_packages')} color="#8b5cf6" onPress={() => setVipVisible(true)} />
-                        <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
-                        <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showLocalToast(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => showNotification(t('coming_soon'), 'info')} />
+                        <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showNotification(t('coming_soon'), 'info')} />
                     </View>
 
                     <TouchableOpacity onPress={() => setLogoutConfirmVisible(true)} style={styles.logoutButton} activeOpacity={0.7}>
@@ -674,7 +876,25 @@ export const ProfileScreen: React.FC = () => {
                 onUpgrade={handleUpgradeVip} 
                 currentVipType={profile.vipType}
             />
-            
+
+            <PaymentMethodsModal 
+                visible={pmVisible} 
+                onClose={() => setPmVisible(false)} 
+                paymentMethods={profile.paymentMethods || []}
+                onAdd={addPaymentMethod}
+                onRemove={removePaymentMethod}
+                onSetDefault={setDefaultPM}
+            />
+
+            <DepositModal 
+                visible={depositVisible} 
+                onClose={() => setDepositVisible(false)} 
+                type={depositType}
+                onDeposit={(amount) => {
+                    updateBalance(amount);
+                    showNotification(t('deposit_success'), 'success');
+                }}
+            />
             <ConfirmationModal 
                 visible={logoutConfirmVisible} 
                 title={t('logout_confirm_title')} 
@@ -683,13 +903,6 @@ export const ProfileScreen: React.FC = () => {
                 onCancel={() => setLogoutConfirmVisible(false)} 
                 confirmText={t('logout')} 
                 type="danger" 
-            />
-            
-            <LocalToast 
-                visible={toast.visible} 
-                message={toast.message} 
-                type={toast.type} 
-                onHide={() => setToast(prev => ({ ...prev, visible: false }))} 
             />
         </View>
     );
@@ -848,4 +1061,30 @@ const styles = StyleSheet.create({
     presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingBottom: 20 },
     presetItem: { width: (Dimensions.get('window').width - 80) / 4, height: (Dimensions.get('window').width - 80) / 4, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#f1f5f9' },
     presetImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+
+    // Finance Styles
+    pmItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+    pmItemDefault: { borderColor: '#3b82f6', backgroundColor: '#eff6ff' },
+    pmInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    pmProvider: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+    pmExpiry: { fontSize: 12, color: '#64748b', marginTop: 2 },
+    pmActions: { flexDirection: 'row', gap: 8 },
+    pmActionBtn: { padding: 8, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+    addPmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderStyle: 'dashed', borderWidth: 2, borderColor: '#3b82f6', borderRadius: 16, marginTop: 12, gap: 10 },
+    addPmText: { color: '#3b82f6', fontWeight: '800', fontSize: 15 },
+    emptyText: { textAlign: 'center', color: '#94a3b8', marginVertical: 20, fontWeight: '600' },
+    amountPresets: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
+    presetAmount: { flex: 1, minWidth: '22%', paddingVertical: 12, backgroundColor: '#f1f5f9', borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+    presetAmountSelected: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+    presetAmountText: { fontWeight: '700', color: '#64748b' },
+    presetAmountTextSelected: { color: '#fff' },
+    bankInfo: { backgroundColor: '#f8fafc', padding: 16, borderRadius: 16, marginTop: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+    bankText: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginBottom: 8 },
+    bankDetails: { fontSize: 14, color: '#64748b', fontWeight: '600', marginBottom: 4 },
+    providerGrid: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+    providerBtn: { flex: 1, paddingVertical: 12, backgroundColor: '#f8fafc', borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+    providerBtnSelected: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
+    providerText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+    providerTextSelected: { color: '#fff' },
+    errorLabel: { color: '#ef4444', fontSize: 12, fontWeight: '600', marginTop: 4, marginLeft: 4 },
 });

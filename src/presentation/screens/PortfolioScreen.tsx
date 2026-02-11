@@ -221,9 +221,12 @@ export const PortfolioScreen: React.FC = () => {
                       rarity: mapRarity(asset.rarity),
                       value: asset.value,
                       symbol: asset.symbol,
+                      amount: asset.amount,
+                      image: asset.image,
                     }}
                     showActions={false}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
+                    largeImage={true} // Use larger image in Portfolio Grid
                     onToggle={() => {
                         setSelectedAssetForOptions(asset);
                         setOptionsModalVisible(true);
@@ -413,7 +416,7 @@ export const PortfolioScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#ffffff' },
-  listContent: { paddingBottom: 40, paddingTop: 20 },
+  listContent: { paddingBottom: 40, paddingTop: 20, paddingHorizontal: 12 },
   balanceCard: {
     marginHorizontal: 20,
     backgroundColor: '#0f172a',

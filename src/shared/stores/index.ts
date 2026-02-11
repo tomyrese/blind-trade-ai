@@ -31,6 +31,7 @@ export {
 
 export { useCartStore } from './cartStore';
 export { useUserStore } from './userStore';
+export { useUIStore } from './uiStore';
 export { useFavoritesStore } from './favoritesStore';
 export { useTranslation } from '../utils/translations';
 

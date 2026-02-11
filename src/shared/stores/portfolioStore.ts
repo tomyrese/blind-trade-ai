@@ -12,6 +12,7 @@ export interface Asset {
   amount: number;
   value: number; // Current market value in VND
   purchasePrice: number; // Price at which it was acquired
+  image?: any;
 }
 
 interface PortfolioState {
@@ -93,7 +94,8 @@ export const usePortfolioStore = create<PortfolioState>()(
           symbol: card.symbol || `PKM-${card.id.padStart(3, '0')}`,
           rarity: card.rarity,
           amount: index === 0 ? 3 : (index < 4 ? 2 : 1), // Varied amounts
-          value: card.value
+          value: card.value,
+          image: card.image,
         }));
         
         const totalValue = demoAssets.reduce((sum: number, a: any) => sum + (a.value * a.amount), 0);

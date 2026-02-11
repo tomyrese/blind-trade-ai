@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   ChevronLeft, 
@@ -15,10 +15,9 @@ import {
   Package 
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useCartStore, useUserStore, usePortfolioStore, useTranslation } from '../../shared/stores';
+import { useCartStore, useUserStore, usePortfolioStore, useTranslation, useUIStore } from '../../shared/stores';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { formatCurrency } from '../../shared/utils/currency';
-import Animated, { FadeInUp, FadeIn, ZoomIn } from 'react-native-reanimated';
 
 export const CartScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -30,6 +29,27 @@ export const CartScreen: React.FC = () => {
   const user = useUserStore((state: any) => state.profile);
   const currency = user?.currency || 'VND';
   const { t } = useTranslation();
+  const showNotification = useUIStore((state) => state.showNotification);
+  const [promoCode, setPromoCode] = React.useState('');
+  const [promoApplied, setPromoApplied] = React.useState(false);
+
+  const priceBreakdown = {
+      subtotal: total,
+      tax: total * 0.08,
+      shipping: total > 0 ? (currency === 'VND' ? 30000 : 5) : 0,
+      discount: promoApplied ? (total * 0.1) : 0, // 10% discount
+  };
+
+  const finalCartTotal = priceBreakdown.subtotal + priceBreakdown.tax + priceBreakdown.shipping - priceBreakdown.discount;
+
+  const handleApplyPromo = () => {
+      if (promoCode.toUpperCase() === 'POKE10') {
+          setPromoApplied(true);
+          showNotification(t('promo_code_applied' as any) || 'Promo applied!', 'success');
+      } else {
+          showNotification(t('invalid_promo_code' as any) || 'Invalid code', 'error');
+      }
+  };
 
   const handleCheckout = () => {
     if (items.length === 0) return;
@@ -41,23 +61,38 @@ export const CartScreen: React.FC = () => {
         rarity: item.card.rarity,
         quantity: item.quantity,
         price: item.card.value,
+        image: item.card.image,
     }));
     
     (navigation as any).navigate('Payment', {
         items: checkoutItems,
-        total: total
+        total: finalCartTotal,
+        fromCart: true
     });
   };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.cartItemWrapper}>
-        <View style={styles.cardContainer}>
-            <CardItem card={item.card} size="small" showActions={false} />
-        </View>
+        <Pressable 
+            style={styles.cardContainer}
+            onPress={() => (navigation as any).navigate('CardDetail', { symbol: item.card.symbol })}
+        >
+            {/* Custom borderless image view */}
+             <Image 
+                source={typeof item.card.image === 'string' ? { uri: item.card.image } : item.card.image}
+                style={styles.cardImage}
+                resizeMode="contain"
+            />
+        </Pressable>
         
         <View style={styles.itemContent}>
             <View style={styles.itemHeader}>
-                <Text style={styles.itemName} numberOfLines={1}>{item.card.name}</Text>
+                <Pressable 
+                    style={{ flex: 1, marginRight: 8 }}
+                    onPress={() => (navigation as any).navigate('CardDetail', { symbol: item.card.symbol })}
+                >
+                    <Text style={styles.itemName} numberOfLines={1}>{item.card.name}</Text>
+                </Pressable>
                 <Pressable onPress={() => removeFromCart(item.card.id)} hitSlop={10} style={styles.deleteBtn}>
                     <Trash2 size={18} color="#94a3b8" />
                 </Pressable>
@@ -122,10 +157,54 @@ export const CartScreen: React.FC = () => {
 
       {items.length > 0 && (
         <View style={styles.footer}>
+          {/* Promo Code */}
+          <View style={styles.promoContainer}>
+              <View style={styles.promoInputWrapper}>
+                  <Package size={18} color="#94a3b8" style={{ marginRight: 8 }} />
+                  <TextInput 
+                      style={styles.promoInput} 
+                      placeholder={t('enter_promo_code' as any) || 'Enter code'} 
+                      value={promoCode}
+                      onChangeText={setPromoCode}
+                      autoCapitalize="characters"
+                      editable={!promoApplied}
+                  />
+              </View>
+              <Pressable 
+                  onPress={handleApplyPromo}
+                  style={[styles.applyBtn, promoApplied && styles.applyBtnDisabled]}
+                  disabled={promoApplied || !promoCode}
+              >
+                  <Text style={styles.applyBtnText}>{promoApplied ? t('equipped' as any) : t('apply' as any)}</Text>
+              </Pressable>
+          </View>
+
+          {/* Price Breakdown */}
+          <View style={styles.breakdownContainer}>
+              <View style={styles.breakdownRow}>
+                  <Text style={styles.breakdownLabel}>{t('subtotal' as any) || 'Subtotal'}</Text>
+                  <Text style={styles.breakdownValue}>{formatCurrency(priceBreakdown.subtotal, currency)}</Text>
+              </View>
+              <View style={styles.breakdownRow}>
+                  <Text style={styles.breakdownLabel}>{t('tax' as any) || 'Tax'}</Text>
+                  <Text style={styles.breakdownValue}>{formatCurrency(priceBreakdown.tax, currency)}</Text>
+              </View>
+              <View style={styles.breakdownRow}>
+                  <Text style={styles.breakdownLabel}>{t('shipping' as any) || 'Shipping'}</Text>
+                  <Text style={styles.breakdownValue}>{formatCurrency(priceBreakdown.shipping, currency)}</Text>
+              </View>
+              {promoApplied && (
+                  <View style={styles.breakdownRow}>
+                      <Text style={[styles.breakdownLabel, { color: '#10b981' }]}>{t('promo_code' as any)} (POKE10)</Text>
+                      <Text style={[styles.breakdownValue, { color: '#10b981' }]}>-{formatCurrency(priceBreakdown.discount, currency)}</Text>
+                  </View>
+              )}
+          </View>
+
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{t('total_price')}</Text>
             <View style={styles.totalValueContainer}>
-                <Text style={styles.totalAmount}>{formatCurrency(total, currency)}</Text>
+                <Text style={styles.totalAmount}>{formatCurrency(finalCartTotal, currency)}</Text>
                 <Text style={styles.vatText}>{t('vat_included')}</Text>
             </View>
           </View>
@@ -228,30 +307,35 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 12,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    // Removed border
+    // borderWidth: 1,
+    // borderColor: '#f1f5f9',
     shadowColor: '#64748b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-    alignItems: 'center', // Vertically align thumbnail and content
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 6,
+    alignItems: 'center', 
   },
   cardContainer: { 
-    width: 80,
-    height: 80,
+    width: 70, 
+    height: 100, // Vertical aspect ratio
     marginRight: 16,
-    // Add shadow to the thumbnail itself for depth
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
     backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 6, 
   },
   itemContent: {
     flex: 1,
-    height: 80, // Match thumbnail height to distribute content evenly
+    height: 90, 
     justifyContent: 'space-between',
     paddingVertical: 2,
   },
@@ -394,6 +478,65 @@ const styles = StyleSheet.create({
   checkoutBtnDisabled: {
     backgroundColor: '#94a3b8',
     shadowOpacity: 0,
+  },
+  promoContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap: 12,
+  },
+  promoInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  promoInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  applyBtn: {
+    paddingHorizontal: 20,
+    backgroundColor: '#0f172a',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyBtnDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  applyBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  breakdownContainer: {
+    gap: 10,
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  breakdownLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  breakdownValue: {
+    fontSize: 14,
+    color: '#1e293b',
+    fontWeight: '700',
   },
   notificationOverlay: {
     ...StyleSheet.absoluteFillObject,

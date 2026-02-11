@@ -72,14 +72,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
         }}
       />
-      <Tab.Screen
-        name="Cart"
-        component={CartScreen}
-        options={{
-          tabBarLabel: t('nav_cart'),
-          tabBarIcon: ({ color, size }) => <ShoppingCart size={size} color={color} />,
-        }}
-      />
+
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
