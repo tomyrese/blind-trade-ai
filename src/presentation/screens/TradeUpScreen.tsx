@@ -274,12 +274,8 @@ export const TradeUpScreen: React.FC = () => {
                   size={viewMode === 'grid' ? 'normal' : 'list'}
                   largeImage={true} // Use larger image in TradeUp Grid
                   showActions={false}
+                  amount={card.amount}
                 />
-                {(card.amount !== undefined && card.amount > 1) && (
-                  <View style={styles.amountBadge}>
-                    <Text style={styles.amountText}>x{card.amount}</Text>
-                  </View>
-                )}
               </View>
             ))}
           </View>
@@ -502,7 +498,7 @@ const styles = StyleSheet.create({
   },
   listSection: {
     marginTop: 32,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12, // Reduced to match Portfolio (12+4=16 total edge)
   },
   listHeader: {
     flexDirection: 'row',
@@ -532,7 +528,7 @@ const styles = StyleSheet.create({
   cardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -8, // Increased negative margin for better spacing with gridItem padding
+    marginHorizontal: -4, // Unified with Portfolio/Market
   },
   cardList: {
     flexDirection: 'column',
@@ -540,22 +536,10 @@ const styles = StyleSheet.create({
     // marginHorizontal: -20, // Removed negative margin to ensure inside parent bounds
   },
   gridItem: {
-    padding: 8, // Standard padding to match Portfolio
+    padding: 4, // Reduced from 8
     position: 'relative'
   },
-  amountBadge: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    zIndex: 10,
-  },
-  amountText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
+
   emptyInventory: {
     padding: 40,
     alignItems: 'center',
@@ -633,7 +617,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
     marginHorizontal: 4,
   },
-  listItem: { paddingVertical: 8, position: 'relative' },
+  listItem: { paddingHorizontal: 0, paddingVertical: 8, position: 'relative' },
 
   // Sort Modal Styles
   modalOverlay: {

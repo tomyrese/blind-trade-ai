@@ -5,6 +5,8 @@ import { Send, MessageSquare, Sparkles, User, ChevronLeft } from 'lucide-react-n
 import { useNavigation } from '@react-navigation/native';
 import { openRouterService } from '../../../../shared/services/OpenRouterService';
 import { useMarkets } from '../../../../shared/hooks/useMarkets';
+import { useUserStore } from '../../../../shared/stores/userStore';
+import { useTranslation } from '../../../../shared/utils/translations';
 
 interface Message {
   id: string;
@@ -14,6 +16,7 @@ interface Message {
 }
 
 const ChatInput = React.memo(({ onSend }: { onSend: (text: string) => void }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
 
   const handleSend = () => {
@@ -27,7 +30,7 @@ const ChatInput = React.memo(({ onSend }: { onSend: (text: string) => void }) =>
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, { maxHeight: 100 }]}
-          placeholder="Hỏi Poké-AI..."
+          placeholder={t('ai_chat_placeholder')}
           placeholderTextColor="#94a3b8"
           value={input}
           onChangeText={setInput}
@@ -50,10 +53,11 @@ const ChatInput = React.memo(({ onSend }: { onSend: (text: string) => void }) =>
 
 export const AIChatScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { t, language } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Chào bạn! Tôi là Poké-AI. Tôi có thể giúp bạn kiểm tra giá cả, độ hiếm hoặc bất kỳ thông tin nào về Pokémon. Bạn muốn hỏi gì?',
+      text: t('ai_chat_greeting'),
       sender: 'ai',
       timestamp: new Date(),
     }
@@ -79,7 +83,7 @@ export const AIChatScreen: React.FC = () => {
 
     try {
       // Call OpenRouter AI with market data context
-      const aiResponse = await openRouterService.chat(text, markets);
+      const aiResponse = await openRouterService.chat(text, markets, language);
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         text: aiResponse,
@@ -88,7 +92,7 @@ export const AIChatScreen: React.FC = () => {
       };
       setMessages(prev => [...prev, aiMsg]);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Đã xảy ra lỗi. Vui lòng thử lại.';
+      const errorMsg = err instanceof Error ? err.message : t('ai_chat_error');
       setError(errorMsg);
       const errorAIMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -121,7 +125,7 @@ export const AIChatScreen: React.FC = () => {
             </View>
             <View>
               <Text style={styles.headerTitleText}>Poké-AI Assistant</Text>
-              <Text style={styles.headerStatus}>Online | Sẵn sàng hỗ trợ</Text>
+              <Text style={styles.headerStatus}>{t('ai_chat_status')}</Text>
             </View>
           </View>
         </View>

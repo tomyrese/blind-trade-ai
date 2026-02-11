@@ -266,7 +266,13 @@ const translations = {
     cond_vip_member: 'Là VIP',
     title_legendary: 'Huyền Thoại',
     desc_legendary: 'Sở hữu thẻ bài cấp Legendary',
-    cond_legendary: 'Sở hữu thẻ Legendary'
+    cond_legendary: 'Sở hữu thẻ Legendary',
+
+    // AI Chat
+    ai_chat_greeting: 'Chào bạn! Tôi là Poké-AI. Tôi có thể giúp bạn kiểm tra giá cả, độ hiếm hoặc bất kỳ thông tin nào về Pokémon. Bạn muốn hỏi gì?',
+    ai_chat_placeholder: 'Hỏi Poké-AI về Pokémon...',
+    ai_chat_status: 'Online | Sẵn sàng hỗ trợ',
+    ai_chat_error: 'Đã xảy ra lỗi. Vui lòng thử lại.',
   },
   en: {
     // Common
@@ -530,7 +536,13 @@ const translations = {
     cond_vip_member: 'Is VIP',
     title_legendary: 'Legendary',
     desc_legendary: 'Own a Legendary card',
-    cond_legendary: 'Own Legendary'
+    cond_legendary: 'Own Legendary',
+
+    // AI Chat
+    ai_chat_greeting: 'Hello! I am Poké-AI. I can help you check prices, rarity, or any information about Pokémon. What would you like to ask?',
+    ai_chat_placeholder: 'Ask Poké-AI about Pokémon...',
+    ai_chat_status: 'Online | Ready to assist',
+    ai_chat_error: 'An error occurred. Please try again.',
   }
 };
 

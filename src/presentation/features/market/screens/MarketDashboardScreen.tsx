@@ -162,8 +162,10 @@ export const MarketDashboardScreen: React.FC = () => {
     );
   }
 
-  return (
-    <View style={[styles.safeArea, { paddingTop: insets.top }]}>
+  const badgeTextStyles = styles.badgeText as any;
+
+  const renderHeader = React.useCallback(() => (
+    <View>
       <View style={styles.headerContainer}>
           <View style={styles.searchContainer}>
              <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
@@ -175,7 +177,7 @@ export const MarketDashboardScreen: React.FC = () => {
             <ShoppingCart size={24} color="#0f172a" />
             {cartCount > 0 && (
                 <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+                    <Text style={badgeTextStyles}>{cartCount > 99 ? '99+' : cartCount}</Text>
                 </View>
             )}
           </Pressable>
@@ -226,7 +228,11 @@ export const MarketDashboardScreen: React.FC = () => {
             </View>
         </View>
       </View>
+    </View>
+  ), [inputText, cartCount, activeTab, viewMode, t, navigation, badgeTextStyles]);
 
+  return (
+    <View style={[styles.safeArea, { paddingTop: insets.top }]}>
       <View style={{ flex: 1 }}>
         <FlashList
           data={filteredMarkets}
@@ -248,7 +254,9 @@ export const MarketDashboardScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           key={viewMode} // Force re-render when switching view modes
           numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
-          contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 24, paddingTop: 4 }}
+          ListHeaderComponent={renderHeader}
+          ListHeaderComponentStyle={{ marginBottom: 0 }} // Ensure no weird spacing
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 4 }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>{t('no_cards_found')}</Text>
@@ -322,8 +330,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   searchBar: {
     flexDirection: 'row',
@@ -331,7 +339,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 48, // Match cartButton height
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
@@ -428,7 +436,7 @@ const styles = StyleSheet.create({
 
   gridItem: {
     flex: 1, 
-    padding: 6,
+    padding: 4,
   },
   listItem: {
       flex: 1,

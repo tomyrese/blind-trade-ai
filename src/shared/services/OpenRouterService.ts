@@ -1,32 +1,55 @@
 // OpenRouter AI Service for Pokemon Chat
 import { Market } from '../../domain/models/Market';
 
-const OPENROUTER_API_KEY = 'API_KEY';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-const SYSTEM_PROMPT = `Bạn là Poké-AI, trợ lý chuyên về Pokémon Trading Card Game (TCG).
+const SYSTEM_PROMPT = `You are Poké-AI, an expert assistant specializing in the Pokémon Trading Card Game (TCG).
 
-QUY TẮC QUAN TRỌNG:
-- CHỈ trả lời câu hỏi liên quan đến Pokémon TCG, thẻ bài Pokémon, giá cả, độ hiếm, chiến thuật chơi bài
-- KHÔNG trả lời câu hỏi về chủ đề khác như thời tiết, toán học, lịch sử, v.v.
-- Nếu người dùng hỏi ngoài phạm vi Pokémon, lịch sự từ chối: "Xin lỗi, tôi chỉ có thể hỗ trợ về Pokémon TCG. Bạn có câu hỏi gì về thẻ bài Pokémon không?"
+IMPORTANT RULES:
+- ONLY answer questions about Pokémon TCG, cards, market prices, rarity, card sets, grading, and game strategies.
+- If the question is outside this scope, respond:
+  - (VN): "Xin lỗi, tôi chỉ có thể hỗ trợ về Pokémon TCG. Bạn có câu hỏi gì về thẻ bài Pokémon không?"
+  - (EN): "Sorry, I can only assist with Pokémon TCG. Do you have any questions about Pokémon cards?"
 
-Bạn có quyền truy cập vào dữ liệu thị trường real-time của các thẻ bài Pokémon hiện có.
+Response Style:
+- Respond in the language used by the user (Vietnamese or English).
+- Keep answers concise (2-3 sentences), friendly, and professional.
+- Use emojis sparingly when appropriate.
 
-Trả lời bằng tiếng Việt, ngắn gọn (2-3 câu), thân thiện và chuyên nghiệp.`;
+Data Usage:
+- You have access to real-time market prices in both VND and USD ($).
+- Specify card condition (Raw, PSA 10, PSA 9, etc.) when possible.
+- If prices are volatile, provide a price range and trend.
+
+Investment Advice:
+- Do not guarantee profits.
+- Use suggestive and neutral language.
+
+Gameplay Strategy:
+- Mention key combos and meta decks when relevant.
+
+Persona:
+- You are a professional Pokémon TCG trader & collector.
+- Your goal is to help users buy, sell, and play effectively.
+`;
 
 export class OpenRouterService {
-  async chat(userMessage: string, marketData?: Market[]): Promise<string> {
+  async chat(userMessage: string, marketData?: Market[], language: 'vi' | 'en' = 'vi'): Promise<string> {
     try {
       // Build context from market data
       let contextMessage = SYSTEM_PROMPT;
+      contextMessage += `\n\nCURRENT LANGUAGE SETTING: ${language === 'vi' ? 'Vietnamese' : 'English'}`;
       
       if (marketData && marketData.length > 0) {
-        const priceInfo = marketData.map(card => 
-          `- ${card.name}: ${this.formatVND(card.currentPrice)} (Độ hiếm: ${card.rarity})`
-        ).join('\n');
+        const priceInfo = marketData.map(card => {
+          const priceVND = this.formatVND(card.currentPrice);
+          const priceUSD = this.formatUSD(card.currentPrice);
+          return `- ${card.name}: ${priceVND} (~${priceUSD}) (Rarity: ${card.rarity})`;
+        }).join('\n');
         
-        contextMessage += `\n\nDỮ LIỆU THỊ TRƯỜNG HIỆN TẠI:\n${priceInfo}`;
+        const marketHeader = language === 'vi' ? 'DỮ LIỆU THỊ TRƯỜNG HIỆN TẠI:' : 'CURRENT MARKET DATA:';
+        contextMessage += `\n\n${marketHeader}\n${priceInfo}`;
       }
 
       // Call OpenRouter API
@@ -35,8 +58,8 @@ export class OpenRouterService {
         headers: {
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://blindtrade.ai', // Optional
-          'X-Title': 'BlindTrade Pokemon AI', // Optional
+          'HTTP-Referer': 'https://blindtrade.ai',
+          'X-Title': 'BlindTrade Pokemon AI',
         },
         body: JSON.stringify({
           model: 'arcee-ai/trinity-large-preview:free',
@@ -51,7 +74,7 @@ export class OpenRouterService {
             },
           ],
           temperature: 0.7,
-          max_tokens: 200,
+          max_tokens: 300,
         }),
       });
 
@@ -61,10 +84,20 @@ export class OpenRouterService {
       }
 
       const data = await response.json();
-      return data.choices[0]?.message?.content || 'Không thể trả lời câu hỏi này.';
+      const aiResponse = data.choices[0]?.message?.content;
+      
+      if (!aiResponse) {
+        return language === 'vi' ? 'Không thể trả lời câu hỏi này.' : 'I cannot answer this question at the moment.';
+      }
+      
+      return aiResponse;
     } catch (error) {
       console.error('OpenRouter API Error:', error);
-      throw new Error('Không thể kết nối với AI. Vui lòng thử lại sau.');
+      throw new Error(
+        language === 'vi' 
+          ? 'Không thể kết nối với AI. Vui lòng thử lại sau.' 
+          : 'Could not connect to AI. Please try again later.'
+      );
     }
   }
 
@@ -77,6 +110,13 @@ export class OpenRouterService {
     }
     return `${amount} VNĐ`;
   }
+
+  private formatUSD(amountVND: number): string {
+    const rate = 25000; // 1 USD = 25,000 VND
+    const usd = amountVND / rate;
+    return `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
 }
+
 
 export const openRouterService = new OpenRouterService();

@@ -12,3 +12,13 @@ export const formatCurrency = (amount: number, currency: 'VND' | 'USD' = 'VND'):
     currency: 'VND',
   }).format(amount);
 };
+
+export const formatCompactVND = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1)}tr`.replace('.0', '');
+  }
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}k`;
+  }
+  return amount.toString();
+};

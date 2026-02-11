@@ -12,10 +12,13 @@ import {
   LayoutGrid, 
   List, 
   X,
-  Package
+  Package,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
-import { formatCurrency } from '../../shared/utils/currency';
+import { formatCurrency, formatCompactVND } from '../../shared/utils/currency';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { useCartStore, usePortfolioStore, useUserStore, useTranslation, useFavoritesStore } from '../../shared/stores';
 import { useNavigation } from '@react-navigation/native';
@@ -91,33 +94,56 @@ export const PortfolioScreen: React.FC = () => {
     <View>
         {/* Balance Card */}
         <View style={styles.balanceCard}>
-          <View style={styles.cardDecorationCircle} />
-          <View style={styles.cardDecorationStar}>
-             <Star size={80} color="rgba(255, 255, 255, 0.05)" fill="white" />
+          {/* Poke Ball Top Half (Red) */}
+          <LinearGradient 
+            colors={['#ef4444', '#dc2626']} 
+            style={styles.pokeBallTop}
+          >
+            <View style={styles.pokeBallTopContent}>
+              <View style={styles.pokeBallHeader}>
+                <View style={[styles.pokeIconContainer, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                  <Package size={18} color="#ffffff" />
+                </View>
+                <View style={styles.pokeTrendBadge}>
+                  {profitPercentage !== 0 && (
+                    profitPercentage >= 0 ? 
+                    <ArrowUpRight size={14} color="#ffffff" /> : 
+                    <ArrowDownRight size={14} color="#ffffff" />
+                  )}
+                  <Text style={styles.pokeTrendText}>
+                    {profitPercentage >= 0 ? '+' : ''}{profitPercentage.toFixed(1)}%
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.pokeLabel}>{t('portfolio_total_value')}</Text>
+            </View>
+          </LinearGradient>
+
+          {/* Poke Ball Center Strip */}
+          <View style={styles.pokeBallCenterStrip}>
+            <View style={styles.pokeBallButtonOuter}>
+              <View style={styles.pokeBallButtonInner}>
+                <View style={styles.pokeBallButtonCore} />
+              </View>
+            </View>
           </View>
 
-          <View style={styles.balanceHeader}>
-            <View style={styles.iconContainer}>
-                 <TrendingUp size={20} color="#ffffff" />
+          {/* Poke Ball Bottom Half (White) */}
+          <View style={styles.pokeBallBottom}>
+            <Text style={styles.pokeAmount} numberOfLines={1}>
+              {currency === 'VND' ? formatCompactVND(totalValue) : formatCurrency(totalValue, 'USD')}
+            </Text>
+            <View style={styles.pokeFooter}>
+              <View style={styles.pokeProfitRow}>
+                <Text style={styles.pokeProfitLabel}>
+                  {totalProfit >= 0 ? t('profit') : t('loss')}
+                </Text>
+                <Text style={[styles.pokeProfitValue, { color: totalProfit >= 0 ? '#10b981' : '#ef4444' }]}>
+                  {totalProfit >= 0 ? '+' : '-'}{currency === 'VND' ? formatCompactVND(Math.abs(totalProfit)) : formatCurrency(Math.abs(totalProfit), 'USD')}
+                </Text>
+              </View>
+              <Text style={styles.pokeFooterDate}>{t('updated_just_now')}</Text>
             </View>
-            <View style={[styles.trendBadge, { backgroundColor: totalProfit >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
-                 <TrendingUp size={12} color={totalProfit >= 0 ? '#10b981' : '#ef4444'} style={{ transform: [{ rotate: totalProfit >= 0 ? '0deg' : '180deg' }] }} />
-                 <Text style={[styles.trendText, { color: totalProfit >= 0 ? '#10b981' : '#ef4444' }]}>
-                   {totalProfit >= 0 ? '+' : ''}{profitPercentage.toFixed(1)}%
-                 </Text>
-            </View>
-          </View>
-          
-          <View style={styles.balanceContent}>
-            <Text style={styles.balanceLabel}>{t('portfolio_total_value')}</Text>
-            <Text style={styles.balanceAmount}>{formatCurrency(totalValue, currency)}</Text>
-          </View>
-
-          <View style={styles.cardFooter}>
-             <Text style={styles.footerText}>
-               {totalProfit >= 0 ? t('profit') : t('loss')}: {formatCurrency(Math.abs(totalProfit), currency)}
-             </Text>
-             <Text style={styles.footerDate}>{t('updated_just_now')}</Text>
           </View>
         </View>
 
@@ -231,13 +257,10 @@ export const PortfolioScreen: React.FC = () => {
                         setSelectedAssetForOptions(asset);
                         setOptionsModalVisible(true);
                     }}
+                    amount={asset.amount}
                   />
                 </Pressable>
-                {asset.amount > 1 && (
-                  <View style={styles.amountBadge}>
-                    <Text style={styles.amountText}>x{asset.amount}</Text>
-                  </View>
-                )}
+
                 <View style={[styles.itemProfitBadge, { backgroundColor: asset.value >= asset.purchasePrice ? '#10b981' : '#ef4444' }]}>
                    <Text style={styles.itemProfitText}>
                      {asset.value >= asset.purchasePrice ? '+' : ''}
@@ -416,67 +439,132 @@ export const PortfolioScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#ffffff' },
-  listContent: { paddingBottom: 40, paddingTop: 20, paddingHorizontal: 12 },
+  listContent: { paddingBottom: 40, paddingTop: 20, paddingHorizontal: 8 },
   balanceCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#0f172a',
-    borderRadius: 32,
-    padding: 24,
-    position: 'relative',
+    marginHorizontal: 4,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    minHeight: 180,
-    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 8,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  cardDecorationCircle: {
-      position: 'absolute',
-      top: -40,
-      right: -40,
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      backgroundColor: '#3b82f6',
-      opacity: 0.1,
+  pokeBallTop: {
+    padding: 24,
+    paddingBottom: 32,
   },
-  cardDecorationStar: {
-      position: 'absolute',
-      bottom: -20,
-      left: -20,
-      opacity: 0.5,
+  pokeBallTopContent: {
+    gap: 12,
   },
-  balanceHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
+  pokeBallHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  iconContainer: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
+  pokeIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  trendBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 20,
-      gap: 4,
+  pokeTrendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
-  trendText: {
-      fontSize: 13,
-      fontWeight: '800',
+  pokeTrendText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  pokeLabel: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  pokeBallCenterStrip: {
+    height: 12,
+    backgroundColor: '#1e293b',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  pokeBallButtonOuter: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1e293b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#ffffff',
+    position: 'absolute',
+  },
+  pokeBallButtonInner: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pokeBallButtonCore: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  pokeBallBottom: {
+    padding: 24,
+    paddingTop: 36,
+    backgroundColor: '#ffffff',
+  },
+  pokeAmount: {
+    fontSize: 42,
+    fontWeight: '900',
+    color: '#0f172a',
+    letterSpacing: -1,
+    marginBottom: 12,
+  },
+  pokeFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  pokeProfitRow: {
+    gap: 2,
+  },
+  pokeProfitLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+  },
+  pokeProfitValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  pokeFooterDate: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '600',
   },
   balanceContent: {
       marginTop: 20,
@@ -516,7 +604,7 @@ const styles = StyleSheet.create({
   actionsRow: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    paddingHorizontal: 20, 
+    paddingHorizontal: 4, 
     marginBottom: 32 
   },
   actionItem: { alignItems: 'center', position: 'relative' },
@@ -531,7 +619,7 @@ const styles = StyleSheet.create({
   badgeText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
   
   filterSection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 4,
     marginBottom: 20,
     gap: 12,
   },
@@ -602,26 +690,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', 
     alignItems: 'center', 
     marginBottom: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 4,
   },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
   sectionCount: { fontSize: 13, color: '#94a3b8', fontWeight: '700' },
-  gridItem: { padding: 8, position: 'relative' },
-  listItem: { paddingHorizontal: 20, paddingVertical: 8, position: 'relative' },
-  amountBadge: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    zIndex: 10,
-  },
-  amountText: { color: '#ffffff', fontSize: 10, fontWeight: '900' },
+  gridItem: { padding: 4, position: 'relative' },
+  listItem: { paddingHorizontal: 4, paddingVertical: 8, position: 'relative' },
+
   itemProfitBadge: {
     position: 'absolute',
     bottom: 16,

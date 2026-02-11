@@ -6,7 +6,7 @@ import { useUserStore } from '../../shared/stores/userStore';
 import { useUIStore } from '../../shared/stores/uiStore';
 import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
 import { useTranslation } from '../../shared/utils/translations';
-import { formatCurrency } from '../../shared/utils/currency';
+import { formatCurrency, formatCompactVND } from '../../shared/utils/currency';
 import { PRESET_AVATARS } from '../../assets/images/avata';
 import { launchImageLibrary } from 'react-native-image-picker';
 
@@ -773,7 +773,7 @@ export const ProfileScreen: React.FC = () => {
 
                     {/* Stats */}
                     <View style={styles.statsContainer}>
-                        <StatItem label={t('balance')} value={formatCurrency(profile.balance || 0, profile.currency)} icon={Wallet} color="#10b981" />
+                        <StatItem label={t('balance')} value={profile.currency === 'VND' ? formatCompactVND(profile.balance || 0) : formatCurrency(profile.balance || 0, 'USD')} icon={Wallet} color="#10b981" />
                         <StatItem label={t('my_collection')} value={profile.collectionCount.toString()} icon={BookOpen} color="#3b82f6" />
                         <StatItem label={t('rank')} value={profile.rank.replace('VIP ', '')} icon={Star} color="#f59e0b" />
                     </View>
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
     avatar: { width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff', overflow: 'hidden' },
     fullAvatar: { width: '100%', height: '100%', resizeMode: 'cover' },
     editAvatarBtn: { position: 'absolute', bottom: 0, right: 0, width: 34, height: 34, borderRadius: 17, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-    userName: { fontSize: 26, fontWeight: '900', color: '#fff' },
+    userName: { fontSize: 24, fontWeight: '900', color: '#fff' },
     userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
     levelContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, width: '80%' },
     levelBadge: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
     statsContainer: { flexDirection: 'row', marginHorizontal: 20, marginTop: -30, marginBottom: 24, zIndex: 2 },
     statBox: { flex: 1, backgroundColor: '#fff', borderRadius: 20, padding: 12, marginHorizontal: 4, alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
     statIconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-    statValue: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+    statValue: { fontSize: 16, fontWeight: '900', color: '#0f172a' },
     statLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '700' },
     
     menuContainer: { paddingHorizontal: 20, marginBottom: 20 },

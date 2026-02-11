@@ -20,9 +20,10 @@ interface CardItemProps {
   showRarity?: boolean; // New prop
   size?: 'normal' | 'small' | 'list';
   largeImage?: boolean; // New prop for controlling image size in grid
+  amount?: number; // New prop for showing quantity badge
 }
 
-export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, showRarity = true, size = 'normal', largeImage = false }) => {
+export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, showRarity = true, size = 'normal', largeImage = false, amount }) => {
     const isFavorite = useFavoritesStore((state) => state.isFavorite(card.id));
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const addToCart = useCartStore((state) => state.addToCart);
@@ -82,8 +83,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
             {
                 borderRadius: 16,
                 padding: 2, // Width of the gradient border
-                aspectRatio: (!isSmall && !isList) ? 0.65 : undefined,
             },
+            (!isSmall && !isList) && { aspectRatio: 0.70 },
             selected && styles.selectedContainer,
             disabled && styles.disabledContainer,
         ]
@@ -95,8 +96,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
             { 
                 borderColor: config.borderColor,
                 shadowColor: config.shadowColor || config.color,
-                aspectRatio: (!isSmall && !isList) ? 0.65 : undefined,
             },
+            (!isSmall && !isList) && { aspectRatio: 0.70 },
             selected && styles.selectedContainer,
             disabled && styles.disabledContainer,
         ]
@@ -122,22 +123,17 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 config.borderGradient && { borderRadius: 14, backgroundColor: '#ffffff' }, // Slightly smaller radius for inner content
                 isList && { flexDirection: 'row', alignItems: 'center', padding: 10, width: '100%' } // Restore logic for list layout
             ]}>
-                
-                {/* Selection Indicator */}
-                {selected && (
-                <View style={[styles.selectionBadge, { backgroundColor: config.borderColor }]}>
-                    <Check size={12} color="#ffffff" strokeWidth={3} />
-                </View>
-                )}
 
                 {/* Top Actions Bar - Hidden in List Mode (Moves to bottom/side) */}
                 {(!isSmall && !isList) && (
                 <View style={[styles.topBar, !showActions && { justifyContent: 'flex-start' }]}> 
-                    {showRarity && (
+                    {showRarity ? (
                         <View style={[styles.rarityTag, { borderColor: config.borderColor, backgroundColor: config.glowColor }]}>
                             {renderRarityIcon()}
                             <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
                         </View>
+                    ) : (
+                        <View style={[styles.rarityTag, { opacity: 0, borderWidth: 0 }]} /> 
                     )}
 
                     {showActions && (
@@ -174,14 +170,14 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 <View style={[
                     styles.artworkContainer, 
                     { borderColor: config.borderColor },
+                    (!isSmall && !isList) && { aspectRatio: 0.75 },
                     (isSmall || isList) && styles.artworkContainerSmall,
-                    largeImage && !isList && !isSmall && { width: '65%' } // Reduced from 75% to prevent overflow
+                    largeImage && !isList && !isSmall && { width: '62%' } // Reduced from 70% to clear price
                 ]}>
                     {/* Gradient Background for Holo effect if applicable */}
                         <View style={[
                             styles.artworkBackground, 
                             { backgroundColor: (isSmall || isList) ? config.borderColor : config.glowColor }, 
-                            (isSmall || isList) && { opacity: 0.15 }
                         ]}>
                             {card.image ? (
                                 <Image 
@@ -251,16 +247,16 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     )}
 
                     {/* Spacer */}
-                    {!isList && <View style={{ flex: 1 }} />}
+
 
                     {/* Price & Action Row */}
                     <View style={[styles.bottomRow, isList && { marginTop: 0 }]}>
                     <View style={[styles.priceWrapper, isList && { flexDirection: 'row', alignItems: 'baseline', gap: 6 }]}>
-                        <Text style={[styles.mainPrice, isList && { fontSize: 16 }]} numberOfLines={1} adjustsFontSizeToFit>
+                        <Text style={[styles.mainPrice, isList && { fontSize: 16 }]} numberOfLines={1} adjustsFontSizeToFit={!isList} minimumFontScale={isList ? 1 : 0.8}>
                         {formatCurrency(card.value, currency)}
                         </Text>
                         {card.tcgPlayerPrice && (
-                        <Text style={[styles.subPrice, isList && { marginTop: 0 }]} numberOfLines={1}>
+                        <Text style={[styles.subPrice, isList && { marginTop: 0 }]} numberOfLines={1} adjustsFontSizeToFit={!isList} minimumFontScale={isList ? 1 : 0.8}>
                             TCG: {formatCurrency(card.tcgPlayerPrice, currency)}
                         </Text>
                         )}
@@ -300,6 +296,19 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 </View>
                 )}
             </View>
+
+            {selected && (
+            <View style={[styles.selectionBadge, { backgroundColor: config.borderColor }]}>
+                <Check size={12} color="#ffffff" strokeWidth={3} />
+            </View>
+            )}
+
+            {/* Amount Badge - Internalized for consistency */}
+            {(amount !== undefined && amount > 1) && (
+              <View style={styles.internalAmountBadge}>
+                <Text style={styles.internalAmountText}>x{amount}</Text>
+              </View>
+            )}
         </ContainerComponent>
       </Pressable>
     );
@@ -314,14 +323,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
-    padding: 10,
-    // aspectRatio: 0.65, // Moved to inline style logic to avoid list view issues
+    padding: 2, // Width of border, matches gradientBorder padding for alignment
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
     position: 'relative',
-    // Removed overflow: 'hidden' to allow selectionBadge to pop out
+    overflow: 'visible', // Allow SelectionBadge to pop out
   },
   gradientBorder: {
       width: '100%',
@@ -332,12 +340,13 @@ const styles = StyleSheet.create({
       shadowRadius: 12,
       elevation: 10,
       position: 'relative',
+      overflow: 'visible', // Allow SelectionBadge to pop out
   },
   innerContent: {
       flex: 1,
       backgroundColor: '#ffffff',
       borderRadius: 13, // 16 - 2(padding) - 1(visual correction)
-      padding: 8,
+      padding: 4, // Reduced from 8 to tighten layout
       overflow: 'hidden',
   },
   containerSmall: {
@@ -363,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 20,
+    zIndex: 50, // Higher zIndex to be on top of borders
     borderWidth: 2.5,
     borderColor: '#ffffff',
     shadowColor: '#000',
@@ -413,7 +422,7 @@ const styles = StyleSheet.create({
   artworkWrapper: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6, // Reduced from 10
   },
   artworkWrapperSmall: {
     width: '100%',
@@ -422,8 +431,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   artworkContainer: {
-    width: '60%', // Default small image
-    aspectRatio: 0.75, // Taller potrait aspect ratio
+    width: '52%', // Reduced from 60% to clear price on Home screen
     borderRadius: 12,
     borderWidth: 2,
     padding: 2,
@@ -468,7 +476,7 @@ const styles = StyleSheet.create({
   // Details Section
   detailsSection: {
     flex: 1,
-    gap: 5,
+    gap: 2, // Final tightening to 2px
   },
   cardTitle: {
     fontSize: 14,
@@ -488,7 +496,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#475569',
-    marginTop: 2,
+    marginTop: -2,
   },
 
   // Bottom Row (Price & Cart)
@@ -497,14 +505,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     gap: 8,
-    marginTop: 6,
+    marginTop: -1, // Eliminate gap completely to pull price right under seller info
   },
   priceWrapper: {
     flex: 1,
     minWidth: 0, // Enable text truncation
   },
   mainPrice: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
     color: '#10b981',
     letterSpacing: -0.2,
@@ -525,12 +533,11 @@ const styles = StyleSheet.create({
   },
   containerList: {
     flexDirection: 'row',
-    aspectRatio: undefined, // Remove fixed aspect ratio
-    minHeight: 100, // Allow flexible height
+    minHeight: 86, // Reduced from 100 to be more compact
     // alignItems: 'center', // Handled by innerContent
     padding: 0, // Gradient border handles padding
     backgroundColor: 'transparent',
-    borderWidth: 0,
+    // Removed borderWidth: 0 to allow standard card borders to show in list view
   },
   
   // Artwork wrappers
@@ -546,5 +553,26 @@ const styles = StyleSheet.create({
       justifyContent: 'center', 
       gap: 2, // Minimal gap between the two main blocks
       paddingVertical: 0, 
+  },
+  
+  // Internalized Badges
+  internalAmountBadge: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 100,
+  },
+  internalAmountText: {
+    color: '#ffffff',
+    fontSize: 8,
+    fontWeight: '900',
   },
 });
