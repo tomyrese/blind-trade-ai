@@ -157,87 +157,6 @@ export const MarketDashboardScreen: React.FC = () => {
 
   const badgeTextStyles = styles.badgeText as any;
 
-  const renderHeader = React.useCallback(() => (
-    <View>
-      <View style={styles.headerContainer}>
-          <View style={styles.searchContainer}>
-             <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
-          </View>
-          <Pressable 
-            style={styles.cartButton}
-            onPress={() => navigation.navigate('Cart')}
-          >
-            <ShoppingCart size={24} color="#0f172a" />
-            {cartCount > 0 && (
-                <View style={styles.badge}>
-                    <Text style={badgeTextStyles}>{cartCount > 99 ? '99+' : cartCount}</Text>
-                </View>
-            )}
-          </Pressable>
-      </View>
-
-      {/* Controls Row: Tabs + Sort + View */}
-      <View style={styles.controlsRow}>
-        <View style={styles.tabBar}>
-          <Pressable 
-            onPress={() => setActiveTab('Hot')}
-            style={[styles.tabItem, activeTab === 'Hot' && styles.activeTab]}
-          >
-            <Flame size={16} color={activeTab === 'Hot' ? '#ef4444' : '#64748b'} fill={activeTab === 'Hot' ? '#ef4444' : 'transparent'} />
-            <Text style={[styles.tabLabel, activeTab === 'Hot' && styles.activeTabLabel]}>{t('tab_hot')}</Text>
-          </Pressable>
-          <Pressable 
-            onPress={() => setActiveTab('Normal')}
-            style={[styles.tabItem, activeTab === 'Normal' && styles.activeTab]}
-          >
-            <Text style={[styles.tabLabel, activeTab === 'Normal' && styles.activeTabLabel]}>{t('tab_all')}</Text>
-          </Pressable>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-            {/* Sort Button */}
-            <Pressable 
-                onPress={() => setSortModalVisible(true)}
-                style={styles.sortButton}
-            >
-                <ArrowUpDown size={20} color="#0f172a" />
-            </Pressable>
-
-            {/* Filter Button */}
-            <Pressable 
-                onPress={() => setFilterModalVisible(true)} 
-                style={[
-                    styles.sortButton, 
-                    selectedRarities.length > 0 && { backgroundColor: '#fef2f2', borderColor: '#fee2e2' }
-                ]}
-            >
-                <Filter 
-                    size={20} 
-                    color={selectedRarities.length > 0 ? '#ef4444' : '#0f172a'} 
-                    fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'} 
-                />
-            </Pressable>
-
-            {/* View Switcher */}
-            <View style={styles.viewSwitcher}>
-                <Pressable 
-                    onPress={() => setViewMode('grid')}
-                    style={[styles.viewBtn, viewMode === 'grid' && styles.activeViewBtn]}
-                >
-                    <LayoutGrid size={20} color={viewMode === 'grid' ? '#0f172a' : '#94a3b8'} />
-                </Pressable>
-                <View style={styles.divider} />
-                <Pressable 
-                    onPress={() => setViewMode('list')}
-                    style={[styles.viewBtn, viewMode === 'list' && styles.activeViewBtn]}
-                >
-                    <List size={20} color={viewMode === 'list' ? '#0f172a' : '#94a3b8'} />
-                </Pressable>
-            </View>
-        </View>
-      </View>
-    </View>
-  ), [inputText, cartCount, activeTab, viewMode, t, navigation, badgeTextStyles, setSortModalVisible, setFilterModalVisible, setActiveTab, setViewMode, selectedRarities, t]);
 
   if (isLoading) {
     return (
@@ -249,6 +168,86 @@ export const MarketDashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top }]}>
+      <View>
+          <View style={styles.headerContainer}>
+              <View style={styles.searchContainer}>
+                 <SearchBar value={inputText} onChange={setInputText} placeholder={t('search_placeholder')} />
+              </View>
+              <Pressable 
+                style={styles.cartButton}
+                onPress={() => navigation.navigate('Cart')}
+              >
+                <ShoppingCart size={24} color="#0f172a" />
+                {cartCount > 0 && (
+                    <View style={styles.badge}>
+                        <Text style={badgeTextStyles}>{cartCount > 99 ? '99+' : cartCount}</Text>
+                    </View>
+                )}
+              </Pressable>
+          </View>
+
+          {/* Controls Row: Tabs + Sort + View */}
+          <View style={styles.controlsRow}>
+            <View style={styles.tabBar}>
+              <Pressable 
+                onPress={() => setActiveTab('Hot')}
+                style={[styles.tabItem, activeTab === 'Hot' && styles.activeTab]}
+              >
+                <Flame size={16} color={activeTab === 'Hot' ? '#ef4444' : '#64748b'} fill={activeTab === 'Hot' ? '#ef4444' : 'transparent'} />
+                <Text style={[styles.tabLabel, activeTab === 'Hot' && styles.activeTabLabel]}>{t('tab_hot')}</Text>
+              </Pressable>
+              <Pressable 
+                onPress={() => setActiveTab('Normal')}
+                style={[styles.tabItem, activeTab === 'Normal' && styles.activeTab]}
+              >
+                <Text style={[styles.tabLabel, activeTab === 'Normal' && styles.activeTabLabel]}>{t('tab_all')}</Text>
+              </Pressable>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+                {/* Sort Button */}
+                <Pressable 
+                    onPress={() => setSortModalVisible(true)}
+                    style={styles.sortButton}
+                >
+                    <ArrowUpDown size={20} color="#0f172a" />
+                </Pressable>
+
+                {/* Filter Button */}
+                <Pressable 
+                    onPress={() => setFilterModalVisible(true)} 
+                    style={[
+                        styles.sortButton, 
+                        selectedRarities.length > 0 && { backgroundColor: '#fef2f2', borderColor: '#fee2e2' }
+                    ]}
+                >
+                    <Filter 
+                        size={20} 
+                        color={selectedRarities.length > 0 ? '#ef4444' : '#0f172a'} 
+                        fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'} 
+                    />
+                </Pressable>
+
+                {/* View Switcher */}
+                <View style={styles.viewSwitcher}>
+                    <Pressable 
+                        onPress={() => setViewMode('grid')}
+                        style={[styles.viewBtn, viewMode === 'grid' && styles.activeViewBtn]}
+                    >
+                        <LayoutGrid size={20} color={viewMode === 'grid' ? '#0f172a' : '#94a3b8'} />
+                    </Pressable>
+                    <View style={styles.divider} />
+                    <Pressable 
+                        onPress={() => setViewMode('list')}
+                        style={[styles.viewBtn, viewMode === 'list' && styles.activeViewBtn]}
+                    >
+                        <List size={20} color={viewMode === 'list' ? '#0f172a' : '#94a3b8'} />
+                    </Pressable>
+                </View>
+            </View>
+          </View>
+      </View>
+
       <View style={{ flex: 1 }}>
         <FlashList
           data={filteredMarkets}
@@ -270,8 +269,7 @@ export const MarketDashboardScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           key={viewMode} // Force re-render when switching view modes
           numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
-          ListHeaderComponent={renderHeader}
-          ListHeaderComponentStyle={{ marginBottom: 0 }} // Ensure no weird spacing
+          ListHeaderComponent={null}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 4 }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
