@@ -1,5 +1,5 @@
 import { Market, Listing, PriceHistoryItem } from '../../domain/models/Market';
-import { Asset } from '../stores/portfolioStore';
+import { Asset } from '../../domain/models/Asset';
 import { mockCards } from '../utils/cardData';
 
 const generateListings = (currentPrice: number): Listing[] => {
@@ -72,6 +72,11 @@ export const marketsApi = {
     // Support finding by ID or Symbol
     const found = all.find(m => m.symbol === symbol || m.id === symbol);
     return found || null;
+  },
+
+  fetchPrice: async (symbol: string): Promise<number> => {
+    const market = await marketsApi.fetchMarket(symbol);
+    return market ? market.currentPrice : 0;
   }
 };
 
@@ -115,5 +120,12 @@ export const assetsApi = {
   updateAsset: async (symbol: string, updates: Partial<Asset>): Promise<void> => {
     // Mock implementation
     return Promise.resolve();
+  }
+};
+
+export const trendingApi = {
+  fetchTrending: async (): Promise<Market[]> => {
+    const all = await marketsApi.fetchMarkets();
+    return all.filter(m => m.isTrending);
   }
 };

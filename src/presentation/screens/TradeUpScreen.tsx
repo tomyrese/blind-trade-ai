@@ -16,13 +16,14 @@ import {
   Package
 } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
-import { mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
+import { CardRarity, mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { LootboxAnimation } from '../features/tradeup/components/LootboxAnimation';
+import { Lootbox3D } from '../features/tradeup/components/Lootbox3D';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
 import { useUIStore } from '../../shared/stores/uiStore';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { generateReward, getFusionProbabilities, mockCards, Card } from '../../shared/utils/cardData';
 import { formatCurrency } from '../../shared/utils/currency';
 import { useNavigation } from '@react-navigation/native';
@@ -108,9 +109,10 @@ export const TradeUpScreen: React.FC = () => {
   }, [ownedCards, searchQuery, sortBy, selectedRarities]);
 
   const totalValue = useMemo(() => {
-    return ownedCards
-      .filter((c) => selectedCards.includes(c.id))
-      .reduce((sum, c) => sum + c.value, 0);
+    return selectedCards.reduce((sum, id) => {
+      const card = ownedCards.find(c => c.id === id);
+      return sum + (card?.value || 0);
+    }, 0);
   }, [ownedCards, selectedCards]);
 
   const fusionChances = useMemo(() => {
@@ -126,18 +128,42 @@ export const TradeUpScreen: React.FC = () => {
     };
   }, [ownedCards, selectedCards]);
 
-  const handleToggleCard = useCallback((id: string) => {
-    setSelectedCards((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((i) => i !== id);
+  const highestSelectedRarity = useMemo(() => {
+    if (selectedCards.length === 0) return 'common';
+    const selectedOwnedCards = ownedCards.filter(c => selectedCards.includes(c.id));
+    let highest = 0;
+    let rarity: CardRarity = 'common';
+    selectedOwnedCards.forEach(c => {
+      const rank = RARITY_RANKS[c.rarity] || 0;
+      if (rank > highest) {
+        highest = rank;
+        rarity = c.rarity;
       }
-      if (prev.length >= 10) {
-        showNotification(t('fusion_limit_message'), 'warning');
-        return prev;
-      }
-      return [...prev, id];
     });
-  }, [t]);
+    return rarity;
+  }, [selectedCards, ownedCards]);
+
+  const handleToggleCard = useCallback((id: string) => {
+    const asset = assets.find(a => a.id === id);
+    if (!asset) return;
+
+    setSelectedCards((prev) => {
+      const currentCount = prev.filter(i => i === id).length;
+      
+      // If we have more than one and haven't selected all of them, add another
+      if (currentCount < asset.amount) {
+        if (prev.length >= 10) {
+          showNotification(t('fusion_limit_message'), 'warning');
+          return prev;
+        }
+        return [...prev, id];
+      } else {
+        // If we have selected all available or just one, remove all instances of this ID
+        // (Simplified toggle behavior: if max reached, clear selection for this card)
+        return prev.filter(i => i !== id);
+      }
+    });
+  }, [assets, t]);
 
   const handleFusion = () => {
     if (selectedCards.length < 2) {
@@ -145,13 +171,34 @@ export const TradeUpScreen: React.FC = () => {
       return;
     }
 
-    const cardsToFuse = ownedCards.filter(c => selectedCards.includes(c.id));
+    // Get the unique asset IDs to find their details
+    const uniqueIds = Array.from(new Set(selectedCards));
+    const cardsToFuse: Card[] = [];
+    
+    // Build the list of cards for fusion calculation (including duplicates)
+    selectedCards.forEach(id => {
+        const asset = assets.find(a => a.id === id);
+        if (asset) {
+            cardsToFuse.push({
+                id: asset.id,
+                name: asset.name,
+                rarity: mapRarity(asset.rarity),
+                value: asset.value,
+                symbol: asset.symbol,
+                amount: 1, // Treat as individual card for fusion
+                image: asset.image
+            });
+        }
+    });
+
     const newReward = generateReward(cardsToFuse);
     setReward(newReward);
     setIsOpening(true);
 
-    // Remove selected assets and add reward
+    // Remove selected assets
     selectedCards.forEach(id => removeAsset(id));
+    
+    // Add reward
     addAsset({
       id: newReward.id,
       name: newReward.name,
@@ -159,7 +206,8 @@ export const TradeUpScreen: React.FC = () => {
       rarity: newReward.rarity,
       amount: 1,
       value: newReward.value,
-      purchasePrice: totalValue / selectedCards.length, // Rough estimation for profit tracking
+      purchasePrice: totalValue / selectedCards.length,
+      image: newReward.image,
     });
     
     setSelectedCards([]);
@@ -199,11 +247,11 @@ export const TradeUpScreen: React.FC = () => {
               </View>
             ) : (
               <View style={styles.selectedGrid}>
-                {selectedCards.slice(0, 5).map(id => {
+                {selectedCards.slice(0, 5).map((id, index) => {
                   const card = ownedCards.find(c => c.id === id);
                   return card ? (
-                    <View key={id} style={styles.smallSelectedCard}>
-                      <CardItem card={card} size="small" showActions={false} />
+                    <View key={`${id}-${index}`} style={styles.smallSelectedCard}>
+                      <CardItem card={card} size="small" showActions={false} hideSeller={true} />
                     </View>
                   ) : null;
                 })}
@@ -298,8 +346,16 @@ export const TradeUpScreen: React.FC = () => {
                   size={viewMode === 'grid' ? 'normal' : 'list'}
                   largeImage={true} // Use larger image in TradeUp Grid
                   showActions={false}
+                  hideSeller={true}
                   amount={card.amount}
                 />
+                {selectedCards.filter(id => id === card.id).length > 0 && (card.amount || 0) > 1 && (
+                  <View style={styles.selectionCountBadge}>
+                    <Text style={styles.selectionCountText}>
+                      {selectedCards.filter(id => id === card.id).length}/{card.amount}
+                    </Text>
+                  </View>
+                )}
               </View>
             ))}
           </View>
@@ -318,7 +374,7 @@ export const TradeUpScreen: React.FC = () => {
 
       {/* Lootbox Animation Overlay */}
       {reward && (
-        <LootboxAnimation
+        <Lootbox3D
           isOpen={isOpening}
           onClose={() => {
             setIsOpening(false);
@@ -326,6 +382,7 @@ export const TradeUpScreen: React.FC = () => {
           }}
           reward={reward}
           currency={currency}
+          highestSelectedRarity={highestSelectedRarity}
         />
       )}
       {/* Filter Modal - Force Rebuild */}
@@ -545,9 +602,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   smallSelectedCard: {
-    width: 60,
-    marginHorizontal: -8, // Stacking effect
-    transform: [{ scale: 0.9 }],
+    width: 48,
+    marginHorizontal: -6, // Tighter stacking for rectangular shape
+    transform: [{ scale: 1.1 }], // Slightly larger to see details
   },
   moreBadge: {
     width: 36,
@@ -617,18 +674,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748b',
   },
-  cardGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4, // Unified with Portfolio/Market
-  },
-  cardList: {
-    flexDirection: 'column',
-    width: '100%',
-    // marginHorizontal: -20, // Removed negative margin to ensure inside parent bounds
-  },
   gridItem: {
-    padding: 4, // Reduced from 8
+    padding: 4, 
     position: 'relative'
   },
 
@@ -710,6 +757,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   listItem: { paddingHorizontal: 0, paddingVertical: 8, position: 'relative' },
+  cardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  cardList: {
+    paddingHorizontal: 0,
+  },
 
   // Sort Modal Styles
   modalOverlay: {
@@ -797,5 +852,22 @@ const styles = StyleSheet.create({
       fontSize: 14,
       fontWeight: '700',
       color: '#475569',
+  },
+  selectionCountBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    zIndex: 10,
+  },
+  selectionCountText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
   },
 });

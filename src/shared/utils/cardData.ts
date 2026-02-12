@@ -263,7 +263,7 @@ export const mockCards: Card[] = [
     name: 'Charizard Holo',
     rarity: 'rare_holo',
     value: 450000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo/Arceus_001_Charizard.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Arceus_001_Charizard.png'),
     isTrending: true,
   },
   {
@@ -271,7 +271,7 @@ export const mockCards: Card[] = [
     name: 'Alakazam Holo',
     rarity: 'rare_holo',
     value: 320000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo/Base_001_Alakazam.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Base_001_Alakazam.png'),
     isTrending: false,
   },
   {
@@ -279,7 +279,7 @@ export const mockCards: Card[] = [
     name: 'Dark Alakazam',
     rarity: 'rare_holo',
     value: 350000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo/Team_Rocket_001_Dark_Alakazam.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Team_Rocket_001_Dark_Alakazam.png'),
     isTrending: true,
   },
 
@@ -289,7 +289,7 @@ export const mockCards: Card[] = [
     name: 'Venusaur-EX',
     rarity: 'rare_holo_ex',
     value: 550000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo EX/XY_001_Venusaur-EX.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_EX/XY_001_Venusaur-EX.png'),
     isTrending: true,
   },
 
@@ -299,7 +299,7 @@ export const mockCards: Card[] = [
     name: 'Venusaur & Snivy-GX',
     rarity: 'rare_holo_gx',
     value: 680000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo GX/Cosmic_Eclipse_001_Venusaur_and_Snivy-GX.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_GX/Cosmic_Eclipse_001_Venusaur_and_Snivy-GX.png'),
     isTrending: true,
   },
 
@@ -309,7 +309,7 @@ export const mockCards: Card[] = [
     name: 'Venusaur V',
     rarity: 'rare_holo_v',
     value: 350000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Holo V/Champions_Path_001_Venusaur_V.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_V/Champions_Path_001_Venusaur_V.png'),
     isTrending: false,
   },
 
@@ -319,7 +319,7 @@ export const mockCards: Card[] = [
     name: 'Charizard VMAX Rainbow',
     rarity: 'rare_rainbow',
     value: 2500000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Rainbow/Champions_Path_074_Charizard_VMAX.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Rainbow/Champions_Path_074_Charizard_VMAX.png'),
     isTrending: true,
   },
   {
@@ -327,7 +327,7 @@ export const mockCards: Card[] = [
     name: 'Gyarados-GX Rainbow',
     rarity: 'rare_rainbow',
     value: 1800000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Rainbow/Crimson_Invasion_112_Gyarados-GX.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Rainbow/Crimson_Invasion_112_Gyarados-GX.png'),
     isTrending: true,
   },
 
@@ -337,7 +337,7 @@ export const mockCards: Card[] = [
     name: 'M Rayquaza-EX Secret',
     rarity: 'rare_secret',
     value: 3500000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Secret/Ancient_Origins_098_M_Rayquaza-EX.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Ancient_Origins_098_M_Rayquaza-EX.png'),
     isTrending: true,
   },
   {
@@ -345,7 +345,7 @@ export const mockCards: Card[] = [
     name: 'Giratina VSTAR Secret',
     rarity: 'rare_secret',
     value: 4200000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Secret/Crown_Zenith_Galarian_Gallery_GG69_Giratina_VSTAR.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Crown_Zenith_Galarian_Gallery_GG69_Giratina_VSTAR.png'),
     isTrending: true,
   },
   {
@@ -353,7 +353,7 @@ export const mockCards: Card[] = [
     name: 'Dark Raichu Secret',
     rarity: 'rare_secret',
     value: 2800000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare Secret/Team_Rocket_083_Dark_Raichu.png'),
+    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Team_Rocket_083_Dark_Raichu.png'),
     isTrending: false,
   },
 
@@ -387,13 +387,13 @@ export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
   const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
   
   if (highestRank <= 2) { // Common, Uncommon
-    return { upgrade: 0.60, same: 0.30, downgrade: 0.10 };
+    return { upgrade: 0.40, same: 0.45, downgrade: 0.15 };
   } else if (highestRank <= 4) { // Rare, Holo
-    return { upgrade: 0.40, same: 0.40, downgrade: 0.20 };
+    return { upgrade: 0.25, same: 0.50, downgrade: 0.25 };
   } else if (highestRank <= 7) { // EX, GX, V
-    return { upgrade: 0.20, same: 0.50, downgrade: 0.30 };
+    return { upgrade: 0.10, same: 0.50, downgrade: 0.40 };
   } else { // Rainbow, Secret
-    return { upgrade: 0.05, same: 0.45, downgrade: 0.50 };
+    return { upgrade: 0.02, same: 0.38, downgrade: 0.60 };
   }
 };
 
@@ -436,16 +436,26 @@ export const generateReward = (selectedCards: Card[]): Card => {
     promo: ['Pikachu (Promo)', 'Eevee (Promo)', 'Meowth (Promo)', 'Psyduck (Promo)'],
   };
 
-  const possibleNames = namesByRarity[targetRarity] || ['Unknown Pokemon'];
-  const name = possibleNames[Math.floor(Math.random() * possibleNames.length)];
+  // Find all matching cards for the target rarity
+  const matchingCards = mockCards.filter(c => c.rarity === targetRarity);
+  
+  // Pick one specific source card to base the reward on
+  const sourceCard = matchingCards.length > 0 
+    ? matchingCards[Math.floor(Math.random() * matchingCards.length)] 
+    : mockCards[0]; // Fallback
+
+  const name = sourceCard.name;
+  const image = sourceCard.image;
 
   return {
-    id: `fusion-${Date.now()}`,
+    id: `fusion-${sourceCard.id}-${targetRarity}`,
     name: `${name} (Fusion)`,
     rarity: targetRarity,
     value: rewardValue,
     tcgPlayerPrice: Math.floor(rewardValue * 1.1),
     cardMarketPrice: Math.floor(rewardValue * 0.95),
+    image: image,
+    symbol: sourceCard.symbol || `PKM-${sourceCard.id}`,
   };
 };
 

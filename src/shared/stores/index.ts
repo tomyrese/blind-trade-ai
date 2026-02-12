@@ -36,6 +36,6 @@ export { useFavoritesStore } from './favoritesStore';
 export { useTranslation } from '../utils/translations';
 
 // Re-export types
-export type { Asset } from './portfolioStore';
+export type { Asset } from '../../domain/models/Asset';
 export type { Order } from './ordersStore';
 export type { Theme, Language, ChartType } from './uiPreferencesStore';

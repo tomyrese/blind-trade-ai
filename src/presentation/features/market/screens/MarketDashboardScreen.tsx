@@ -56,6 +56,8 @@ export const MarketDashboardScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const marketsQuery = useMarkets();
   
+  console.log('DEBUG: MarketDashboard render. isLoading:', marketsQuery.isLoading, 'Data length:', Array.isArray(marketsQuery.data) ? marketsQuery.data.length : 'N/A');
+
   // Cart Store for Badge
   const cartItems = useCartStore((state: any) => state.items);
   const cartCount = cartItems.length;
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
       flexDirection: 'row', // Keeping row to align items
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingHorizontal: 8,
       marginBottom: 12,
       gap: 12,
   },

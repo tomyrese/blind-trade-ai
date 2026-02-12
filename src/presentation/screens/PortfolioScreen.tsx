@@ -17,7 +17,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
 import { formatCurrency, formatCompactVND } from '../../shared/utils/currency';
 import { CardItem } from '../features/tradeup/components/CardItem';
@@ -276,6 +276,7 @@ export const PortfolioScreen: React.FC = () => {
                       image: asset.image,
                     }}
                     showActions={false}
+                    hideSeller={true}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
                     largeImage={true} // Use larger image in Portfolio Grid
                     onToggle={() => {

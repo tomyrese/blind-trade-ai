@@ -6,8 +6,8 @@ import { MarketDashboardScreen } from '../features/market/screens/MarketDashboar
 import { useMarkets } from '../../shared/hooks/useMarkets';
 
 export const HomeScreen: React.FC = () => {
-  const { isLoading, error } = useMarkets();
-  console.log('HomeScreen mounted');
+  const { isLoading, error, data } = useMarkets();
+  console.log('DEBUG: HomeScreen mounted. isLoading:', isLoading, 'error:', error, 'dataLength:', data?.length);
 
   if (isLoading) {
     return (

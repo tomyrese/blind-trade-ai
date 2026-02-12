@@ -1,19 +1,7 @@
-// Portfolio Store
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKVStorage } from '../storage/mmkv';
-
-export interface Asset {
-  id: string;
-  name: string;
-  symbol: string; // e.g., "PKM-025"
-  rarity: string;
-  rarityLabel?: string;
-  amount: number;
-  value: number; // Current market value in VND
-  purchasePrice: number; // Price at which it was acquired
-  image?: any;
-}
+import { Asset } from '../../domain/models/Asset';
 
 interface PortfolioState {
   assets: Asset[];
@@ -38,15 +26,20 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       addAsset: (asset) =>
         set((state) => {
-          const exists = state.assets.find((a) => a.id === asset.id);
-          if (exists) {
-            return {
-              assets: state.assets.map((a) =>
-                a.id === asset.id ? { ...a, amount: a.amount + asset.amount } : a
-              ),
-            };
+          // Check if an asset with the same symbol and rarity already exists
+          const existingIndex = state.assets.findIndex(
+            (a) => a.symbol === asset.symbol && a.rarity === asset.rarity
+          );
+
+          let newAssets;
+          if (existingIndex > -1) {
+            newAssets = state.assets.map((a, index) =>
+              index === existingIndex ? { ...a, amount: a.amount + asset.amount } : a
+            );
+          } else {
+            newAssets = [asset, ...state.assets];
           }
-          const newAssets = [asset, ...state.assets];
+
           const totalValue = newAssets.reduce((sum, a) => sum + (a.value * a.amount), 0);
           return { assets: newAssets, totalValue };
         }),
@@ -86,15 +79,14 @@ export const usePortfolioStore = create<PortfolioState>()(
       
       seedPortfolio: () => {
         const { mockCards } = require('../utils/cardData');
-        // Take a diverse set of 10 cards (e.g., every other card or a slice of interesting ones)
-        // For simplicity and quality, we'll take a specific slice or map carefully
         const demoAssets = mockCards.slice(0, 10).map((card: any, index: number) => ({
-          id: `demo-${card.id}-${index}`, // Unique ID
+          id: `seed-${card.id}-${index}`, // Unique for seed but predictable
           name: card.name,
           symbol: card.symbol || `PKM-${card.id.padStart(3, '0')}`,
           rarity: card.rarity,
-          amount: index === 0 ? 3 : (index < 4 ? 2 : 1), // Varied amounts
+          amount: index === 0 ? 3 : (index < 4 ? 2 : 1),
           value: card.value,
+          purchasePrice: card.value,
           image: card.image,
         }));
         
@@ -106,7 +98,10 @@ export const usePortfolioStore = create<PortfolioState>()(
           const updatedAssets = [...state.assets];
           
           newItems.forEach((item: Asset) => {
-            const existingIndex = updatedAssets.findIndex(a => a.id === item.id || a.symbol === item.symbol);
+            const existingIndex = updatedAssets.findIndex(
+              (a) => a.symbol === item.symbol && a.rarity === item.rarity
+            );
+
             if (existingIndex > -1) {
               updatedAssets[existingIndex] = {
                 ...updatedAssets[existingIndex],
@@ -124,16 +119,17 @@ export const usePortfolioStore = create<PortfolioState>()(
       },
       removeFromPortfolio: (id) =>
         set((state) => {
-          const asset = state.assets.find(a => a.id === id);
-          if (!asset) return state;
+          const assetIndex = state.assets.findIndex(a => a.id === id);
+          if (assetIndex === -1) return state;
           
+          const asset = state.assets[assetIndex];
           let newAssets;
           if (asset.amount > 1) {
-            newAssets = state.assets.map(a => 
-              a.id === id ? { ...a, amount: a.amount - 1 } : a
+            newAssets = state.assets.map((a, index) => 
+              index === assetIndex ? { ...a, amount: a.amount - 1 } : a
             );
           } else {
-            newAssets = state.assets.filter(a => a.id !== id);
+            newAssets = state.assets.filter((_, index) => index !== assetIndex);
           }
           
           const totalValue = newAssets.reduce((sum, a) => sum + (a.value * a.amount), 0);

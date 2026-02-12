@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet, Image } from 'react-native';
 import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image as ImageIcon } from 'lucide-react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { Card, RARITY_CONFIGS } from '../../../../shared/utils/cardData';
 import { formatCurrency } from '../../../../shared/utils/currency';
 import { useUserStore } from '../../../../shared/stores/userStore';
@@ -21,9 +21,10 @@ interface CardItemProps {
   size?: 'normal' | 'small' | 'list';
   largeImage?: boolean; // New prop for controlling image size in grid
   amount?: number; // New prop for showing quantity badge
+  hideSeller?: boolean; // New prop
 }
 
-export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, showRarity = true, size = 'normal', largeImage = false, amount }) => {
+export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onToggle, disabled = false, showActions = true, showRarity = true, size = 'normal', largeImage = false, amount, hideSeller = false }) => {
     const isFavorite = useFavoritesStore((state) => state.isFavorite(card.id));
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const addToCart = useCartStore((state) => state.addToCart);
@@ -177,7 +178,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     {/* Gradient Background for Holo effect if applicable */}
                         <View style={[
                             styles.artworkBackground, 
-                            { backgroundColor: (isSmall || isList) ? config.borderColor : config.glowColor }, 
+                            { backgroundColor: (isSmall || isList) ? 'transparent' : config.glowColor }, 
                         ]}>
                             {card.image ? (
                                 <Image 
@@ -231,7 +232,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                             </Text>
                             
                             {/* List Mode Seller Info */}
-                            {isList && (
+                            {isList && !hideSeller && (
                                 <Text style={[styles.sellerInfo, { fontSize: 10, marginTop: 3 }]} numberOfLines={1}>
                                     • {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
                                 </Text>
@@ -240,7 +241,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     </View>
 
                     {/* Grid Mode Seller Info */}
-                    {!isList && (
+                    {!isList && !hideSeller && (
                         <Text style={styles.sellerInfo} numberOfLines={1}>
                         {t('listed_by')}: {card.listings?.[0]?.sellerName || card.symbol || 'Trainer'}
                         </Text>
@@ -350,9 +351,10 @@ const styles = StyleSheet.create({
       overflow: 'hidden',
   },
   containerSmall: {
-    aspectRatio: 1, // Square for cart thumbnail
-    padding: 4, // Less padding to maximize image
-    borderRadius: 16,
+    aspectRatio: 0.7, // Rectangular card-like
+    width: 48, // Fixed width for top bar
+    padding: 0,
+    borderRadius: 8,
   },
   selectedContainer: {
     transform: [{ scale: 0.97 }],
@@ -429,6 +431,8 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 8,
   },
   artworkContainer: {
     width: '52%', // Reduced from 60% to clear price on Home screen
@@ -439,11 +443,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   artworkContainerSmall: {
-    width: '100%', // Fill the square container
+    width: '100%',
     height: '100%',
-    borderRadius: 14, // Match outer radius roughly
-    borderWidth: 1, // Restore inner border
-    padding: 1,
+    borderRadius: 8,
+    borderWidth: 0, 
+    padding: 0,
     backgroundColor: 'transparent',
   },
   artworkBackground: {

@@ -68,6 +68,8 @@ const translations = {
     fusion_requirement_title: 'Yêu cầu',
     fusion_requirement_message: 'Bạn cần ít nhất 2 thẻ bài để bắt đầu hợp nhất.',
     no_results_found: 'Không tìm thấy kết quả nào.',
+    fusion_success: 'HỢP NHẤT THÀNH CÔNG!',
+    fusion_failed: 'HỢP NHẤT THẤT BẠI!',
     
     // Cart
     cart_title: 'Giỏ Hàng',
@@ -128,7 +130,7 @@ const translations = {
     sort_date_newest: 'Mới đăng bán',
     sort_date_oldest: 'Cũ nhất',
     sort_name_asc: 'Tên: A-Z',
-    tab_hot: 'Xu Hướng',
+    tab_hot: 'Hot',
     tab_all: 'Tất Cả',
     no_cards_found: 'Không tìm thấy thẻ bài nào.',
     
@@ -353,6 +355,8 @@ const translations = {
     fusion_requirement_title: 'Requirement',
     fusion_requirement_message: 'You need at least 2 cards to start fusion.',
     no_results_found: 'No results found.',
+    fusion_success: 'FUSION SUCCESS!',
+    fusion_failed: 'FUSION FAILED!',
     
     // Cart
     cart_title: 'Shopping Cart',
@@ -413,7 +417,7 @@ const translations = {
     sort_date_newest: 'Newest Listed',
     sort_date_oldest: 'Oldest',
     sort_name_asc: 'Name: A-Z',
-    tab_hot: 'Trending',
+    tab_hot: 'Hot',
     tab_all: 'All',
     no_cards_found: 'No cards found.',
 

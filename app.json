@@ -1,4 +1,8 @@
 {
   "name": "BlindTradeAI",
-  "displayName": "BlindTradeAI"
+  "displayName": "BlindTradeAI",
+  "expo": {
+    "name": "BlindTradeAI",
+    "slug": "blindtradeai"
+  }
 }

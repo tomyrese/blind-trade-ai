@@ -20,9 +20,10 @@ export const RootNavigator: React.FC = () => {
   const hasHydrated = useUserStore((state) => state.hasHydrated);
 
   // Local state to track if we should stop waiting
-  const [shouldShowApp, setShouldShowApp] = useState(false);
+  const [shouldShowApp, setShouldShowApp] = useState(() => useUserStore.getState().hasHydrated);
 
   useEffect(() => {
+    // If we're already showing the app, just listen for changes
     // If store says it's hydrated, show app immediately
     if (hasHydrated) {
       setShouldShowApp(true);

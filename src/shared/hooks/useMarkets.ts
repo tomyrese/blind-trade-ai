@@ -1,7 +1,7 @@
 // TanStack Query Hooks
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { marketsApi, assetsApi } from '../api/endpoints';
-import { Asset } from '../stores/portfolioStore';
+import { marketsApi, assetsApi, trendingApi } from '../api/endpoints';
+import { Asset } from '../../domain/models/Asset';
 
 // Query Keys
 export const queryKeys = {
@@ -33,7 +33,7 @@ export const useMarket = (symbol: string) => {
 export const usePrice = (symbol: string) => {
   return useQuery({
     queryKey: ['price', symbol],
-    queryFn: () => marketApi.fetchPrice(symbol),
+    queryFn: () => marketsApi.fetchPrice(symbol),
     staleTime: 10000, // 10 seconds
     refetchInterval: 15000, // Refetch every 15 seconds
     enabled: !!symbol,
