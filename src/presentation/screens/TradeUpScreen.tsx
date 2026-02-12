@@ -1,22 +1,37 @@
+import {
+  Card,
+  CardRarity,
+  mapRarity,
+  RARITY_RANKS,
+  generateReward,
+  getFusionProbabilities,
+  mockCards
+} from '../../shared/utils/cardData';
+
+
+const [reward, setReward] = useState<Card | null>(null);
+const [isOpen, setIsOpen] = useState(false);
+
+
+import { executeGacha } from '../../shared/utils/gachaEngine';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Layers, 
-  Zap, 
-  Info, 
-  ArrowRight, 
-  Sparkles, 
-  Filter, 
-  Search, 
-  ArrowUpDown, 
-  LayoutGrid, 
-  List, 
+import {
+  Layers,
+  Zap,
+  Info,
+  ArrowRight,
+  Sparkles,
+  Filter,
+  Search,
+  ArrowUpDown,
+  LayoutGrid,
+  List,
   X,
   Package
 } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
-import { CardRarity, mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { Lootbox3D } from '../features/tradeup/components/Lootbox3D';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
@@ -24,7 +39,6 @@ import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
 import { useUIStore } from '../../shared/stores/uiStore';
 import { LinearGradient } from 'react-native-linear-gradient';
-import { generateReward, getFusionProbabilities, mockCards, Card } from '../../shared/utils/cardData';
 import { formatCurrency } from '../../shared/utils/currency';
 import { useNavigation } from '@react-navigation/native';
 
@@ -36,7 +50,12 @@ export const TradeUpScreen: React.FC = () => {
   const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const { t } = useTranslation();
   const showNotification = useUIStore((state) => state.showNotification);
-  
+  const handleGacha = () => {
+    const result = executeGacha();
+    setReward(result);
+    setIsOpen(true);
+  };
+
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isOpening, setIsOpening] = useState(false);
   const [reward, setReward] = useState<Card | null>(null);
@@ -82,9 +101,9 @@ export const TradeUpScreen: React.FC = () => {
 
   const filteredCards = useMemo(() => {
     let result = [...ownedCards];
-    
+
     if (searchQuery) {
-      result = result.filter(c => 
+      result = result.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -118,7 +137,7 @@ export const TradeUpScreen: React.FC = () => {
   const fusionChances = useMemo(() => {
     const cards = ownedCards.filter(c => selectedCards.includes(c.id));
     if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
-    
+
     // Use the logic from cardData.ts
     const odds = getFusionProbabilities(cards);
     return {
@@ -149,7 +168,7 @@ export const TradeUpScreen: React.FC = () => {
 
     setSelectedCards((prev) => {
       const currentCount = prev.filter(i => i === id).length;
-      
+
       // If we have more than one and haven't selected all of them, add another
       if (currentCount < asset.amount) {
         if (prev.length >= 10) {
@@ -174,7 +193,7 @@ export const TradeUpScreen: React.FC = () => {
     // Get the unique asset IDs to find their details
     const uniqueIds = Array.from(new Set(selectedCards));
     const cardsToFuse: Card[] = [];
-    
+
     // Build the list of cards for fusion calculation (including duplicates)
     selectedCards.forEach(id => {
         const asset = assets.find(a => a.id === id);
@@ -197,7 +216,7 @@ export const TradeUpScreen: React.FC = () => {
 
     // Remove selected assets
     selectedCards.forEach(id => removeAsset(id));
-    
+
     // Add reward
     addAsset({
       id: newReward.id,
@@ -209,7 +228,7 @@ export const TradeUpScreen: React.FC = () => {
       purchasePrice: totalValue / selectedCards.length,
       image: newReward.image,
     });
-    
+
     setSelectedCards([]);
   };
 
@@ -262,8 +281,8 @@ export const TradeUpScreen: React.FC = () => {
             )}
           </View>
 
-          <Pressable 
-            style={[styles.fuseButton, selectedCards.length < 2 && styles.buttonDisabled]} 
+          <Pressable
+            style={[styles.fuseButton, selectedCards.length < 2 && styles.buttonDisabled]}
             onPress={handleFusion}
             disabled={selectedCards.length < 2}
           >
@@ -297,30 +316,30 @@ export const TradeUpScreen: React.FC = () => {
                           <ArrowUpDown size={20} color="#1e293b" />
                       </Pressable>
 
-                      <Pressable 
-                          onPress={() => setFilterModalVisible(true)} 
+                      <Pressable
+                          onPress={() => setFilterModalVisible(true)}
                           style={[
-                              styles.controlBtn, 
+                              styles.controlBtn,
                               selectedRarities.length > 0 && { backgroundColor: '#fef2f2', borderColor: '#fee2e2' }
                           ]}
                       >
-                          <Filter 
-                              size={20} 
-                              color={selectedRarities.length > 0 ? '#ef4444' : '#1e293b'} 
-                              fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'} 
+                          <Filter
+                              size={20}
+                              color={selectedRarities.length > 0 ? '#ef4444' : '#1e293b'}
+                              fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'}
                           />
                       </Pressable>
                   </View>
 
                   <View style={styles.viewSwitcher}>
-                      <Pressable 
+                      <Pressable
                           onPress={() => setViewMode('grid')}
                           style={[styles.viewIconBtn, viewMode === 'grid' && styles.activeViewIcon]}
                       >
                           <LayoutGrid size={20} color={viewMode === 'grid' ? '#0f172a' : '#94a3b8'} />
                       </Pressable>
                       <View style={styles.vDivider} />
-                      <Pressable 
+                      <Pressable
                           onPress={() => setViewMode('list')}
                           style={[styles.viewIconBtn, viewMode === 'list' && styles.activeViewIcon]}
                       >
@@ -329,13 +348,13 @@ export const TradeUpScreen: React.FC = () => {
                   </View>
               </View>
           </View>
-          
+
           <View style={viewMode === 'grid' ? styles.cardGrid : styles.cardList}>
             {filteredCards.map((card) => (
-              <View 
-                key={card.id} 
+              <View
+                key={card.id}
                 style={[
-                    viewMode === 'grid' ? styles.gridItem : styles.listItem, 
+                    viewMode === 'grid' ? styles.gridItem : styles.listItem,
                     viewMode === 'grid' ? { width: isTablet ? '33.33%' : '50%' } : { width: '100%' }
                 ]}
               >
@@ -359,7 +378,7 @@ export const TradeUpScreen: React.FC = () => {
               </View>
             ))}
           </View>
-          
+
           {filteredCards.length === 0 && (
             <View style={styles.emptyInventory}>
               {searchQuery ? (
@@ -392,8 +411,8 @@ export const TradeUpScreen: React.FC = () => {
         animationType="slide"
         onRequestClose={() => setFilterModalVisible(false)}
       >
-        <Pressable 
-            style={styles.modalOverlay} 
+        <Pressable
+            style={styles.modalOverlay}
             onPress={() => setFilterModalVisible(false)}
         >
             <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
@@ -403,7 +422,7 @@ export const TradeUpScreen: React.FC = () => {
                         <X size={24} color="#64748b" />
                     </Pressable>
                 </View>
-                
+
                 <View style={styles.modalBody}>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                         {Object.keys(RARITY_RANKS).map((rarityKey) => {
@@ -437,7 +456,7 @@ export const TradeUpScreen: React.FC = () => {
                     </View>
 
                     {selectedRarities.length > 0 && (
-                        <Pressable 
+                        <Pressable
                             style={styles.clearFilterBtn}
                             onPress={() => {
                                 setSelectedRarities([]);
@@ -459,8 +478,8 @@ export const TradeUpScreen: React.FC = () => {
         animationType="slide"
         onRequestClose={() => setSortModalVisible(false)}
       >
-        <Pressable 
-            style={styles.modalOverlay} 
+        <Pressable
+            style={styles.modalOverlay}
             onPress={() => setSortModalVisible(false)}
         >
             <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
@@ -470,7 +489,7 @@ export const TradeUpScreen: React.FC = () => {
                         <X size={24} color="#64748b" />
                     </Pressable>
                 </View>
-                
+
                 <View style={styles.modalBody}>
                     {SORT_OPTIONS.map((option) => (
                         <Pressable
@@ -675,7 +694,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   gridItem: {
-    padding: 4, 
+    padding: 4,
     position: 'relative'
   },
 
@@ -688,7 +707,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  
+
   // Filter Section
   filterSection: {
     marginBottom: 20,

@@ -17,6 +17,8 @@ export type RootStackParamList = {
   Payment: { items?: any[]; total?: number; fromCart?: boolean };
   PurchaseHistory: undefined;
   TransactionDetail: { transactionId: string };
+  Gacha: undefined;
+
 };
 
 // Main Bottom Tab Navigator

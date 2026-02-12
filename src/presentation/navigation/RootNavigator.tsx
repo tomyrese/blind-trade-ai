@@ -12,26 +12,22 @@ import { PaymentScreen } from '../screens/PaymentScreen';
 import { PurchaseHistoryScreen } from '../screens/PurchaseHistoryScreen';
 import { TransactionDetailScreen } from '../screens/TransactionDetailScreen';
 import { useUserStore } from '../../shared/stores/userStore';
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const hasHydrated = useUserStore((state) => state.hasHydrated);
 
-  // Local state to track if we should stop waiting
-  const [shouldShowApp, setShouldShowApp] = useState(() => useUserStore.getState().hasHydrated);
+  const [shouldShowApp, setShouldShowApp] = useState(() =>
+    useUserStore.getState().hasHydrated
+  );
 
   useEffect(() => {
-    // If we're already showing the app, just listen for changes
-    // If store says it's hydrated, show app immediately
     if (hasHydrated) {
       setShouldShowApp(true);
       return;
     }
 
-    // Safety timeout: If hydration takes more than 2.5 seconds, just show the app
-    // This resolves the "infinite loading" spin if rehydration listener fails
     const timer = setTimeout(() => {
       setShouldShowApp(true);
     }, 2500);
@@ -41,9 +37,23 @@ export const RootNavigator: React.FC = () => {
 
   if (!shouldShowApp) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ee1515' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#ee1515',
+        }}
+      >
         <ActivityIndicator size="large" color="#ffffff" />
-        <Text style={{ color: '#ffffff', marginTop: 12, fontWeight: '700', fontSize: 12 }}>
+        <Text
+          style={{
+            color: '#ffffff',
+            marginTop: 12,
+            fontWeight: '700',
+            fontSize: 12,
+          }}
+        >
           POKÉ-MARKET INITIALIZING...
         </Text>
       </View>

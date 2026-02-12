@@ -164,10 +164,10 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
 
 // Helper to get image or fallback
 const getCardImage = (rarity: string, name: string) => {
-    // In a real app, this would map to actual assets. 
+    // In a real app, this would map to actual assets.
     // For now we try to use existing asserts or return undefined to let CardItem render the fallback letter.
     // We will use the existing paths where possible or just null to test the renders.
-    return null; 
+    return null;
 };
 
 export const mockCards: Card[] = [
@@ -383,9 +383,9 @@ export interface fusionOdds {
 
 export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
   if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
-  
+
   const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
-  
+
   if (highestRank <= 2) { // Common, Uncommon
     return { upgrade: 0.40, same: 0.45, downgrade: 0.15 };
   } else if (highestRank <= 4) { // Rare, Holo
@@ -401,10 +401,10 @@ export const generateReward = (selectedCards: Card[]): Card => {
   const totalValue = selectedCards.reduce((sum, c) => sum + c.value, 0);
   const odds = getFusionProbabilities(selectedCards);
   const roll = Math.random();
-  
+
   const ranks = Object.keys(RARITY_RANKS) as CardRarity[];
   const highestRank = Math.max(...selectedCards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
-  
+
   let targetRarity: CardRarity = 'common';
   let multiplier = 1.0;
 
@@ -422,7 +422,7 @@ export const generateReward = (selectedCards: Card[]): Card => {
   }
 
   const rewardValue = Math.floor(totalValue * multiplier);
-  
+
   const namesByRarity: Record<CardRarity, string[]> = {
     common: ['Rattata', 'Pidgey', 'Zubat', 'Caterpie'],
     uncommon: ['Ivysaur', 'Charmeleon', 'Wartortle', 'Pikachu'],
@@ -438,10 +438,10 @@ export const generateReward = (selectedCards: Card[]): Card => {
 
   // Find all matching cards for the target rarity
   const matchingCards = mockCards.filter(c => c.rarity === targetRarity);
-  
+
   // Pick one specific source card to base the reward on
-  const sourceCard = matchingCards.length > 0 
-    ? matchingCards[Math.floor(Math.random() * matchingCards.length)] 
+  const sourceCard = matchingCards.length > 0
+    ? matchingCards[Math.floor(Math.random() * matchingCards.length)]
     : mockCards[0]; // Fallback
 
   const name = sourceCard.name;
@@ -461,19 +461,19 @@ export const generateReward = (selectedCards: Card[]): Card => {
 
 export const mapRarity = (rarity: string | undefined): CardRarity => {
   if (!rarity) return 'common';
-  
+
   const validRarities: CardRarity[] = [
-    'common', 'uncommon', 'rare', 'rare_holo', 
-    'rare_holo_ex', 'rare_holo_gx', 
+    'common', 'uncommon', 'rare', 'rare_holo',
+    'rare_holo_ex', 'rare_holo_gx',
     'rare_holo_v', 'rare_rainbow', 'rare_secret', 'promo'
   ];
-  
+
   if (validRarities.includes(rarity as CardRarity)) {
     return rarity as CardRarity;
   }
 
   const r = rarity.toLowerCase();
-  
+
   if (r.includes('rainbow') || r.includes('hyper')) return 'rare_rainbow';
   if (r.includes('secret')) return 'rare_secret';
   if (r.includes('v') && !r.includes('vmax') && !r.includes('vstar')) return 'rare_holo_v';
@@ -483,6 +483,6 @@ export const mapRarity = (rarity: string | undefined): CardRarity => {
   if (r.includes('holo')) return 'rare_holo';
   if (r.includes('rare')) return 'rare';
   if (r.includes('uncommon')) return 'uncommon';
-  
+
   return 'common';
 };
