@@ -47,6 +47,10 @@ export const TradeUpScreen: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('value_desc');
   const [isSortModalVisible, setSortModalVisible] = useState(false);
 
+  // Filter state
+  const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setSearchQuery(inputText), 350);
@@ -85,6 +89,10 @@ export const TradeUpScreen: React.FC = () => {
       );
     }
 
+    if (selectedRarities.length > 0) {
+        result = result.filter(c => selectedRarities.includes(mapRarity(c.rarity)));
+    }
+
     result.sort((a, b) => {
       switch (sortBy) {
         case 'value_desc': return b.value - a.value;
@@ -97,7 +105,7 @@ export const TradeUpScreen: React.FC = () => {
     });
 
     return result;
-  }, [ownedCards, searchQuery, sortBy]);
+  }, [ownedCards, searchQuery, sortBy, selectedRarities]);
 
   const totalValue = useMemo(() => {
     return ownedCards
@@ -236,9 +244,25 @@ export const TradeUpScreen: React.FC = () => {
               </View>
 
               <View style={styles.controlsRow}>
-                  <Pressable onPress={() => setSortModalVisible(true)} style={styles.controlBtn}>
-                      <ArrowUpDown size={20} color="#1e293b" />
-                  </Pressable>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <Pressable onPress={() => setSortModalVisible(true)} style={styles.controlBtn}>
+                          <ArrowUpDown size={20} color="#1e293b" />
+                      </Pressable>
+
+                      <Pressable 
+                          onPress={() => setFilterModalVisible(true)} 
+                          style={[
+                              styles.controlBtn, 
+                              selectedRarities.length > 0 && { backgroundColor: '#fef2f2', borderColor: '#fee2e2' }
+                          ]}
+                      >
+                          <Filter 
+                              size={20} 
+                              color={selectedRarities.length > 0 ? '#ef4444' : '#1e293b'} 
+                              fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'} 
+                          />
+                      </Pressable>
+                  </View>
 
                   <View style={styles.viewSwitcher}>
                       <Pressable 
@@ -303,6 +327,73 @@ export const TradeUpScreen: React.FC = () => {
           reward={reward}
         />
       )}
+      {/* Filter Modal */}
+      <Modal
+        visible={isFilterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setFilterModalVisible(false)}
+        >
+            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{t('filter_title')}</Text>
+                    <Pressable onPress={() => setFilterModalVisible(false)}>
+                        <X size={24} color="#64748b" />
+                    </Pressable>
+                </View>
+                
+                <View style={styles.modalBody}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {Object.keys(RARITY_RANKS).map((rarityKey) => {
+                            const isSelected = selectedRarities.includes(rarityKey);
+                            return (
+                                <Pressable
+                                    key={rarityKey}
+                                    style={[
+                                        styles.filterChip,
+                                        isSelected && styles.activeFilterChip
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedRarities(prev => {
+                                            if (prev.includes(rarityKey)) {
+                                                return prev.filter(r => r !== rarityKey);
+                                            } else {
+                                                return [...prev, rarityKey];
+                                            }
+                                        });
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.filterChipLabel,
+                                        isSelected && styles.activeFilterChipLabel
+                                    ]}>
+                                        {t(`rarity_${rarityKey}` as any)}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+
+                    {selectedRarities.length > 0 && (
+                        <Pressable 
+                            style={styles.clearFilterBtn}
+                            onPress={() => {
+                                setSelectedRarities([]);
+                                setFilterModalVisible(false);
+                            }}
+                        >
+                            <Text style={styles.clearFilterText}>{t('clear_filter')}</Text>
+                        </Pressable>
+                    )}
+                </View>
+            </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* Sort Modal */}
       <Modal
         visible={isSortModalVisible}
@@ -672,5 +763,38 @@ const styles = StyleSheet.create({
       height: 8,
       borderRadius: 4,
       backgroundColor: '#ef4444',
+  },
+  filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 12,
+      backgroundColor: '#f8fafc',
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+  },
+  activeFilterChip: {
+      backgroundColor: '#fef2f2',
+      borderColor: '#fee2e2',
+  },
+  filterChipLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#64748b',
+  },
+  activeFilterChipLabel: {
+      color: '#ef4444',
+      fontWeight: '700',
+  },
+  clearFilterBtn: {
+      marginTop: 16,
+      alignItems: 'center',
+      paddingVertical: 12,
+      backgroundColor: '#f1f5f9',
+      borderRadius: 12,
+  },
+  clearFilterText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#475569',
   },
 });

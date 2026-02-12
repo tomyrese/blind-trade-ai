@@ -1,7 +1,7 @@
 // OpenRouter AI Service for Pokemon Chat
 import { Market } from '../../domain/models/Market';
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const SYSTEM_PROMPT = `You are Poké-AI, an expert assistant specializing in the Pokémon Trading Card Game (TCG).

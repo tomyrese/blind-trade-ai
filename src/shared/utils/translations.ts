@@ -273,6 +273,21 @@ const translations = {
     ai_chat_placeholder: 'Hỏi Poké-AI về Pokémon...',
     ai_chat_status: 'Online | Sẵn sàng hỗ trợ',
     ai_chat_error: 'Đã xảy ra lỗi. Vui lòng thử lại.',
+
+    // Rarity
+    rarity_common: 'Common',
+    rarity_uncommon: 'Uncommon',
+    rarity_rare: 'Rare',
+    rarity_rare_holo: 'Rare Holo',
+    rarity_rare_holo_ex: 'Rare Holo EX',
+    rarity_rare_holo_gx: 'Rare Holo GX',
+    rarity_rare_holo_v: 'Rare Holo V',
+    rarity_rare_rainbow: 'Rare Rainbow',
+    rarity_rare_secret: 'Secret Rare',
+    rarity_promo: 'Promo',
+    filter_title: 'Lọc theo độ hiếm',
+    clear_filter: 'Xóa bộ lọc',
+    apply_filter: 'Áp dụng',
   },
   en: {
     // Common
@@ -543,6 +558,21 @@ const translations = {
     ai_chat_placeholder: 'Ask Poké-AI about Pokémon...',
     ai_chat_status: 'Online | Ready to assist',
     ai_chat_error: 'An error occurred. Please try again.',
+
+    // Rarity
+    rarity_common: 'Common',
+    rarity_uncommon: 'Uncommon',
+    rarity_rare: 'Rare',
+    rarity_rare_holo: 'Rare Holo',
+    rarity_rare_holo_ex: 'Rare Holo EX',
+    rarity_rare_holo_gx: 'Rare Holo GX',
+    rarity_rare_holo_v: 'Rare Holo V',
+    rarity_rare_rainbow: 'Rare Rainbow',
+    rarity_rare_secret: 'Secret Rare',
+    rarity_promo: 'Promo',
+    filter_title: 'Filter by Rarity',
+    clear_filter: 'Clear Filter',
+    apply_filter: 'Apply',
   }
 };
 

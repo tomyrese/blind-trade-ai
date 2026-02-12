@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, useWindowDimensions, TextInput, Pressable, Acti
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { Search, Flame, LayoutGrid, List, ShoppingCart } from 'lucide-react-native'; // Added List icon
+import { Search, Flame, LayoutGrid, List, ShoppingCart, Filter } from 'lucide-react-native'; // Added List icon
 import { useCartStore } from '../../../../shared/stores';
 import { useMarkets } from '../../../../shared/hooks/useMarkets';
 import { CardItem } from '../../tradeup/components/CardItem';
 import { Market } from '../../../../domain/models/Market';
-import { Card, mapRarity } from '../../../../shared/utils/cardData';
+import { Card, mapRarity, RARITY_RANKS } from '../../../../shared/utils/cardData';
 import { useTranslation } from '../../../../shared/utils/translations';
 
 type TabType = 'Hot' | 'Normal';
@@ -44,17 +44,7 @@ const SORT_OPTIONS: { id: SortOption; label: string }[] = [
   { id: 'date_oldest', label: 'Cũ nhất' },
 ];
 
-const RARITY_WEIGHTS: Record<string, number> = {
-  common: 1,
-  uncommon: 2,
-  rare: 3,
-  double_rare: 4,
-  ultra_rare: 5,
-  illustration_rare: 6,
-  special_illustration_rare: 7,
-  secret_rare: 8,
-  promo: 9,
-};
+
 
 import { ArrowUpDown, X } from 'lucide-react-native';
 import { Modal } from 'react-native';
@@ -81,6 +71,10 @@ export const MarketDashboardScreen: React.FC = () => {
   // Sorting State
   const [sortBy, setSortBy] = useState<SortOption>('date_newest');
   const [isSortModalVisible, setSortModalVisible] = useState(false);
+
+  // Filter state
+  const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
 
   const isTablet = width > 768;
 
@@ -120,6 +114,11 @@ export const MarketDashboardScreen: React.FC = () => {
       );
     }
 
+    // Filter by Rarity
+    if (selectedRarities.length > 0) {
+        result = result.filter(m => selectedRarities.includes(mapRarity(m.rarity)));
+    }
+
     // 2. Filter by Tab (Hot = Trending cards)
     if (activeTab === 'Hot') {
         // Filter to only show items marked as trending
@@ -137,9 +136,9 @@ export const MarketDashboardScreen: React.FC = () => {
         case 'price_desc':
           return b.currentPrice - a.currentPrice;
         case 'rarity_asc':
-          return (RARITY_WEIGHTS[a.rarity] || 0) - (RARITY_WEIGHTS[b.rarity] || 0);
+          return (RARITY_RANKS[mapRarity(a.rarity)] || 0) - (RARITY_RANKS[mapRarity(b.rarity)] || 0);
         case 'rarity_desc':
-          return (RARITY_WEIGHTS[b.rarity] || 0) - (RARITY_WEIGHTS[a.rarity] || 0);
+          return (RARITY_RANKS[mapRarity(b.rarity)] || 0) - (RARITY_RANKS[mapRarity(a.rarity)] || 0);
         case 'date_newest':
             // Newest first
             return (new Date(b.listedAt || 0).getTime()) - (new Date(a.listedAt || 0).getTime());
@@ -152,7 +151,7 @@ export const MarketDashboardScreen: React.FC = () => {
     });
     
     return result;
-  }, [markets, searchQuery, activeTab, sortBy]);
+  }, [markets, searchQuery, activeTab, sortBy, selectedRarities]);
 
   if (isLoading) {
     return (
@@ -210,6 +209,21 @@ export const MarketDashboardScreen: React.FC = () => {
                 <ArrowUpDown size={20} color="#0f172a" />
             </Pressable>
 
+            {/* Filter Button */}
+            <Pressable 
+                onPress={() => setFilterModalVisible(true)} 
+                style={[
+                    styles.sortButton, 
+                    selectedRarities.length > 0 && { backgroundColor: '#fef2f2', borderColor: '#fee2e2' }
+                ]}
+            >
+                <Filter 
+                    size={20} 
+                    color={selectedRarities.length > 0 ? '#ef4444' : '#0f172a'} 
+                    fill={selectedRarities.length > 0 ? '#ef4444' : 'transparent'} 
+                />
+            </Pressable>
+
             {/* View Switcher */}
             <View style={styles.viewSwitcher}>
                 <Pressable 
@@ -264,6 +278,75 @@ export const MarketDashboardScreen: React.FC = () => {
           }
         />
       </View>
+
+
+
+      {/* Filter Modal */}
+      <Modal
+        visible={isFilterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setFilterModalVisible(false)}
+        >
+            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>{t('filter_title')}</Text>
+                    <Pressable onPress={() => setFilterModalVisible(false)}>
+                        <X size={24} color="#64748b" />
+                    </Pressable>
+                </View>
+                
+                <View style={styles.modalBody}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {Object.keys(RARITY_RANKS).map((rarityKey) => {
+                            const isSelected = selectedRarities.includes(rarityKey);
+                            return (
+                                <Pressable
+                                    key={rarityKey}
+                                    style={[
+                                        styles.filterChip,
+                                        isSelected && styles.activeFilterChip
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedRarities(prev => {
+                                            if (prev.includes(rarityKey)) {
+                                                return prev.filter(r => r !== rarityKey);
+                                            } else {
+                                                return [...prev, rarityKey];
+                                            }
+                                        });
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.filterChipLabel,
+                                        isSelected && styles.activeFilterChipLabel
+                                    ]}>
+                                        {t(`rarity_${rarityKey}` as any)}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+
+                    {selectedRarities.length > 0 && (
+                        <Pressable 
+                            style={styles.clearFilterBtn}
+                            onPress={() => {
+                                setSelectedRarities([]);
+                                setFilterModalVisible(false);
+                            }}
+                        >
+                            <Text style={styles.clearFilterText}>{t('clear_filter')}</Text>
+                        </Pressable>
+                    )}
+                </View>
+            </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Sort Options Modal */}
       <Modal
@@ -554,5 +637,38 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '800',
+  },
+  filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 12,
+      backgroundColor: '#f8fafc',
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+  },
+  activeFilterChip: {
+      backgroundColor: '#fef2f2',
+      borderColor: '#fee2e2',
+  },
+  filterChipLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#64748b',
+  },
+  activeFilterChipLabel: {
+      color: '#ef4444',
+      fontWeight: '700',
+  },
+  clearFilterBtn: {
+      marginTop: 16,
+      alignItems: 'center',
+      paddingVertical: 12,
+      backgroundColor: '#f1f5f9',
+      borderRadius: 12,
+  },
+  clearFilterText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#475569',
   },
 });
