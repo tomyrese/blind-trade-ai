@@ -9,10 +9,6 @@ import {
 } from '../../shared/utils/cardData';
 
 
-const [reward, setReward] = useState<Card | null>(null);
-const [isOpen, setIsOpen] = useState(false);
-
-
 import { executeGacha } from '../../shared/utils/gachaEngine';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Pressable } from 'react-native';
@@ -50,15 +46,16 @@ export const TradeUpScreen: React.FC = () => {
   const currency = useUserStore((state) => state.profile?.currency || 'VND');
   const { t } = useTranslation();
   const showNotification = useUIStore((state) => state.showNotification);
-  const handleGacha = () => {
-    const result = executeGacha();
-    setReward(result);
-    setIsOpen(true);
-  };
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isOpening, setIsOpening] = useState(false);
   const [reward, setReward] = useState<Card | null>(null);
+
+  const handleGacha = () => {
+    const result = executeGacha();
+    setReward(result);
+    setIsOpening(true);
+  };
 
   // Filtering & Search state
   const [inputText, setInputText] = useState('');

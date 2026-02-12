@@ -155,14 +155,6 @@ export const MarketDashboardScreen: React.FC = () => {
     return result;
   }, [markets, searchQuery, activeTab, sortBy, selectedRarities]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#ef4444" />
-      </View>
-    );
-  }
-
   const badgeTextStyles = styles.badgeText as any;
 
   const renderHeader = React.useCallback(() => (
@@ -245,7 +237,15 @@ export const MarketDashboardScreen: React.FC = () => {
         </View>
       </View>
     </View>
-  ), [inputText, cartCount, activeTab, viewMode, t, navigation, badgeTextStyles]);
+  ), [inputText, cartCount, activeTab, viewMode, t, navigation, badgeTextStyles, setSortModalVisible, setFilterModalVisible, setActiveTab, setViewMode, selectedRarities, t]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#ef4444" />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top }]}>

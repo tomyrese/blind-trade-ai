@@ -9,6 +9,8 @@ import { Gift, X, Sparkles, Check, RotateCcw } from 'lucide-react-native';
 import { GachaLootbox } from './GachaLootbox';
 import { mockCards, Card, RARITY_RANKS } from '../../../shared/utils/cardData';
 import { useUserStore } from '../../../shared/stores/userStore';
+import { useTranslation } from '../../../shared/utils/translations';
+import { formatCurrency } from '../../../shared/utils/currency';
 
 const { width, height } = Dimensions.get('window');
 
@@ -129,6 +131,8 @@ const GachaWidget = () => {
 
   const spend = useUserStore(state => state.spend);
   const userBalance = useUserStore(state => state.profile?.balance || 0);
+  const userCurrency = useUserStore(state => state.profile?.currency || 'VND');
+  const { t } = useTranslation();
 
   const generateRandomCards = (count: number): Card[] => {
       const results: Card[] = [];
@@ -158,7 +162,7 @@ const GachaWidget = () => {
     const isSuccess = spend(cost);
 
     if (!isSuccess) {
-      Alert.alert("Thông báo", "Số dư không đủ để thực hiện quay.");
+      Alert.alert(t('info'), t('gacha_insufficient_balance'));
       return;
     }
 
@@ -218,23 +222,23 @@ const GachaWidget = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.menuContainer}>
               <TouchableOpacity style={styles.closeBtn} onPress={resetGacha}><X color="#333" /></TouchableOpacity>
-              <Text style={styles.menuTitle}>VÒNG QUAY THẦN THÚ</Text>
+              <Text style={styles.menuTitle}>{t('gacha_title')}</Text>
 
               <View style={styles.balanceTag}>
-                 <Text style={styles.balanceLabel}>Số dư:</Text>
-                 <Text style={styles.balanceValue}>{userBalance.toLocaleString('vi-VN')} VND</Text>
+                 <Text style={styles.balanceLabel}>{t('gacha_balance')}</Text>
+                 <Text style={styles.balanceValue}>{formatCurrency(userBalance, userCurrency)}</Text>
               </View>
 
               <View style={styles.btnRow}>
                 <TouchableOpacity style={[styles.summonBtn, {backgroundColor: '#3b82f6'}]} onPress={() => startSummon(false)}>
-                   <Text style={styles.btnTitle}>ROLL x1</Text>
-                   <Text style={styles.btnPrice}>{PRICE_1.toLocaleString('vi-VN')} VND</Text>
+                   <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
+                   <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.summonBtn, {backgroundColor: '#eab308'}]} onPress={() => startSummon(true)}>
-                   <View style={styles.tagDiscount}><Text style={styles.tagText}>HOT</Text></View>
-                   <Text style={styles.btnTitle}>ROLL x10</Text>
-                   <Text style={styles.btnPrice}>{PRICE_10.toLocaleString('vi-VN')} VND</Text>
+                   <View style={styles.tagDiscount}><Text style={styles.tagText}>{t('gacha_hot')}</Text></View>
+                   <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
+                   <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -246,7 +250,7 @@ const GachaWidget = () => {
             isOpen={true}
             reward={bestReward}
             onClose={onChestClose}
-            currency="VND"
+            currency={userCurrency}
             // Truyền thẳng màu Vàng/Tím/Xanh vào rương 3D để nó đổi màu theo
             highestSelectedRarity={bestReward.rarity}
           />
@@ -256,7 +260,7 @@ const GachaWidget = () => {
           <View style={styles.resultContainer}>
             <View style={styles.headerResult}>
                <Text style={styles.headerTitle}>
-                 {isRollMulti ? 'KẾT QUẢ (10 THẺ)' : 'THẺ BÀI NHẬN ĐƯỢC'}
+                 {isRollMulti ? t('gacha_result_multi') : t('gacha_result_title')}
                </Text>
             </View>
 
@@ -301,17 +305,17 @@ const GachaWidget = () => {
             <View style={styles.footer}>
               {!revealed.every(v => v) ? (
                 <TouchableOpacity style={styles.footerBtn} onPress={openAllCurrent}>
-                  <Text style={styles.footerBtnText}>LẬT TẤT CẢ</Text>
+                  <Text style={styles.footerBtnText}>{t('gacha_flip_all')}</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={{flexDirection: 'row', gap: 15}}>
                     <TouchableOpacity style={[styles.footerBtn, {backgroundColor: '#3b82f6', paddingHorizontal: 30}]} onPress={resetGacha}>
                         <Check color="white" size={20} strokeWidth={3}/>
-                        <Text style={[styles.footerBtnText, {color: 'white', marginLeft: 5}]}>XONG</Text>
+                        <Text style={[styles.footerBtnText, {color: 'white', marginLeft: 5}]}>{t('gacha_done')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.footerBtn, {backgroundColor: '#eab308'}]} onPress={() => startSummon(isRollMulti)}>
                         <RotateCcw color="black" size={20} strokeWidth={3}/>
-                        <Text style={[styles.footerBtnText, {marginLeft: 5}]}>QUAY TIẾP</Text>
+                        <Text style={[styles.footerBtnText, {marginLeft: 5}]}>{t('gacha_roll_again')}</Text>
                     </TouchableOpacity>
                 </View>
               )}

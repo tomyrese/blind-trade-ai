@@ -290,6 +290,20 @@ const translations = {
     filter_title: 'Lọc theo độ hiếm',
     clear_filter: 'Xóa bộ lọc',
     apply_filter: 'Áp dụng',
+
+    // Gacha
+    gacha_title: 'VÒNG QUAY THẦN THÚ',
+    gacha_balance: 'Số dư:',
+    gacha_roll_x1: 'ROLL x1',
+    gacha_roll_x10: 'ROLL x10',
+    gacha_result_title: 'THẺ BÀI NHẬN ĐƯỢC',
+    gacha_result_multi: 'KẾT QUẢ (10 THẺ)',
+    gacha_flip_all: 'LẬT TẤT CẢ',
+    gacha_done: 'XONG',
+    gacha_roll_again: 'QUAY TIẾP',
+    gacha_tap_chest: 'CHẠM VÀO RƯƠNG',
+    gacha_insufficient_balance: 'Số dư không đủ để thực hiện quay.',
+    gacha_hot: 'HOT',
   },
   en: {
     // Common
@@ -577,6 +591,20 @@ const translations = {
     filter_title: 'Filter by Rarity',
     clear_filter: 'Clear Filter',
     apply_filter: 'Apply',
+
+    // Gacha
+    gacha_title: 'LEGENDARY SUMMON',
+    gacha_balance: 'Balance:',
+    gacha_roll_x1: 'ROLL x1',
+    gacha_roll_x10: 'ROLL x10',
+    gacha_result_title: 'REWARD CARDS',
+    gacha_result_multi: 'RESULTS (10 CARDS)',
+    gacha_flip_all: 'FLIP ALL',
+    gacha_done: 'DONE',
+    gacha_roll_again: 'ROLL AGAIN',
+    gacha_tap_chest: 'TAP THE CHEST',
+    gacha_insufficient_balance: 'Insufficient balance for summon.',
+    gacha_hot: 'HOT',
   }
 };
 

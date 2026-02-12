@@ -6,9 +6,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/presentation/navigation/RootNavigator';
 import { QueryProvider } from './src/shared/providers/QueryProvider';
 import { ToastProvider } from './src/shared/contexts/ToastContext';
-// import { ignoreLogs } from './src/shared/utils/ignoreLogs';
-
-// ignoreLogs();
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },

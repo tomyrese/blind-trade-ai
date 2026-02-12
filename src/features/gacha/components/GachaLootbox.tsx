@@ -12,6 +12,7 @@ import {
   CardRarity,
   RARITY_RANKS,
 } from '../../../shared/utils/cardData';
+import { useTranslation } from '../../../shared/utils/translations';
 
 const { width, height } = Dimensions.get('window');
 
@@ -237,6 +238,7 @@ interface GachaLootboxProps {
 
 export const GachaLootbox: React.FC<GachaLootboxProps> = ({ isOpen, reward, onClose }) => {
   const [flashIntensity, setFlashIntensity] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isOpen) setFlashIntensity(0);
@@ -278,7 +280,7 @@ export const GachaLootbox: React.FC<GachaLootboxProps> = ({ isOpen, reward, onCl
 
       <View style={styles.overlayContainer} pointerEvents="box-none">
          <Animated.View entering={FadeIn.duration(500)} style={styles.instructionContainer}>
-             <RNText style={styles.instructionText}>CHẠM VÀO RƯƠNG</RNText>
+             <RNText style={styles.instructionText}>{t('gacha_tap_chest')}</RNText>
          </Animated.View>
       </View>
     </View>

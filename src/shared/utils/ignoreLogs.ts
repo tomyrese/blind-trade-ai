@@ -10,19 +10,44 @@ export const ignoreLogs = () => {
 
   const _consoleWarn = console.warn;
   console.warn = (...args) => {
-    if (args[0] && typeof args[0] === 'string') {
-      if (args[0].includes('EXGL: gl.pixelStorei()')) return;
-      if (args[0].includes('THREE.WebGLProgram')) return;
-      if (args[0].includes('material.dispersion')) return; 
+    const message = args.map(arg => String(arg)).join(' ');
+    
+    const ignored = [
+      'EXGL: gl.pixelStorei()',
+      'THREE.WebGLProgram',
+      'material.dispersion',
+      'SafeAreaView has been deprecated',
+      'Multiple instances of Three.js',
+      'THREE.WARNING: Multiple instances',
+      'EXPO_OS is not defined'
+    ];
+
+    if (ignored.some(pattern => message.includes(pattern))) {
+      return;
     }
+    
     _consoleWarn(...args);
   };
 
   const _consoleError = console.error;
   console.error = (...args) => {
-    if (args[0] && typeof args[0] === 'string') {
-      if (args[0].includes('EXGL: gl.pixelStorei()')) return;
+    const message = args.map(arg => String(arg)).join(' ');
+    
+    // Ignore non-critical runtime library errors
+    if (message.includes('EXPO_OS is not defined') || message.includes('EXGL: gl.pixelStorei()')) {
+      return;
     }
+    
+    // For React hook errors, try to provide more context if possible
+    if (message.includes('Rendered fewer hooks than expected')) {
+      _consoleError('[HOOK MISMATCH DETECTED]', message);
+      const stack = args.find(arg => arg && typeof arg === 'object' && arg.componentStack);
+      if (stack) {
+        _consoleError('[COMPONENT STACK]', stack.componentStack);
+      }
+      return;
+    }
+    
     _consoleError(...args);
   };
 };
