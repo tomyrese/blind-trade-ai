@@ -11,6 +11,8 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { PurchaseHistoryScreen } from '../screens/PurchaseHistoryScreen';
 import { TransactionDetailScreen } from '../screens/TransactionDetailScreen';
+import { PokedexScreen } from '../screens/PokedexScreen';
+import { TradeUpScreen } from '../screens/TradeUpScreen';
 import { useUserStore } from '../../shared/stores/userStore';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -80,6 +82,8 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PurchaseHistory" component={PurchaseHistoryScreen} />
           <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
+          <Stack.Screen name="Pokedex" component={PokedexScreen} />
+          <Stack.Screen name="TradeUp" component={TradeUpScreen} />
         </>
       )}
     </Stack.Navigator>

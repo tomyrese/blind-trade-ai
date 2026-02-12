@@ -29,7 +29,6 @@ export const HomeScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <MarketDashboardScreen />
-      <GachaWidget />
     </View>
   );
 };

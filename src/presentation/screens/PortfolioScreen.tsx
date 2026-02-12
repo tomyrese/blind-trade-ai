@@ -15,7 +15,9 @@ import {
   X,
   Package,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Zap,
+  Book
 } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
@@ -37,7 +39,6 @@ export const PortfolioScreen: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('value_desc');
   const [isSortModalVisible, setSortModalVisible] = useState(false);
   const [selectedAssetForOptions, setSelectedAssetForOptions] = useState<any>(null);
-  const [isOptionsModalVisible, setOptionsModalVisible] = useState(false);
   
   // Filter state
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
@@ -169,17 +170,17 @@ export const PortfolioScreen: React.FC = () => {
               </View>
             )}
           </Pressable>
-          <Pressable onPress={() => {}} style={styles.actionItem}>
+          <Pressable onPress={() => navigation.navigate('TradeUp')} style={styles.actionItem}>
             <View style={[styles.actionIcon, { backgroundColor: '#f1f5f9' }]}>
-              <TrendingUp size={24} color="#475569" />
+              <Zap size={24} color="#475569" />
             </View>
-            <Text style={styles.actionLabel}>{t('market_stats')}</Text>
+            <Text style={styles.actionLabel}>{t('nav_tradeup')}</Text>
           </Pressable>
-          <Pressable onPress={() => {}} style={styles.actionItem}>
+          <Pressable onPress={() => navigation.navigate('Pokedex')} style={styles.actionItem}>
             <View style={[styles.actionIcon, { backgroundColor: '#f8fafc' }]}>
-              <MoreHorizontal size={24} color="#64748b" />
+              <Book size={24} color="#64748b" />
             </View>
-            <Text style={styles.actionLabel}>{t('options')}</Text>
+            <Text style={styles.actionLabel}>Poké Dex</Text>
           </Pressable>
         </View>
 
@@ -259,10 +260,6 @@ export const PortfolioScreen: React.FC = () => {
             <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
                 <Pressable 
                   onPress={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
-                  onLongPress={() => {
-                      setSelectedAssetForOptions(asset);
-                      setOptionsModalVisible(true);
-                  }}
                   style={{ width: '100%' }}
                 >
                   <CardItem 
@@ -279,10 +276,7 @@ export const PortfolioScreen: React.FC = () => {
                     hideSeller={true}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
                     largeImage={true} // Use larger image in Portfolio Grid
-                    onToggle={() => {
-                        setSelectedAssetForOptions(asset);
-                        setOptionsModalVisible(true);
-                    }}
+                    onToggle={() => {}}
                     amount={asset.amount}
                   />
                 </Pressable>
@@ -293,19 +287,6 @@ export const PortfolioScreen: React.FC = () => {
                      {(((asset.value - asset.purchasePrice) / (asset.purchasePrice || 1)) * 100).toFixed(0)}%
                    </Text>
                 </View>
-                
-                {/* Options Menu Trigger for List View */}
-                {viewMode === 'list' && (
-                  <Pressable 
-                    style={styles.listMoreBtn}
-                    onPress={() => {
-                        setSelectedAssetForOptions(asset);
-                        setOptionsModalVisible(true);
-                    }}
-                  >
-                    <MoreHorizontal size={20} color="#94a3b8" />
-                  </Pressable>
-                )}
             </View>
         )}
         ListEmptyComponent={
@@ -428,102 +409,6 @@ export const PortfolioScreen: React.FC = () => {
                             )}
                         </Pressable>
                     ))}
-                </View>
-            </Pressable>
-        </Pressable>
-      </Modal>
-
-      {/* Asset Options Modal */}
-      <Modal
-        visible={isOptionsModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setOptionsModalVisible(false)}
-        statusBarTranslucent={true}
-      >
-        <Pressable 
-            style={styles.modalOverlay} 
-            onPress={() => setOptionsModalVisible(false)}
-        >
-            <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
-                <View style={styles.modalHeader}>
-                    <View>
-                        <Text style={styles.modalTitle}>{selectedAssetForOptions?.name || t('options')}</Text>
-                        <Text style={styles.modalSubtitle}>{selectedAssetForOptions?.symbol || ''}</Text>
-                    </View>
-                    <Pressable onPress={() => setOptionsModalVisible(false)}>
-                        <X size={24} color="#64748b" />
-                    </Pressable>
-                </View>
-                
-                <View style={styles.modalBody}>
-                    <Pressable
-                        style={styles.optionActionItem}
-                        onPress={() => {
-                            setOptionsModalVisible(false);
-                            navigation.navigate('CardDetail', { symbol: selectedAssetForOptions?.symbol || selectedAssetForOptions?.id });
-                        }}
-                    >
-                        <View style={[styles.optionIconBox, { backgroundColor: '#eff6ff' }]}>
-                            <Search size={20} color="#3b82f6" />
-                        </View>
-                        <Text style={styles.optionActionLabel}>{t('view_details')}</Text>
-                    </Pressable>
-
-                    <Pressable
-                        style={styles.optionActionItem}
-                        onPress={() => {
-                            toggleFavorite(selectedAssetForOptions?.id);
-                        }}
-                    >
-                        <View style={[styles.optionIconBox, { backgroundColor: '#fef2f2' }]}>
-                            <Heart 
-                                size={20} 
-                                color="#ef4444" 
-                                fill={isFavorite(selectedAssetForOptions?.id) ? '#ef4444' : 'transparent'} 
-                            />
-                        </View>
-                        <Text style={styles.optionActionLabel}>
-                            {isFavorite(selectedAssetForOptions?.id) ? t('remove_success') : t('favorites_title')}
-                        </Text>
-                    </Pressable>
-
-                    <Pressable
-                        style={styles.optionActionItem}
-                        onPress={() => {
-                            setOptionsModalVisible(false);
-                            navigation.navigate('MainTabs', { 
-                                screen: 'TradeUp',
-                                params: { preSelectedId: selectedAssetForOptions?.id }
-                            });
-                        }}
-                    >
-                        <View style={[styles.optionIconBox, { backgroundColor: '#f5f3ff' }]}>
-                            <TrendingUp size={20} color="#8b5cf6" />
-                        </View>
-                        <Text style={styles.optionActionLabel}>{t('send_to_fusion')}</Text>
-                    </Pressable>
-
-                    <View style={styles.optionDivider} />
-
-                    <Pressable
-                        style={styles.optionActionItem}
-                        onPress={() => {
-                            if (!selectedAssetForOptions) return;
-                            const sellPrice = Math.floor(selectedAssetForOptions.value * 0.75);
-                            sellAsset(selectedAssetForOptions.id);
-                            updateBalance(sellPrice);
-                            setOptionsModalVisible(false);
-                        }}
-                    >
-                        <View style={[styles.optionIconBox, { backgroundColor: '#fef2f2' }]}>
-                            <TrendingUp size={20} color="#ef4444" style={{ transform: [{ rotate: '180deg'}] }} />
-                        </View>
-                        <View>
-                            <Text style={[styles.optionActionLabel, { color: '#ef4444' }]}>{t('quick_sell')}</Text>
-                            <Text style={styles.sellHint}>{t('liquidity')}: {formatCurrency(Math.floor((selectedAssetForOptions?.value || 0) * 0.75), currency)}</Text>
-                        </View>
-                    </Pressable>
                 </View>
             </Pressable>
         </Pressable>

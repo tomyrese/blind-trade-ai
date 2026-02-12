@@ -18,14 +18,15 @@ export type RootStackParamList = {
   PurchaseHistory: undefined;
   TransactionDetail: { transactionId: string };
   Gacha: undefined;
-
+  Pokedex: undefined;
+  TradeUp: { preSelectedId?: string } | undefined;
 };
 
 // Main Bottom Tab Navigator
 export type MainTabParamList = {
   Home: undefined;
+  Gacha: undefined;
   Portfolio: undefined;
-  TradeUp: undefined;
   AIChat: undefined;
   Profile: undefined;
   Cart: undefined;

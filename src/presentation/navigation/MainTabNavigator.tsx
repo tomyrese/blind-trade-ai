@@ -1,17 +1,18 @@
 // Bottom Tab Navigator
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, PieChart, Sparkles, MessageSquare, User, ShoppingCart, CreditCard } from 'lucide-react-native';
+import { Home, PieChart, Sparkles, MessageSquare, User, ShoppingCart, CreditCard, Layers } from 'lucide-react-native';
 
 import { MainTabParamList } from './types';
 import { HomeScreen } from '../screens/HomeScreen';
 import { PortfolioScreen } from '../screens/PortfolioScreen';
-import { TradeUpScreen } from '../screens/TradeUpScreen';
 import { AIChatScreen } from '../features/scanner/screens/AIChatScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { useTranslation } from '../../shared/utils/translations';
+
+import { GachaScreen } from '../screens/GachaScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -49,19 +50,19 @@ export const MainTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
+        name="Gacha"
+        component={GachaScreen}
+        options={{
+          tabBarLabel: t('nav_gacha'),
+          tabBarIcon: ({ color, size }) => <Sparkles size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="Portfolio"
         component={PortfolioScreen}
         options={{
           tabBarLabel: t('nav_portfolio'),
           tabBarIcon: ({ color, size }) => <PieChart size={size} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="TradeUp"
-        component={TradeUpScreen}
-        options={{
-          tabBarLabel: t('nav_tradeup'),
-          tabBarIcon: ({ color, size }) => <Sparkles size={size} color={color} />,
         }}
       />
       <Tab.Screen

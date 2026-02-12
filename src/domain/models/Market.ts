@@ -7,6 +7,8 @@ export type CardRarity =
   | 'rare_holo_ex'
   | 'rare_holo_gx'
   | 'rare_holo_v'
+  | 'rare_holo_vmax'
+  | 'rare_holo_vstar'
   | 'rare_rainbow'
   | 'rare_secret'
   | 'promo';

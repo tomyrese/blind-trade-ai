@@ -1,4 +1,5 @@
 import { CardRarity, Listing } from '../../domain/models/Market';
+import { allCards } from './allCards';
 // Remove specific icon imports to avoid issues if they don't exist, use generic View/Text or update later if needed.
 // Keeping it simple for now, assuming icons are used in components, not here purely.
 // Wait, RARITY_CONFIGS uses shape matching string.
@@ -32,6 +33,8 @@ export const RARITY_COLORS: Record<CardRarity, string> = {
   rare_holo_ex: '#6366F1',
   rare_holo_gx: '#EC4899',
   rare_holo_v: '#F43F5E',
+  rare_holo_vmax: '#A855F7',
+  rare_holo_vstar: '#EAB308',
   rare_rainbow: '#D946EF',
   rare_secret: '#EAB308',
   promo: '#06B6D4',
@@ -45,8 +48,10 @@ export const RARITY_RANKS: Record<CardRarity, number> = {
   rare_holo_ex: 5,
   rare_holo_gx: 6,
   rare_holo_v: 7,
-  rare_rainbow: 8,
-  rare_secret: 9,
+  rare_holo_vmax: 8,
+  rare_holo_vstar: 8,
+  rare_rainbow: 9,
+  rare_secret: 10,
   promo: 0,
 };
 
@@ -119,6 +124,28 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
     glowColor: 'rgba(236, 72, 153, 0.3)',
     isHolo: true,
   },
+  rare_holo_vmax: {
+    label: 'Rare Holo VMAX',
+    symbol: 'VMAX',
+    shape: 'star',
+    starCount: 3,
+    color: '#A855F7',
+    borderColor: '#C084FC',
+    glowColor: 'rgba(168, 85, 247, 0.4)',
+    isHolo: true,
+    isFullArt: true,
+  },
+  rare_holo_vstar: {
+    label: 'Rare Holo VSTAR',
+    symbol: 'VSTAR',
+    shape: 'star',
+    starCount: 3,
+    color: '#EAB308',
+    borderColor: '#FACC15',
+    glowColor: 'rgba(234, 179, 8, 0.4)',
+    isHolo: true,
+    isFullArt: true,
+  },
   rare_holo_v: {
     label: 'Rare Holo V',
     symbol: 'V',
@@ -170,211 +197,7 @@ const getCardImage = (rarity: string, name: string) => {
     return null;
 };
 
-export const mockCards: Card[] = [
-  // --- COMMON ---
-  {
-    id: 'c-101',
-    name: 'Erikas Oddish',
-    rarity: 'common',
-    value: 5000,
-    image: require('../../assets/images/pokemon_by_rarity/Common/Ascended_Heroes_001_Erikas_Oddish.png'),
-    isTrending: false,
-  },
-  {
-    id: 'c-102',
-    name: 'Charmander',
-    rarity: 'common',
-    value: 8000,
-    image: require('../../assets/images/pokemon_by_rarity/Common/Ascended_Heroes_020_Charmander.png'),
-    isTrending: true,
-  },
-  {
-    id: 'c-103',
-    name: 'Pikachu',
-    rarity: 'common',
-    value: 12000,
-    image: require('../../assets/images/pokemon_by_rarity/Common/Ascended_Heroes_055_Pikachu.png'),
-    isTrending: true,
-  },
-  {
-    id: 'c-104',
-    name: 'Erikas Bellsprout',
-    rarity: 'common',
-    value: 4500,
-    image: require('../../assets/images/pokemon_by_rarity/Common/Ascended_Heroes_004_Erikas_Bellsprout.png'),
-    isTrending: false,
-  },
-
-  // --- UNCOMMON ---
-  {
-    id: 'u-101',
-    name: 'Charmeleon',
-    rarity: 'uncommon',
-    value: 18000,
-    image: require('../../assets/images/pokemon_by_rarity/Uncommon/Ascended_Heroes_021_Charmeleon.png'),
-    isTrending: true,
-  },
-  {
-    id: 'u-102',
-    name: 'Raichu',
-    rarity: 'uncommon',
-    value: 25000,
-    image: require('../../assets/images/pokemon_by_rarity/Uncommon/Ascended_Heroes_056_Raichu.png'),
-    isTrending: false,
-  },
-  {
-    id: 'u-103',
-    name: 'Bayleef',
-    rarity: 'uncommon',
-    value: 15000,
-    image: require('../../assets/images/pokemon_by_rarity/Uncommon/Ascended_Heroes_009_Bayleef.png'),
-    isTrending: false,
-  },
-
-  // --- RARE ---
-  {
-    id: 'r-101',
-    name: 'Entei',
-    rarity: 'rare',
-    value: 85000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare/Ascended_Heroes_025_Entei.png'),
-    isTrending: true,
-  },
-  {
-    id: 'r-102',
-    name: 'Rayquaza',
-    rarity: 'rare',
-    value: 120000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare/Ascended_Heroes_153_Rayquaza.png'),
-    isTrending: true,
-  },
-  {
-    id: 'r-103',
-    name: 'Groudon',
-    rarity: 'rare',
-    value: 95000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare/Ascended_Heroes_108_Groudon.png'),
-    isTrending: false,
-  },
-
-  // --- RARE HOLO ---
-  {
-    id: 'h-101',
-    name: 'Charizard Holo',
-    rarity: 'rare_holo',
-    value: 450000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Arceus_001_Charizard.png'),
-    isTrending: true,
-  },
-  {
-    id: 'h-102',
-    name: 'Alakazam Holo',
-    rarity: 'rare_holo',
-    value: 320000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Base_001_Alakazam.png'),
-    isTrending: false,
-  },
-  {
-    id: 'h-104',
-    name: 'Dark Alakazam',
-    rarity: 'rare_holo',
-    value: 350000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Team_Rocket_001_Dark_Alakazam.png'),
-    isTrending: true,
-  },
-
-  // --- RARE HOLO EX ---
-  {
-    id: 'ex-101',
-    name: 'Venusaur-EX',
-    rarity: 'rare_holo_ex',
-    value: 550000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_EX/XY_001_Venusaur-EX.png'),
-    isTrending: true,
-  },
-
-  // --- RARE HOLO GX ---
-  {
-    id: 'gx-101',
-    name: 'Venusaur & Snivy-GX',
-    rarity: 'rare_holo_gx',
-    value: 680000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_GX/Cosmic_Eclipse_001_Venusaur_and_Snivy-GX.png'),
-    isTrending: true,
-  },
-
-  // --- RARE HOLO V ---
-  {
-    id: 'v-101',
-    name: 'Venusaur V',
-    rarity: 'rare_holo_v',
-    value: 350000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Holo_V/Champions_Path_001_Venusaur_V.png'),
-    isTrending: false,
-  },
-
-  // --- RARE RAINBOW ---
-  {
-    id: 'rb-101',
-    name: 'Charizard VMAX Rainbow',
-    rarity: 'rare_rainbow',
-    value: 2500000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Rainbow/Champions_Path_074_Charizard_VMAX.png'),
-    isTrending: true,
-  },
-  {
-    id: 'rb-102',
-    name: 'Gyarados-GX Rainbow',
-    rarity: 'rare_rainbow',
-    value: 1800000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Rainbow/Crimson_Invasion_112_Gyarados-GX.png'),
-    isTrending: true,
-  },
-
-  // --- RARE SECRET ---
-  {
-    id: 'sr-101',
-    name: 'M Rayquaza-EX Secret',
-    rarity: 'rare_secret',
-    value: 3500000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Ancient_Origins_098_M_Rayquaza-EX.png'),
-    isTrending: true,
-  },
-  {
-    id: 'sr-102',
-    name: 'Giratina VSTAR Secret',
-    rarity: 'rare_secret',
-    value: 4200000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Crown_Zenith_Galarian_Gallery_GG69_Giratina_VSTAR.png'),
-    isTrending: true,
-  },
-  {
-    id: 'sr-103',
-    name: 'Dark Raichu Secret',
-    rarity: 'rare_secret',
-    value: 2800000,
-    image: require('../../assets/images/pokemon_by_rarity/Rare_Secret/Team_Rocket_083_Dark_Raichu.png'),
-    isTrending: false,
-  },
-
-  // --- PROMO ---
-  {
-    id: 'p-101',
-    name: 'Pikachu Promo',
-    rarity: 'promo',
-    value: 150000,
-    image: require('../../assets/images/pokemon_by_rarity/Promo/Wizards_Black_Star_Promos_001_Pikachu.png'),
-    isTrending: true,
-  },
-  {
-    id: 'p-102',
-    name: 'Snorlax-GX Promo',
-    rarity: 'promo',
-    value: 220000,
-    image: require('../../assets/images/pokemon_by_rarity/Promo/SM_Black_Star_Promos_SM05_Snorlax-GX.png'),
-    isTrending: false,
-  },
-];
+export const mockCards: Card[] = allCards;
 export interface fusionOdds {
   upgrade: number;
   same: number;
@@ -431,7 +254,9 @@ export const generateReward = (selectedCards: Card[]): Card => {
     rare_holo_ex: ['Mewtwo ex', 'Rayquaza ex', 'Lugia ex', 'Kyogre ex'],
     rare_holo_gx: ['Lunala GX', 'Solgaleo GX', 'Darkrai GX', 'Snorlax GX'],
     rare_holo_v: ['Zacian V', 'Zamazenta V', 'Pikachu V', 'Eevee V'],
-    rare_rainbow: ['Charizard VMAX', 'Pikachu VMAX', 'Mew VMAX', 'Rayquaza VMAX'],
+    rare_holo_vmax: ['Charizard VMAX', 'Rayquaza VMAX', 'Mew VMAX', 'Pikachu VMAX'],
+    rare_holo_vstar: ['Arceus VSTAR', 'Giratina VSTAR', 'Palkia VSTAR', 'Dialga VSTAR'],
+    rare_rainbow: ['Charizard VMAX (Rainbow)', 'Pikachu VMAX (Rainbow)', 'Mew VMAX (Rainbow)', 'Rayquaza VMAX (Rainbow)'],
     rare_secret: ['Mew (Gold)', 'Pikachu (Gold)', 'Ultra Ball (Gold)', 'Arceus VSTAR (Gold)'],
     promo: ['Pikachu (Promo)', 'Eevee (Promo)', 'Meowth (Promo)', 'Psyduck (Promo)'],
   };
@@ -476,6 +301,8 @@ export const mapRarity = (rarity: string | undefined): CardRarity => {
 
   if (r.includes('rainbow') || r.includes('hyper')) return 'rare_rainbow';
   if (r.includes('secret')) return 'rare_secret';
+  if (r.includes('vmax')) return 'rare_holo_vmax';
+  if (r.includes('vstar')) return 'rare_holo_vstar';
   if (r.includes('v') && !r.includes('vmax') && !r.includes('vstar')) return 'rare_holo_v';
   if (r.includes('gx')) return 'rare_holo_gx';
   if (r.includes('ex')) return 'rare_holo_ex';

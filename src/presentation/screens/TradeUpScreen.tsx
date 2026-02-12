@@ -25,7 +25,8 @@ import {
   LayoutGrid,
   List,
   X,
-  Package
+  Package,
+  ChevronLeft
 } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
 import { CardItem } from '../features/tradeup/components/CardItem';
@@ -39,6 +40,7 @@ import { formatCurrency } from '../../shared/utils/currency';
 import { useNavigation } from '@react-navigation/native';
 
 export const TradeUpScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
   const assets = usePortfolioStore((state) => state.assets);
   const addAsset = usePortfolioStore((state) => state.addAsset);
@@ -231,6 +233,17 @@ export const TradeUpScreen: React.FC = () => {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={styles.appHeader}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="#0f172a" />
+          </Pressable>
+          <View style={styles.headerTitleContainer}>
+              <Zap size={20} color="#3b82f6" fill="#3b82f6" />
+              <Text style={styles.headerTitleText}>{t('nav_tradeup')}</Text>
+          </View>
+          <View style={{ width: 40 }} />
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Fusion Panel */}
         <View style={[styles.fusionPanel, { marginTop: 20 }]}>
@@ -771,6 +784,26 @@ const styles = StyleSheet.create({
     height: 16,
     backgroundColor: '#e2e8f0',
     marginHorizontal: 4,
+  },
+  appHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0f172a',
   },
   listItem: { paddingHorizontal: 0, paddingVertical: 8, position: 'relative' },
   cardGrid: {
