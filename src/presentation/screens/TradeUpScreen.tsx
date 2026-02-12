@@ -325,9 +325,10 @@ export const TradeUpScreen: React.FC = () => {
             setReward(null);
           }}
           reward={reward}
+          currency={currency}
         />
       )}
-      {/* Filter Modal */}
+      {/* Filter Modal - Force Rebuild */}
       <Modal
         visible={isFilterModalVisible}
         transparent={true}

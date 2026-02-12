@@ -14,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Package, Sparkles } from 'lucide-react-native';
 import { Card, RARITY_COLORS } from '../../../../shared/utils/cardData';
-import { formatVND } from '../../../../shared/utils/formatters';
+import { formatCurrency } from '../../../../shared/utils/currency';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,12 +22,14 @@ interface LootboxAnimationProps {
   isOpen: boolean;
   reward: Card | null;
   onClose: () => void;
+  currency: string;
 }
 
 export const LootboxAnimation: React.FC<LootboxAnimationProps> = ({
   isOpen,
   reward,
   onClose,
+  currency,
 }) => {
   const [isOpened, setIsOpened] = useState(false);
   
@@ -161,7 +163,7 @@ export const LootboxAnimation: React.FC<LootboxAnimationProps> = ({
             </View>
             <Text style={styles.cardName}>{reward.name}</Text>
             <Text style={[styles.cardRarity, { color: rarityColor }]}>{reward.rarity.toUpperCase()}</Text>
-            <Text style={styles.cardValue}>{formatVND(reward.value)}</Text>
+            <Text style={styles.cardValue}>{formatCurrency(reward.value, currency === 'USD' ? 'USD' : 'VND')}</Text>
           </View>
         </Animated.View>
       )}

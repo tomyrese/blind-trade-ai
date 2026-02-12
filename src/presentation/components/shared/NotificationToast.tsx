@@ -48,8 +48,6 @@ export const NotificationToast: React.FC = () => {
         opacity: opacity.value,
     }));
 
-    if (!notification.visible && opacity.value === 0) return null;
-
     const getColors = () => {
         switch (notification.type) {
             case 'success':
@@ -106,7 +104,10 @@ export const NotificationToast: React.FC = () => {
     const { bg, border, icon, text, Icon } = getColors();
 
     return (
-        <Animated.View style={[styles.container, animatedStyle, { backgroundColor: bg, borderColor: border }]}>
+        <Animated.View 
+            pointerEvents={notification.visible ? 'auto' : 'none'}
+            style={[styles.container, animatedStyle, { backgroundColor: bg, borderColor: border }]}
+        >
             <View style={styles.content}>
                 <View style={[styles.iconContainer, { backgroundColor: `${icon}15` }]}>
                     <Icon size={20} color={icon} fill={notification.type === 'favorite' ? icon : 'transparent'} />

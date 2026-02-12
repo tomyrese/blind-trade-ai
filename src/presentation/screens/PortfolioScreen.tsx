@@ -316,7 +316,7 @@ export const PortfolioScreen: React.FC = () => {
       />
 
 
-      {/* Filter Modal */}
+      {/* Filter Modal - Force Rebuild */}
       <Modal
         visible={isFilterModalVisible}
         transparent={true}
