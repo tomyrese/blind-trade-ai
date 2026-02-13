@@ -51,6 +51,7 @@ export interface UserProfile {
   balance: number; // Current virtual balance
   paymentMethods: PaymentMethod[];
   
+  phoneNumber?: string;
   notificationsEnabled: boolean;
   currency: 'VND' | 'USD';
   language: 'vi' | 'en';

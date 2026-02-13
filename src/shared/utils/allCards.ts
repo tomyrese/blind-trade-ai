@@ -1,4 +1,4 @@
-import { Card } from './cardData';
+import { Card } from './cardTypes';
 
 export const allCards: Card[] = [
   {
@@ -1515,7 +1515,6 @@ export const allCards: Card[] = [
     rarity: 'common',
     value: 4000,
     image: require('../../assets/images/pokemon_by_rarity/All_Cards/Dragon_Majesty_072_Altaria-GX.png'),
-    isTrending: true,
     isTrending: true,
   },
   {

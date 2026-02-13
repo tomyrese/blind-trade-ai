@@ -72,7 +72,7 @@ export const CardDetailScreen: React.FC = () => {
   }
 
   // Use mapRarity to ensure we get the correct config key
-  const rarityKey = mapRarity(market.rarity);
+  const rarityKey = mapRarity(market.rarity, market.name);
   const rarityConfig = RARITY_CONFIGS[rarityKey] || RARITY_CONFIGS.common;
   const rarityColor = rarityConfig.color;
   const isCardFavorite = isFavorite(market.id);
@@ -84,7 +84,7 @@ export const CardDetailScreen: React.FC = () => {
     addToCart({
       id: market.id,
       name: market.name,
-      rarity: mapRarity(market.rarity),
+      rarity: mapRarity(market.rarity, market.name),
       value: listing.price,
       symbol: market.symbol,
       tcgPlayerPrice: market.tcgPlayerPrice,
@@ -102,7 +102,7 @@ export const CardDetailScreen: React.FC = () => {
         id: market.id,
         name: market.name,
         symbol: market.symbol || '',
-        rarity: mapRarity(market.rarity),
+        rarity: mapRarity(market.rarity, market.name),
         quantity: 1,
         price: listing.price,
       }],

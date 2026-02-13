@@ -15,7 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Import Component & Data
-import { mockCards, Card } from '../../shared/utils/cardData';
+import { normalizedCards, Card, mapRarity, RARITY_CONFIGS, RARITY_RANKS } from '../../shared/utils/cardData';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
 import { formatCurrency } from '../../shared/utils/currency';
@@ -29,13 +29,24 @@ const PRICE_10 = 1600000;
 // --- 1. HÀM QUY ĐỔI MÀU ---
 const getTierColor = (rarity: string) => {
   const r = rarity.toLowerCase();
-  if (['rare_secret', 'rare_rainbow', 'rare_holo_vstar', 'rare_holo_vmax', 'rare_holo_v', 'rare_holo_gx', 'rare_holo_ex', 'promo'].includes(r)) {
-    return '#FFD700'; // GOLD
+  const config = RARITY_CONFIGS[r as keyof typeof RARITY_CONFIGS];
+  
+  if (config) {
+    return config.borderColor;
   }
-  if (['rare', 'rare_holo'].includes(r)) {
-    return '#C084FC'; // PURPLE
+  
+  // Logical Fallbacks for unknown strings
+  if (r.includes('secret') || r.includes('rainbow') || r.includes('vstar') || r.includes('vmax') || r.includes('gold')) {
+    return '#FACC15'; // Gold/Yellow
   }
-  return '#3B82F6'; // BLUE
+  if (r.includes('rare') || r.includes('holo')) {
+    return '#A78BFA'; // Purple/Violet
+  }
+  if (r.includes('uncommon')) {
+    return '#34D399'; // Green
+  }
+
+  return '#9CA3AF'; // Gray (Common)
 };
 
 // --- 2. COMPONENT THẺ BÀI CON (3D Flip) ---
@@ -43,7 +54,12 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
     item: Card, index: number, revealed: boolean, onFlip: () => void, sizeMode: 'big' | 'small'
 }) => {
     const tierColor = getTierColor(item.rarity);
-    const isGoldTier = tierColor === '#FFD700';
+    const rank = RARITY_RANKS[item.rarity as keyof typeof RARITY_RANKS] || 0;
+    const isGoldTier = rank >= 5;
+    const isPurpleTier = rank >= 3 && rank < 5;
+    
+    // Hint color for the border before flipping
+    const hintBorderColor = revealed ? tierColor : tierColor + '40'; // 40 is hex for ~25% opacity
     
     const entryDelay = index * 100;
     const rotate = useSharedValue(0);
@@ -79,8 +95,10 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
                 <View style={[
                   styles.cardBaseContainer,
                   {
-                    borderColor: revealed ? tierColor : '#334155',
+                    borderColor: hintBorderColor,
                     borderWidth: isGoldTier && revealed ? 4 : 2,
+                    shadowColor: tierColor,
+                    shadowOpacity: revealed ? 0.6 : 0.2,
                   }
                 ]}>
                     <Animated.View style={[styles.cardFace, styles.cardFront, frontAnimatedStyle]}>
@@ -92,7 +110,9 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
 
                     <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
                         <Sparkles color={tierColor} size={28} opacity={0.4} />
-                        <Text style={styles.rarityHintText}>{item.rarity.replace(/_/g, ' ').toUpperCase()}</Text>
+                        <Text style={styles.rarityHintText}>
+                            {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
+                        </Text>
                     </Animated.View>
                 </View>
             </TouchableOpacity>
@@ -116,33 +136,40 @@ export const GachaScreen = () => {
 
   const isAllRevealed = revealed.length > 0 && revealed.every(v => v);
 
-  const generateRandomCards = (count: number): any[] => {
-      const results: any[] = [];
-      for(let i=0; i<count; i++) {
-          const rand = Math.random();
-          let pool: Card[] = [];
+    const generateRandomCards = (count: number): any[] => {
+        const results: any[] = [];
+        for(let i=0; i<count; i++) {
+            const rand = Math.random();
+            let pool: Card[] = [];
 
-          if (rand < 0.05) { 
-             pool = mockCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_vstar', 'rare_holo_vmax', 'rare_holo_v'].includes(c.rarity));
-          } else if (rand < 0.25) { 
-             pool = mockCards.filter(c => ['rare_holo', 'rare', 'rare_holo_gx', 'rare_holo_ex', 'promo'].includes(c.rarity));
-          } else { 
-             pool = mockCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
-          }
+            // Filter pools based on ALREADY NORMALIZED rarity
+            if (rand < 0.05) { 
+               pool = normalizedCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_vstar', 'rare_holo_vmax', 'rare_holo_v'].includes(c.rarity));
+            } else if (rand < 0.25) { 
+               pool = normalizedCards.filter(c => ['rare_holo', 'rare', 'rare_holo_gx', 'rare_holo_ex', 'promo'].includes(c.rarity));
+            } else { 
+               pool = normalizedCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
+            }
 
-          if (pool.length === 0) pool = mockCards;
+            if (pool.length === 0) pool = normalizedCards;
 
-          const baseCard = pool[Math.floor(Math.random() * pool.length)];
-          results.push({ 
-            ...baseCard, 
-            id: `${baseCard.id}-${Date.now()}-${i}`,
-            baseId: baseCard.id 
-          });
-      }
-      return results;
-  };
+            const baseCard = pool[Math.floor(Math.random() * pool.length)];
+            
+            results.push({ 
+              ...baseCard, 
+              id: `${baseCard.id}-${Date.now()}-${i}`,
+              baseId: baseCard.id 
+            });
+        }
+        return results;
+    };
 
   const startSummon = (isMulti: boolean) => {
+    // Safety check: Cannot summon again if current cards aren't fully revealed
+    if (phase === 'RESULT' && !isAllRevealed) {
+       return;
+    }
+
     const cost = isMulti ? PRICE_10 : PRICE_1;
     const isSuccess = spend(cost);
 
@@ -285,9 +312,16 @@ export const GachaScreen = () => {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity style={[styles.footerBtn, { marginTop: 12, backgroundColor: '#334155' }]} onPress={() => startSummon(isRollMulti)}>
-              <RotateCcw color="white" size={20} style={{ marginRight: 8 }} />
-              <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_roll_again')}</Text>
+            <TouchableOpacity 
+              style={[
+                styles.footerBtn, 
+                { marginTop: 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' }
+              ]} 
+              onPress={() => isAllRevealed && startSummon(isRollMulti)}
+              disabled={!isAllRevealed}
+            >
+              <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
+              <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

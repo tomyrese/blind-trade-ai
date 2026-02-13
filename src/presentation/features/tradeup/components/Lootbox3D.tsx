@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, Suspense } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, ContactShadows, Float } from '@react-three/drei';
+import { useGLTF, ContactShadows, Float, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { Card, CardRarity, RARITY_COLORS, RARITY_CONFIGS, RARITY_RANKS } from '../../../../shared/utils/cardData';
 import { formatCurrency } from '../../../../shared/utils/currency';
@@ -124,16 +124,17 @@ const RewardCard3D = ({ active, image, rarityColor, isSuccess, onComplete }: {
     onComplete: () => void
 }) => {
     const mesh = useRef<THREE.Mesh>(null);
-    const [texture, setTexture] = useState<THREE.Texture | null>(null);
     const [phase, setPhase] = useState<'hidden' | 'pop' | 'vanish'>('hidden');
+    
+    // Resolve asset safely
+    const texture = useTexture(image ? Asset.fromModule(image).uri : '');
     
     // Spring physics refs for ultra-smooth motion
     const posYSprung = useRef(0);
     const posYVelocity = useRef(0);
-    const spinSprung = useRef(0);
-    const spinVelocity = useRef(0);
     const scaleSprung = useRef(0.1);
     const scaleVelocity = useRef(0);
+    const spinVelocity = useRef(0);
     const opacity = useRef(1);
 
     useEffect(() => {
@@ -143,27 +144,11 @@ const RewardCard3D = ({ active, image, rarityColor, isSuccess, onComplete }: {
         }
     }, [active, isSuccess]);
 
-    useEffect(() => {
-        if (!image || !active) return;
-        let isMounted = true;
-        const loadTexture = async () => {
-            try {
-                const asset = Asset.fromModule(image);
-                await asset.downloadAsync();
-                const loader = new THREE.TextureLoader();
-                loader.load(asset.localUri || asset.uri, (tex) => {
-                    if (isMounted) {
-                        tex.colorSpace = THREE.SRGBColorSpace;
-                        tex.flipY = false;
-                        setTexture(tex);
-                    }
-                });
-            } catch (err) { console.warn('Lootbox3D: Asset resolve error:', err); }
-        };
-        loadTexture();
-        return () => { isMounted = false; };
-    }, [image, active]);
-    
+    if (texture) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.flipY = false;
+    }
+
     useFrame((state, delta) => {
         if (!mesh.current || phase === 'hidden') return;
         
@@ -535,23 +520,25 @@ export const Lootbox3D: React.FC<Lootbox3DProps> = ({ isOpen, reward, onClose, c
       {/* 3D Scene Layer */}
       <View style={styles.sceneContainer}>
         <Canvas camera={{ position: [0, 1.2, 4.5], fov: 42 }}>
-          {/* Enhanced Lighting for Vibrant Colors */}
-          <ambientLight intensity={0.8 + flashIntensity} /> 
-          <directionalLight position={[5, 8, 5]} intensity={1.5 + flashIntensity * 0.5} castShadow />
-          <spotLight position={[-5, 5, 5]} angle={0.5} penumbra={1} intensity={2.0 + flashIntensity} color="#FFD54F" />
-          <pointLight position={[0, 0, 2]} intensity={1.0 + flashIntensity * 2} color={rarityColor} distance={5} />
+          <Suspense fallback={null}>
+            {/* Enhanced Lighting for Vibrant Colors */}
+            <ambientLight intensity={0.8 + flashIntensity} /> 
+            <directionalLight position={[5, 8, 5]} intensity={1.5 + flashIntensity * 0.5} castShadow />
+            <spotLight position={[-5, 5, 5]} angle={0.5} penumbra={1} intensity={2.0 + flashIntensity} color="#FFD54F" />
+            <pointLight position={[0, 0, 2]} intensity={1.0 + flashIntensity * 2} color={rarityColor} distance={5} />
+              
+            <Chest 
+              onOpenComplete={handleOpenComplete} 
+              onOpenStart={handleOpenStart}
+              onCardComplete={() => setShowReward(true)}
+              rarityColor={rarityColor} 
+              particleColor={particleColor} 
+              rewardImage={reward?.image}
+              isSuccess={isSuccess}
+            />
             
-          <Chest 
-            onOpenComplete={handleOpenComplete} 
-            onOpenStart={handleOpenStart}
-            onCardComplete={() => setShowReward(true)}
-            rarityColor={rarityColor} 
-            particleColor={particleColor} 
-            rewardImage={reward?.image}
-            isSuccess={isSuccess}
-          />
-          
-          <ContactShadows position={[0, -1.8, 0]} opacity={0.6} scale={10} blur={2.0} far={4} color="#000000" />
+            <ContactShadows position={[0, -1.8, 0]} opacity={0.6} scale={10} blur={2.0} far={4} color="#000000" />
+          </Suspense>
         </Canvas>
       </View>
 

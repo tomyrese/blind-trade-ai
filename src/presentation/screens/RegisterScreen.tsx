@@ -17,22 +17,87 @@ import { useNavigation } from '@react-navigation/native';
 import { RootStackNavigationProp } from '../navigation/types';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
-import { Mail, Lock, User, UserPlus, ArrowLeft, Globe } from 'lucide-react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Mail, Lock, User, UserPlus, ArrowLeft, Globe, Phone } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { InfoModal, ModalType } from '../components/InfoModal';
 
 const { width, height } = Dimensions.get('window');
+
+const registerSchema = z.object({
+  name: z.string()
+    .min(1, 'full_name_required')
+    .regex(/^[^0-9]*$/, 'name_no_numbers'),
+  email: z.string().email('invalid_email_format').min(1, 'email_required'),
+  phone: z.string()
+    .min(10, 'phone_min_10')
+    .regex(/^[0-9]+$/, 'phone_digits_only'),
+  password: z.string()
+    .min(8, 'password_min_8')
+    .regex(/[A-Z]/, 'password_need_upper')
+    .regex(/[a-z]/, 'password_need_lower')
+    .regex(/[0-9]/, 'password_need_number')
+    .regex(/[^A-Za-z0-9]/, 'password_need_special'),
+  confirmPassword: z.string().min(1, 'confirm_password_required'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'passwords_do_not_match',
+  path: ['confirmPassword'],
+});
+
+type RegisterForm = z.infer<typeof registerSchema>;
+
+const PasswordRequirements = ({ password, visible }: { password: string; visible: boolean }) => {
+  const { t } = useTranslation();
+  if (!visible) return null;
+
+  const requirements = [
+    { label: t('password_min_8'), met: password.length >= 8 },
+    { label: t('password_need_upper'), met: /[A-Z]/.test(password) },
+    { label: t('password_need_lower'), met: /[a-z]/.test(password) },
+    { label: t('password_need_number'), met: /[0-9]/.test(password) },
+    { label: t('password_need_special'), met: /[^A-Za-z0-9]/.test(password) },
+  ];
+
+  return (
+    <View style={styles.requirementContainer}>
+      <Text style={styles.requirementTitle}>{t('password_rules_title')}</Text>
+      <View style={styles.requirementList}>
+        {requirements.map((req, index) => (
+          <View key={index} style={styles.requirementItem}>
+            <View style={[styles.requirementDot, { backgroundColor: req.met ? '#22c55e' : '#94a3b8' }]} />
+            <Text style={[styles.requirementText, { color: req.met ? '#166534' : '#64748b' }]}>
+              {req.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 export const RegisterScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { register, setLanguage } = useUserStore();
   const { t, language } = useTranslation();
   
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const passwordValue = watch('password');
   
   // Custom Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -52,27 +117,11 @@ export const RegisterScreen = () => {
     setModalVisible(true);
   };
 
-  const handleRegister = async () => {
+  const handleRegister = async (data: RegisterForm) => {
     Keyboard.dismiss();
-    
-    if (!name || !email || !password || !confirmPassword) {
-      showInfo('error', t('error'), t('please_fill_all_fields'));
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      showInfo('error', t('error'), t('passwords_do_not_match'));
-      return;
-    }
-
-    if (password.length < 6) {
-      showInfo('error', t('error'), t('password_too_short'));
-      return;
-    }
-
     setLoading(true);
     try {
-      const success = await register(name, email, password);
+      const success = await register(data.name, data.email, data.password, data.phone);
       if (success) {
         showInfo('success', t('success'), t('registration_success'), () => {
           navigation.navigate('Login');
@@ -96,7 +145,6 @@ export const RegisterScreen = () => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#ee1515" translucent />
       
-      {/* Static Background */}
       {/* Static Background */}
       <View style={{ position: 'absolute', top: 0, left: 0, width: width, height: height + 50 }}>
         <LinearGradient
@@ -140,66 +188,139 @@ export const RegisterScreen = () => {
           </View>
 
           <View style={styles.formContainer}>
-            <View style={styles.inputWrapper}>
-              <User size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('full_name')}
-                placeholderTextColor="#94a3b8"
-                value={name}
-                onChangeText={setName}
-                returnKeyType="next"
-                textContentType="name"
-              />
-            </View>
+            {/* Full Name */}
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputGroup}>
+                  <View style={[styles.inputWrapper, errors.name && styles.inputErrorBorder]}>
+                    <User size={20} color={errors.name ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('full_name')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      returnKeyType="next"
+                      textContentType="name"
+                    />
+                  </View>
+                  {errors.name && <Text style={styles.errorText}>{t(errors.name.message as any)}</Text>}
+                </View>
+              )}
+            />
 
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('email')}
-                placeholderTextColor="#94a3b8"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                returnKeyType="next"
-              />
-            </View>
+            {/* Email */}
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputGroup}>
+                  <View style={[styles.inputWrapper, errors.email && styles.inputErrorBorder]}>
+                    <Mail size={20} color={errors.email ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('email')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      returnKeyType="next"
+                    />
+                  </View>
+                  {errors.email && <Text style={styles.errorText}>{t(errors.email.message as any)}</Text>}
+                </View>
+              )}
+            />
 
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('password')}
-                placeholderTextColor="#94a3b8"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                returnKeyType="next"
-                textContentType="newPassword"
-              />
-            </View>
+            {/* Phone Number */}
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputGroup}>
+                  <View style={[styles.inputWrapper, errors.phone && styles.inputErrorBorder]}>
+                    <Phone size={20} color={errors.phone ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('phone_number')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      keyboardType="phone-pad"
+                      returnKeyType="next"
+                    />
+                  </View>
+                  {errors.phone && <Text style={styles.errorText}>{t(errors.phone.message as any)}</Text>}
+                </View>
+              )}
+            />
 
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('confirm_password')}
-                placeholderTextColor="#94a3b8"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                textContentType="newPassword"
-                onSubmitEditing={handleRegister}
-              />
-            </View>
+            {/* Password */}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputGroup}>
+                  <View style={[styles.inputWrapper, errors.password && styles.inputErrorBorder]}>
+                    <Lock size={20} color={errors.password ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('password')}
+                      placeholderTextColor="#94a3b8"
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => {
+                        onBlur();
+                        setPasswordFocused(false);
+                      }}
+                      onChangeText={onChange}
+                      value={value}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      returnKeyType="next"
+                      textContentType="newPassword"
+                    />
+                  </View>
+                  <PasswordRequirements password={value} visible={passwordFocused} />
+                  {errors.password && <Text style={styles.errorText}>{t(errors.password.message as any)}</Text>}
+                </View>
+              )}
+            />
+
+            {/* Confirm Password */}
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputGroup}>
+                  <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputErrorBorder]}>
+                    <Lock size={20} color={errors.confirmPassword ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('confirm_password')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      textContentType="newPassword"
+                      onSubmitEditing={handleSubmit(handleRegister)}
+                    />
+                  </View>
+                  {errors.confirmPassword && <Text style={styles.errorText}>{t(errors.confirmPassword.message as any)}</Text>}
+                </View>
+              )}
+            />
 
             <TouchableOpacity
               style={styles.registerButton}
-              onPress={handleRegister}
+              onPress={handleSubmit(handleRegister)}
               disabled={loading}
             >
               <LinearGradient
@@ -355,12 +476,56 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     alignSelf: 'center',
   },
+  requirementContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: -8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  requirementTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 8,
+  },
+  requirementList: {
+    gap: 6,
+  },
+  requirementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  requirementDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  requirementText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputErrorBorder: {
+    borderColor: '#ef4444',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
     borderRadius: 15,
-    marginBottom: 16,
     paddingHorizontal: 16,
     height: 56,
     borderWidth: 1.5,

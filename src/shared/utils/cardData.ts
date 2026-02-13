@@ -1,29 +1,7 @@
-import { CardRarity, Listing } from '../../domain/models/Market';
+import { CardRarity, Listing, Card, RarityConfigItem } from './cardTypes';
 import { allCards } from './allCards';
-// Remove specific icon imports to avoid issues if they don't exist, use generic View/Text or update later if needed.
-// Keeping it simple for now, assuming icons are used in components, not here purely.
-// Wait, RARITY_CONFIGS uses shape matching string.
-// But valid shapes in config are 'circle' | 'diamond' ...
-// We don't import icons here. We import types.
 
-export type { CardRarity, Listing };
-
-export interface Card {
-  id: string;
-  name: string;
-  rarity: CardRarity;
-  rarityLabel?: string;
-  value: number;
-  symbol?: string;
-  tcgPlayerPrice?: number;
-  cardMarketPrice?: number;
-  image?: any;
-  isFavorite?: boolean;
-  listings?: Listing[];
-  listedAt?: string;
-  amount?: number;
-  isTrending?: boolean; // New property for Trending tab
-}
+export type { CardRarity, Listing, Card, RarityConfigItem };
 
 export const RARITY_COLORS: Record<CardRarity, string> = {
   common: '#9CA3AF',
@@ -54,20 +32,6 @@ export const RARITY_RANKS: Record<CardRarity, number> = {
   rare_secret: 10,
   promo: 0,
 };
-
-export interface RarityConfigItem {
-  label: string;
-  symbol: string;
-  shape: 'circle' | 'diamond' | 'star' | 'sparkles' | 'gem' | 'crown' | 'zap' | 'image' | 'text';
-  starCount?: number;
-  color: string;
-  borderColor: string;
-  borderGradient?: string[]; // New property for Gradient Borders
-  shadowColor?: string;
-  glowColor: string;
-  isHolo?: boolean;
-  isFullArt?: boolean;
-}
 
 export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   common: {
@@ -124,6 +88,16 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
     glowColor: 'rgba(236, 72, 153, 0.3)',
     isHolo: true,
   },
+  rare_holo_v: {
+    label: 'Rare Holo V',
+    symbol: 'V',
+    shape: 'star',
+    starCount: 2,
+    color: '#F43F5E',
+    borderColor: '#FB7185',
+    glowColor: 'rgba(244, 63, 94, 0.3)',
+    isHolo: true,
+  },
   rare_holo_vmax: {
     label: 'Rare Holo VMAX',
     symbol: 'VMAX',
@@ -145,16 +119,6 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
     glowColor: 'rgba(234, 179, 8, 0.4)',
     isHolo: true,
     isFullArt: true,
-  },
-  rare_holo_v: {
-    label: 'Rare Holo V',
-    symbol: 'V',
-    shape: 'star',
-    starCount: 2,
-    color: '#F43F5E',
-    borderColor: '#FB7185',
-    glowColor: 'rgba(244, 63, 94, 0.3)',
-    isHolo: true,
   },
   rare_rainbow: {
     label: 'Rare Rainbow',
@@ -182,7 +146,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   promo: {
     label: 'Promo',
     symbol: 'P',
-    shape: 'crown', // Changed from text to crown icon
+    shape: 'crown',
     color: '#06B6D4',
     borderColor: '#22D3EE',
     glowColor: 'rgba(6, 182, 212, 0.25)',
@@ -191,9 +155,6 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
 
 // Helper to get image or fallback
 const getCardImage = (rarity: string, name: string) => {
-    // In a real app, this would map to actual assets.
-    // For now we try to use existing asserts or return undefined to let CardItem render the fallback letter.
-    // We will use the existing paths where possible or just null to test the renders.
     return null;
 };
 
@@ -207,7 +168,7 @@ export interface fusionOdds {
 export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
   if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
 
-  const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
+  const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity, c.name)] || 0));
 
   if (highestRank <= 2) { // Common, Uncommon
     return { upgrade: 0.40, same: 0.45, downgrade: 0.15 };
@@ -226,7 +187,7 @@ export const generateReward = (selectedCards: Card[]): Card => {
   const roll = Math.random();
 
   const ranks = Object.keys(RARITY_RANKS) as CardRarity[];
-  const highestRank = Math.max(...selectedCards.map(c => RARITY_RANKS[mapRarity(c.rarity)] || 0));
+  const highestRank = Math.max(...selectedCards.map(c => RARITY_RANKS[mapRarity(c.rarity, c.name)] || 0));
 
   let targetRarity: CardRarity = 'common';
   let multiplier = 1.0;
@@ -246,28 +207,13 @@ export const generateReward = (selectedCards: Card[]): Card => {
 
   const rewardValue = Math.floor(totalValue * multiplier);
 
-  const namesByRarity: Record<CardRarity, string[]> = {
-    common: ['Rattata', 'Pidgey', 'Zubat', 'Caterpie'],
-    uncommon: ['Ivysaur', 'Charmeleon', 'Wartortle', 'Pikachu'],
-    rare: ['Gyarados', 'Arcanine', 'Alakazam', 'Machamp'],
-    rare_holo: ['Charizard', 'Blastoise', 'Venusaur', 'Dragonite'],
-    rare_holo_ex: ['Mewtwo ex', 'Rayquaza ex', 'Lugia ex', 'Kyogre ex'],
-    rare_holo_gx: ['Lunala GX', 'Solgaleo GX', 'Darkrai GX', 'Snorlax GX'],
-    rare_holo_v: ['Zacian V', 'Zamazenta V', 'Pikachu V', 'Eevee V'],
-    rare_holo_vmax: ['Charizard VMAX', 'Rayquaza VMAX', 'Mew VMAX', 'Pikachu VMAX'],
-    rare_holo_vstar: ['Arceus VSTAR', 'Giratina VSTAR', 'Palkia VSTAR', 'Dialga VSTAR'],
-    rare_rainbow: ['Charizard VMAX (Rainbow)', 'Pikachu VMAX (Rainbow)', 'Mew VMAX (Rainbow)', 'Rayquaza VMAX (Rainbow)'],
-    rare_secret: ['Mew (Gold)', 'Pikachu (Gold)', 'Ultra Ball (Gold)', 'Arceus VSTAR (Gold)'],
-    promo: ['Pikachu (Promo)', 'Eevee (Promo)', 'Meowth (Promo)', 'Psyduck (Promo)'],
-  };
-
   // Find all matching cards for the target rarity
-  const matchingCards = mockCards.filter(c => c.rarity === targetRarity);
+  const matchingCards = normalizedCards.filter(c => c.rarity === targetRarity);
 
   // Pick one specific source card to base the reward on
   const sourceCard = matchingCards.length > 0
     ? matchingCards[Math.floor(Math.random() * matchingCards.length)]
-    : mockCards[0]; // Fallback
+    : normalizedCards[0]; // Fallback
 
   const name = sourceCard.name;
   const image = sourceCard.image;
@@ -284,32 +230,88 @@ export const generateReward = (selectedCards: Card[]): Card => {
   };
 };
 
-export const mapRarity = (rarity: string | undefined): CardRarity => {
-  if (!rarity) return 'common';
+const LEGENDARY_NAMES = [
+  'Arceus', 'Kyogre', 'Groudon', 'Rayquaza', 'Dialga', 'Palkia', 'Giratina',
+  'Entei', 'Raikou', 'Suicune', 'Lugia', 'Ho-oh', 'Celebi', 'Mewtwo', 'Mew',
+  'Articuno', 'Zapdos', 'Moltres', 'Latias', 'Latios', 'Deoxys', 'Jirachi',
+  'Regirock', 'Regice', 'Registeel', 'Regigigas', 'Darkrai', 'Cresselia',
+  'Manaphy', 'Phione', 'Shaymin', 'Victini', 'Cobalion', 'Terrakion', 'Virizion',
+  'Keldeo', 'Reshiram', 'Zekrom', 'Kyurem', 'Xerneas', 'Yveltal', 'Zygarde',
+  'Diancie', 'Hoopa', 'Volcanion', 'Tapu Koko', 'Tapu Lele', 'Tapu Bulu', 'Tapu Fini',
+  'Solgaleo', 'Lunala', 'Nihilego', 'Buzzwole', 'Pheromosa', 'Xurkitree', 'Celesteela',
+  'Kartana', 'Guzzlord', 'Necrozma', 'Magearna', 'Marshadow', 'Zeraora', 'Meltan', 'Melmetal',
+  'Zacian', 'Zamazenta', 'Eternatus', 'Kubfu', 'Urshifu', 'Zarude', 'Regieleki', 'Regidrago',
+  'Glastrier', 'Spectrier', 'Calyrex', 'Enamorus', 'Koraidon', 'Miraidon'
+];
 
+export const mapRarity = (rarity: string | undefined, name?: string): CardRarity => {
+  const r = (rarity || 'common').toLowerCase();
+  const n = (name || '').toLowerCase();
+
+  // Helper for word-boundary matching
+  const has = (keyword: string) => new RegExp(`\\b${keyword}\\b`, 'i').test(n);
+
+  // 1. Extreme Rarities / Special Keywords (Highest Priority)
+  if (n.includes('rainbow') || n.includes('hyper') || has('rainbow') || has('hyper')) return 'rare_rainbow';
+  if (n.includes('secret') || has('secret') || n.includes('(gold)') || n.includes('shiny')) return 'rare_secret';
+  
+  // 2. Modern Ultra Rares
+  if (has('vmax')) return 'rare_holo_vmax';
+  if (has('vstar')) return 'rare_holo_vstar';
+  if (has('v') && !has('vmax') && !has('vstar')) return 'rare_holo_v';
+  
+  // 3. Iconic Legacy Ultra Rares
+  if (has('gx')) return 'rare_holo_gx';
+  if (has('ex') || has('mega') || has('primal') || n.includes('-ex')) {
+     return 'rare_holo_ex';
+  }
+  
+  if (has('break')) return 'rare_holo_ex';
+  if (n.includes('tag team')) return 'rare_holo_gx';
+
+  // 4. Legendary Check - Legendaries are at least rare_holo
+  if (LEGENDARY_NAMES.some(legend => n.includes(legend.toLowerCase()))) {
+    return 'rare_holo';
+  }
+
+  // 5. Modern TCG terminology (Illustration Rares, etc.)
+  if (n.includes('illustration rare') || n.includes('special illustration') || n.includes('trainer gallery')) {
+    return 'rare_holo_ex'; // Usually high value / holo
+  }
+  if (has('radiant')) return 'rare_holo';
+  if (has('ultra') && has('rare')) return 'rare_holo_ex';
+  if (has('double') && has('rare')) return 'rare_holo_ex';
+
+  // 6. Other types
+  if (has('promo') || n.includes('(promo)')) return 'promo';
+  if (has('holo')) return 'rare_holo';
+  
+  // 7. Explicit check for 'rare' in name or data
+  if (has('rare') || r.includes('rare')) {
+    if (r.includes('holo')) return 'rare_holo';
+    return 'rare';
+  }
+
+  // 8. Base Rarity Validation
   const validRarities: CardRarity[] = [
     'common', 'uncommon', 'rare', 'rare_holo',
     'rare_holo_ex', 'rare_holo_gx',
-    'rare_holo_v', 'rare_rainbow', 'rare_secret', 'promo'
+    'rare_holo_v', 'rare_holo_vmax', 'rare_holo_vstar',
+    'rare_rainbow', 'rare_secret', 'promo'
   ];
 
-  if (validRarities.includes(rarity as CardRarity)) {
-    return rarity as CardRarity;
+  if (validRarities.includes(r as CardRarity)) {
+    return r as CardRarity;
   }
 
-  const r = rarity.toLowerCase();
-
-  if (r.includes('rainbow') || r.includes('hyper')) return 'rare_rainbow';
-  if (r.includes('secret')) return 'rare_secret';
-  if (r.includes('vmax')) return 'rare_holo_vmax';
-  if (r.includes('vstar')) return 'rare_holo_vstar';
-  if (r.includes('v') && !r.includes('vmax') && !r.includes('vstar')) return 'rare_holo_v';
-  if (r.includes('gx')) return 'rare_holo_gx';
-  if (r.includes('ex')) return 'rare_holo_ex';
-  if (r.includes('promo')) return 'promo';
-  if (r.includes('holo')) return 'rare_holo';
-  if (r.includes('rare')) return 'rare';
   if (r.includes('uncommon')) return 'uncommon';
 
   return 'common';
 };
+
+// Pre-normalized cards for consistent use across the app
+export const normalizedCards: Card[] = allCards.map(c => ({
+  ...c,
+  rarity: mapRarity(c.rarity, c.name)
+}));
+

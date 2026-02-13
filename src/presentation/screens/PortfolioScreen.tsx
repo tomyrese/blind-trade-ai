@@ -83,22 +83,22 @@ export const PortfolioScreen: React.FC = () => {
     }
 
     if (selectedRarities.length > 0) {
-        result = result.filter(a => selectedRarities.includes(mapRarity(a.rarity)));
+        result = result.filter(a => selectedRarities.includes(mapRarity(a.rarity, a.name)));
     }
 
     result.sort((a, b) => {
       switch (sortBy) {
         case 'value_desc': return b.value - a.value;
         case 'value_asc': return a.value - b.value;
-        case 'rarity_desc': return (RARITY_RANKS[mapRarity(b.rarity)] || 0) - (RARITY_RANKS[mapRarity(a.rarity)] || 0);
-        case 'rarity_asc': return (RARITY_RANKS[mapRarity(a.rarity)] || 0) - (RARITY_RANKS[mapRarity(b.rarity)] || 0);
+        case 'rarity_desc': return (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0) - (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0);
+        case 'rarity_asc': return (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0) - (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0);
         case 'name_asc': return a.name.localeCompare(b.name);
         default: return 0;
       }
     });
 
     return result;
-  }, [assets, searchQuery, sortBy]);
+  }, [assets, searchQuery, sortBy, selectedRarities]);
 
   const renderHeader = () => (
     <View>
@@ -266,7 +266,7 @@ export const PortfolioScreen: React.FC = () => {
                     card={{
                       id: asset.id,
                       name: asset.name,
-                      rarity: mapRarity(asset.rarity),
+                      rarity: mapRarity(asset.rarity, asset.name),
                       value: asset.value,
                       symbol: asset.symbol,
                       amount: asset.amount,
@@ -292,7 +292,9 @@ export const PortfolioScreen: React.FC = () => {
         ListEmptyComponent={
             <View style={styles.emptyContainer}>
                 <Package size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
-                <Text style={styles.emptyText}>{t('no_assets_owned')}</Text>
+                <Text style={styles.emptyText}>
+                    { (searchQuery || selectedRarities.length > 0) ? t('no_results_found') : t('no_assets_owned') }
+                </Text>
             </View>
         }
       />

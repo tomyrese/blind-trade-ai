@@ -22,7 +22,18 @@ import { Mail, Lock, LogIn, Globe } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { InfoModal, ModalType } from '../components/InfoModal';
 
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
 const { width, height } = Dimensions.get('window');
+
+const loginSchema = z.object({
+  email: z.string().email('invalid_email_format').min(1, 'email_required'),
+  password: z.string().min(1, 'password_required'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 export const LoginScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -30,9 +41,16 @@ export const LoginScreen = () => {
   const { seedPortfolio } = usePortfolioStore();
   const { t, language } = useTranslation();
   
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
   
   // Custom Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -51,16 +69,11 @@ export const LoginScreen = () => {
     setModalVisible(true);
   };
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      showInfo('error', t('error'), t('please_fill_all_fields'));
-      return;
-    }
-
+  const handleLogin = async (data: LoginForm) => {
     Keyboard.dismiss();
     setLoading(true);
     try {
-      const success = await login(email, password);
+      const success = await login(data.email, data.password);
       if (!success) {
         showInfo('error', t('error'), t('invalid_credentials'));
       }
@@ -114,38 +127,58 @@ export const LoginScreen = () => {
           </View>
 
           <View style={styles.formContainer}>
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('email')}
-                placeholderTextColor="#94a3b8"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                returnKeyType="next"
-              />
-            </View>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputGroup, errors.email && styles.inputErrorBorder]}>
+                  <View style={styles.inputWrapper}>
+                    <Mail size={20} color={errors.email ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('email')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      returnKeyType="next"
+                    />
+                  </View>
+                  {errors.email && <Text style={styles.errorText}>{t(errors.email.message as any)}</Text>}
+                </View>
+              )}
+            />
 
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t('password')}
-                placeholderTextColor="#94a3b8"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                textContentType="password"
-                onSubmitEditing={handleLogin}
-              />
-            </View>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputGroup, errors.password && styles.inputErrorBorder]}>
+                  <View style={styles.inputWrapper}>
+                    <Lock size={20} color={errors.password ? '#ef4444' : '#64748b'} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('password')}
+                      placeholderTextColor="#94a3b8"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      textContentType="password"
+                      onSubmitEditing={handleSubmit(handleLogin)}
+                    />
+                  </View>
+                  {errors.password && <Text style={styles.errorText}>{t(errors.password.message as any)}</Text>}
+                </View>
+              )}
+            />
 
             <TouchableOpacity
               style={styles.loginButton}
-              onPress={handleLogin}
+              onPress={handleSubmit(handleLogin)}
               disabled={loading}
             >
               <LinearGradient
@@ -311,12 +344,24 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     alignSelf: 'center',
   },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputErrorBorder: {
+    borderColor: '#ef4444',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
     borderRadius: 15,
-    marginBottom: 16,
     paddingHorizontal: 16,
     height: 56,
     borderWidth: 1.5,

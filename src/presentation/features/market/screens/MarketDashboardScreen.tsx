@@ -94,7 +94,7 @@ export const MarketDashboardScreen: React.FC = () => {
   const marketToCard = (market: Market): Card => ({
     id: market.id,
     name: market.name,
-    rarity: mapRarity(market.rarity),
+    rarity: mapRarity(market.rarity, market.name),
     rarityLabel: market.rarityLabel,
     value: market.currentPrice,
     tcgPlayerPrice: market.tcgPlayerPrice,
@@ -118,7 +118,7 @@ export const MarketDashboardScreen: React.FC = () => {
 
     // Filter by Rarity
     if (selectedRarities.length > 0) {
-        result = result.filter(m => selectedRarities.includes(mapRarity(m.rarity)));
+        result = result.filter(m => selectedRarities.includes(mapRarity(m.rarity, m.name)));
     }
 
     // 2. Filter by Tab (Hot = Trending cards)
@@ -138,9 +138,9 @@ export const MarketDashboardScreen: React.FC = () => {
         case 'price_desc':
           return b.currentPrice - a.currentPrice;
         case 'rarity_asc':
-          return (RARITY_RANKS[mapRarity(a.rarity)] || 0) - (RARITY_RANKS[mapRarity(b.rarity)] || 0);
+          return (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0) - (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0);
         case 'rarity_desc':
-          return (RARITY_RANKS[mapRarity(b.rarity)] || 0) - (RARITY_RANKS[mapRarity(a.rarity)] || 0);
+          return (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0) - (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0);
         case 'date_newest':
             // Newest first
             return (new Date(b.listedAt || 0).getTime()) - (new Date(a.listedAt || 0).getTime());

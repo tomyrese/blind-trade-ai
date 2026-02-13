@@ -19,7 +19,7 @@ interface UserState {
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
   loginAsGuest: () => void;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, phone: string) => Promise<boolean>;
   logout: () => void;
   setLanguage: (lang: 'en' | 'vi') => void;
   
@@ -99,15 +99,15 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      register: async (name, email, password) => {
+      register: async (name, email, password, phone) => {
         const { registeredUsers } = get();
-        if (name && email && password.length >= 6) {
+        if (name && email && password.length >= 6 && phone) {
           const exists = registeredUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
           if (exists) return false;
 
-          const newProfile = { ...MOCK_USER, name, email, language: get().language };
+          const newProfile = { ...MOCK_USER, name, email, phoneNumber: phone, language: get().language };
           set(state => ({
-            registeredUsers: [...state.registeredUsers, { name, email, password, profile: newProfile }]
+            registeredUsers: [...state.registeredUsers, { email, password, profile: newProfile }]
           }));
           return true;
         }

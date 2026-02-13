@@ -26,7 +26,7 @@ export const FavoritesScreen: React.FC = () => {
         card={{
             id: item.id,
             name: item.name,
-            rarity: mapRarity(item.rarity),
+            rarity: mapRarity(item.rarity, item.name),
             value: item.currentPrice,
             symbol: item.symbol,
             tcgPlayerPrice: item.tcgPlayerPrice,

@@ -13,8 +13,8 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { mockCards, mapRarity, RARITY_RANKS } from '../../shared/utils/cardData';
-import { useTranslation } from '../../shared/stores';
+import { normalizedCards, Card, mapRarity, RARITY_CONFIGS, RARITY_RANKS } from '../../shared/utils/cardData';
+import { useTranslation } from '../../shared/utils/translations';
 
 export const PokedexScreen: React.FC = () => {
   const { width } = useWindowDimensions();
@@ -38,7 +38,7 @@ export const PokedexScreen: React.FC = () => {
   ];
 
   const filteredCards = useMemo(() => {
-    let result = [...mockCards];
+    let result = [...normalizedCards];
     
     if (inputText) {
       result = result.filter(c => 
@@ -48,7 +48,7 @@ export const PokedexScreen: React.FC = () => {
     }
 
     if (selectedRarities.length > 0) {
-      result = result.filter(c => selectedRarities.includes(mapRarity(c.rarity)));
+      result = result.filter(c => selectedRarities.includes(c.rarity));
     }
 
     result.sort((a, b) => {
@@ -56,8 +56,8 @@ export const PokedexScreen: React.FC = () => {
         case 'id_asc': return a.id.localeCompare(b.id);
         case 'value_desc': return b.value - a.value;
         case 'value_asc': return a.value - b.value;
-        case 'rarity_desc': return (RARITY_RANKS[mapRarity(b.rarity)] || 0) - (RARITY_RANKS[mapRarity(a.rarity)] || 0);
-        case 'rarity_asc': return (RARITY_RANKS[mapRarity(a.rarity)] || 0) - (RARITY_RANKS[mapRarity(b.rarity)] || 0);
+        case 'rarity_desc': return (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0) - (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0);
+        case 'rarity_asc': return (RARITY_RANKS[mapRarity(a.rarity, a.name)] || 0) - (RARITY_RANKS[mapRarity(b.rarity, b.name)] || 0);
         default: return 0;
       }
     });
@@ -157,6 +157,12 @@ export const PokedexScreen: React.FC = () => {
                 </Pressable>
             </View>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Book size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyText}>{t('no_results_found')}</Text>
+          </View>
+        }
       />
 
       {/* Sort Modal */}
@@ -301,4 +307,6 @@ const styles = StyleSheet.create({
   activeFilterChip: { backgroundColor: '#fef2f2', borderColor: '#fee2e2' },
   filterChipLabel: { fontSize: 14, fontWeight: '700', color: '#64748b' },
   activeFilterChipLabel: { color: '#ef4444' },
+  emptyContainer: { padding: 60, alignItems: 'center' },
+  emptyText: { color: '#94a3b8', fontSize: 15, fontWeight: '700' },
 });

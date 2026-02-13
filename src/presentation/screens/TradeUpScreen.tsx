@@ -83,7 +83,7 @@ export const TradeUpScreen: React.FC = () => {
     return assets.map(a => ({
       id: a.id,
       name: a.name,
-      rarity: mapRarity(a.rarity),
+      rarity: mapRarity(a.rarity, a.name),
       value: a.value,
       symbol: a.symbol,
       amount: a.amount,
@@ -109,7 +109,7 @@ export const TradeUpScreen: React.FC = () => {
     }
 
     if (selectedRarities.length > 0) {
-        result = result.filter(c => selectedRarities.includes(mapRarity(c.rarity)));
+        result = result.filter(c => selectedRarities.includes(mapRarity(c.rarity, c.name)));
     }
 
     result.sort((a, b) => {
@@ -200,7 +200,7 @@ export const TradeUpScreen: React.FC = () => {
             cardsToFuse.push({
                 id: asset.id,
                 name: asset.name,
-                rarity: mapRarity(asset.rarity),
+                rarity: mapRarity(asset.rarity, asset.name),
                 value: asset.value,
                 symbol: asset.symbol,
                 amount: 1, // Treat as individual card for fusion
@@ -391,7 +391,7 @@ export const TradeUpScreen: React.FC = () => {
 
           {filteredCards.length === 0 && (
             <View style={styles.emptyInventory}>
-              {searchQuery ? (
+              {(searchQuery || selectedRarities.length > 0) ? (
                 <Text style={styles.emptyInventoryText}>{t('no_results_found')}</Text>
               ) : (
                 <Text style={styles.emptyInventoryText}>{t('no_cards_to_fuse')}</Text>
@@ -799,6 +799,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  backBtn: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: '#f1f5f9', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
   headerTitleText: {
     fontSize: 20,
