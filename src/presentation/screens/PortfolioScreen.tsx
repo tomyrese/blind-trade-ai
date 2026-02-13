@@ -251,8 +251,8 @@ export const PortfolioScreen: React.FC = () => {
       <FlashList<any>
         data={filteredAssets}
         keyExtractor={item => item.id}
-        key={viewMode}
-        numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
+        key={viewMode === 'grid' ? `grid-${width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2}` : 'list'}
+        numColumns={viewMode === 'grid' ? (width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2) : 1}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
 

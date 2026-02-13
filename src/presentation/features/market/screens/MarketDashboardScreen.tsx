@@ -267,8 +267,8 @@ export const MarketDashboardScreen: React.FC = () => {
             </View>
           )}
           keyExtractor={(item) => item.id}
-          key={viewMode} // Force re-render when switching view modes
-          numColumns={viewMode === 'grid' ? (isTablet ? 3 : 2) : 1}
+          key={viewMode === 'grid' ? `grid-${width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2}` : 'list'} // Force re-render when switching view modes or column counts
+          numColumns={viewMode === 'grid' ? (width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2) : 1}
           ListHeaderComponent={null}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 4 }}
           ListEmptyComponent={
