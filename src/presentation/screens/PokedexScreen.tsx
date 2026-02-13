@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, Pressable, TextInput, Modal, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, Pressable, TextInput, Modal } from 'react-native';
 import { 
   Book, 
   Search, 
@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { CardItem } from '../features/tradeup/components/CardItem';
 import { normalizedCards, Card, mapRarity, RARITY_CONFIGS, RARITY_RANKS } from '../../shared/utils/cardData';
 import { useTranslation } from '../../shared/utils/translations';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const PokedexScreen: React.FC = () => {
   const { width } = useWindowDimensions();
@@ -67,8 +68,6 @@ export const PokedexScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={styles.header}>
-        {/* Header content moved to fixed appHeader */}
-
         <View style={styles.filterSection}>
             <View style={styles.searchBar}>
                 <Search size={20} color="#94a3b8" />
@@ -123,7 +122,7 @@ export const PokedexScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.appHeader}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
               <ChevronLeft size={28} color="#0f172a" />
@@ -184,15 +183,24 @@ export const PokedexScreen: React.FC = () => {
                     {SORT_OPTIONS.map((option) => (
                         <Pressable
                             key={option.id}
-                            style={[styles.sortOptionItem, sortBy === option.id && styles.activeSortOptionItem]}
+                            style={[
+                                styles.sortOptionItem, 
+                                sortBy === option.id && styles.activeSortOptionItem
+                            ]}
                             onPress={() => {
                                 setSortBy(option.id);
                                 setSortModalVisible(false);
                             }}
                         >
-                            <Text style={[styles.sortOptionLabel, sortBy === option.id && styles.activeSortOptionLabel]}>
+                            <Text style={[
+                                styles.sortOptionLabel, 
+                                sortBy === option.id && styles.activeSortOptionLabel
+                            ]}>
                                 {option.label}
                             </Text>
+                            {sortBy === option.id && (
+                                <View style={styles.activeDot} />
+                            )}
                         </Pressable>
                     ))}
                 </View>
@@ -222,7 +230,10 @@ export const PokedexScreen: React.FC = () => {
                             return (
                                 <Pressable
                                     key={rarityKey}
-                                    style={[styles.filterChip, isSelected && styles.activeFilterChip]}
+                                    style={[
+                                        styles.filterChip, 
+                                        isSelected && styles.activeFilterChip
+                                    ]}
                                     onPress={() => {
                                         setSelectedRarities(prev => 
                                             prev.includes(rarityKey) 
@@ -231,13 +242,28 @@ export const PokedexScreen: React.FC = () => {
                                         );
                                     }}
                                 >
-                                    <Text style={[styles.filterChipLabel, isSelected && styles.activeFilterChipLabel]}>
+                                    <Text style={[
+                                        styles.filterChipLabel, 
+                                        isSelected && styles.activeFilterChipLabel
+                                    ]}>
                                         {t(`rarity_${rarityKey}` as any)}
                                     </Text>
                                 </Pressable>
                             );
                         })}
                     </View>
+
+                    {selectedRarities.length > 0 && (
+                        <Pressable 
+                            style={styles.clearFilterBtn}
+                            onPress={() => {
+                                setSelectedRarities([]);
+                                setFilterModalVisible(false);
+                            }}
+                        >
+                            <Text style={styles.clearFilterText}>{t('clear_filter')}</Text>
+                        </Pressable>
+                    )}
                 </View>
             </Pressable>
         </Pressable>
@@ -268,14 +294,19 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#0f172a',
   },
-  header: { paddingHorizontal: 16, paddingTop: 24 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  titleContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  title: { fontSize: 24, fontWeight: '900', color: '#0f172a' },
-  listContent: { paddingBottom: 40 },
-  gridItem: { padding: 8 },
-  listItem: { padding: 12 },
-  filterSection: { gap: 12, marginBottom: 16 },
+  header: { paddingHorizontal: 16, paddingVertical: 20 },
+  backBtn: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: '#f1f5f9', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  listContent: { paddingBottom: 40, paddingHorizontal: 12 },
+  gridItem: { padding: 4, position: 'relative' },
+  listItem: { paddingHorizontal: 4, paddingVertical: 8, position: 'relative' },
+  filterSection: { gap: 12 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -288,25 +319,92 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, marginLeft: 12, fontSize: 16, color: '#0f172a', fontWeight: '600' },
   controlsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  controlBtn: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
-  viewSwitcher: { flexDirection: 'row', backgroundColor: '#f8fafc', borderRadius: 14, borderWidth: 1, borderColor: '#f1f5f9', padding: 4 },
+  controlBtn: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 14, 
+    backgroundColor: '#f8fafc', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 1, 
+    borderColor: '#f1f5f9' 
+  },
+  viewSwitcher: { 
+    flexDirection: 'row', 
+    backgroundColor: '#f8fafc', 
+    borderRadius: 14, 
+    borderWidth: 1, 
+    borderColor: '#f1f5f9', 
+    padding: 4 
+  },
   viewIconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
-  activeViewIcon: { backgroundColor: '#ffffff', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  activeViewIcon: { 
+    backgroundColor: '#ffffff', 
+    elevation: 2, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4 
+  },
   vDivider: { width: 1, height: 16, backgroundColor: '#e2e8f0', marginHorizontal: 4, alignSelf: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalContent: { 
+    backgroundColor: 'white', 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 24, 
+    paddingBottom: 40 
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 24 
+  },
   modalTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
   modalBody: { gap: 8 },
-  sortOptionItem: { paddingVertical: 16, paddingHorizontal: 20, borderRadius: 16, backgroundColor: '#f8fafc', marginBottom: 8 },
+  sortOptionItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingVertical: 16, 
+    paddingHorizontal: 20, 
+    borderRadius: 16, 
+    backgroundColor: '#f8fafc', 
+  },
   activeSortOptionItem: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fee2e2' },
   sortOptionLabel: { fontSize: 16, fontWeight: '700', color: '#475569' },
   activeSortOptionLabel: { color: '#ef4444' },
+  activeDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#ef4444',
+  },
   rarityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' },
+  filterChip: { 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderRadius: 12, 
+    backgroundColor: '#f8fafc', 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0' 
+  },
   activeFilterChip: { backgroundColor: '#fef2f2', borderColor: '#fee2e2' },
-  filterChipLabel: { fontSize: 14, fontWeight: '700', color: '#64748b' },
-  activeFilterChipLabel: { color: '#ef4444' },
+  filterChipLabel: { fontSize: 13, fontWeight: '600', color: '#64748b' },
+  activeFilterChipLabel: { color: '#ef4444', fontWeight: '700' },
+  clearFilterBtn: {
+      marginTop: 16,
+      alignItems: 'center',
+      paddingVertical: 12,
+      backgroundColor: '#f1f5f9',
+      borderRadius: 12,
+  },
+  clearFilterText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#475569',
+  },
   emptyContainer: { padding: 60, alignItems: 'center' },
   emptyText: { color: '#94a3b8', fontSize: 15, fontWeight: '700' },
 });
