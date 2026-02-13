@@ -314,7 +314,7 @@ const translations = {
     apply_filter: 'Áp dụng',
 
     // Gacha
-    gacha_title: 'VÒNG QUAY THẦN THÚ',
+    gacha_title: 'VÒNG QUAY MAY MẮN',
     gacha_balance: 'Số dư:',
     gacha_roll_x1: 'ROLL x1',
     gacha_roll_x10: 'ROLL x10',
@@ -330,6 +330,8 @@ const translations = {
     gacha_reveal_title: 'ĐANG KHÁM PHÁ PHẦN THƯỞNG...',
     gacha_skip: 'BỎ QUA',
     gacha_hot: 'HOT',
+    gacha_roll_x1_desc: 'Nhận 1 Thẻ Pokémon',
+    gacha_roll_x10_desc: 'Nhận 10 Thẻ Pokémon',
   },
   en: {
     // Common
@@ -641,7 +643,7 @@ const translations = {
     apply_filter: 'Apply',
 
     // Gacha
-    gacha_title: 'LEGENDARY SUMMON',
+    gacha_title: 'LUCKY SUMMON',
     gacha_balance: 'Balance:',
     gacha_roll_x1: 'ROLL x1',
     gacha_roll_x10: 'ROLL x10',
@@ -657,6 +659,8 @@ const translations = {
     gacha_reveal_title: 'UNCOVERING REWARDS...',
     gacha_skip: 'SKIP',
     gacha_hot: 'HOT',
+    gacha_roll_x1_desc: 'Get 1 Pokémon Card',
+    gacha_roll_x10_desc: 'Get 10 Pokémon Cards',
   }
 };
 
