@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, Pressable, TextInput, Modal, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, Pressable, TextInput, Modal, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Heart, 
   Search, 
@@ -132,7 +133,7 @@ export const FavoritesScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.appHeader}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
               <ChevronLeft size={28} color="#0f172a" />
@@ -172,7 +173,7 @@ export const FavoritesScreen: React.FC = () => {
                         listings: item.listings
                     }}
                     showActions={false}
-                    hideSeller={true}
+                    hideSeller={false}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
                     largeImage={true}
                   />
@@ -296,7 +297,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingTop: 40, 
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
