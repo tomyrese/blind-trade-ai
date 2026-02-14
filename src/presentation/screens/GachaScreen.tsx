@@ -4,13 +4,16 @@ import {
   Dimensions, Image, ScrollView, SafeAreaView, useWindowDimensions,
 } from 'react-native';
 import { X, Sparkles, Check, RotateCcw, Coins } from 'lucide-react-native';
-import Animated, { 
-  FadeIn, 
-  ZoomIn, 
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  FadeIn,
+  ZoomIn,
   FadeInDown,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withDelay,
+  withSequence,
   interpolate,
 } from 'react-native-reanimated';
 
@@ -20,6 +23,7 @@ import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
 import { formatCurrency } from '../../shared/utils/currency';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
+import { GachaAnimation } from '../../features/gacha/components/GachaAnimation';
 
 const { width } = Dimensions.get('window');
 
@@ -30,11 +34,11 @@ const PRICE_10 = 1600000;
 const getTierColor = (rarity: string) => {
   const r = rarity.toLowerCase();
   const config = RARITY_CONFIGS[r as keyof typeof RARITY_CONFIGS];
-  
+
   if (config) {
     return config.borderColor;
   }
-  
+
   // Logical Fallbacks for unknown strings
   if (r.includes('secret') || r.includes('rainbow') || r.includes('vstar') || r.includes('vmax') || r.includes('gold')) {
     return '#FACC15'; // Gold/Yellow
@@ -51,79 +55,177 @@ const getTierColor = (rarity: string) => {
 
 // --- 2. COMPONENT THẺ BÀI CON (3D Flip) ---
 const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
-    item: Card, index: number, revealed: boolean, onFlip: () => void, sizeMode: 'big' | 'small'
+  item: Card, index: number, revealed: boolean, onFlip: () => void, sizeMode: 'big' | 'small'
 }) => {
-    const tierColor = getTierColor(item.rarity);
-    const rank = RARITY_RANKS[item.rarity as keyof typeof RARITY_RANKS] || 0;
-    const isGoldTier = rank >= 5;
-    const isPurpleTier = rank >= 3 && rank < 5;
-    
-    // Hint color for the border before flipping
-    const hintBorderColor = revealed ? tierColor : tierColor + '40'; // 40 is hex for ~25% opacity
-    
-    const entryDelay = index * 100;
-    const rotate = useSharedValue(0);
+  const tierColor = getTierColor(item.rarity);
+  const rank = RARITY_RANKS[item.rarity as keyof typeof RARITY_RANKS] || 0;
+  const isGoldTier = rank >= 5;
+  const isPurpleTier = rank >= 3 && rank < 5;
 
-    useEffect(() => {
-        if (revealed) {
-            rotate.value = withTiming(180, { duration: 600 });
-        } else {
-            rotate.value = 0;
-        }
-    }, [revealed]);
+  // Hint color for the border before flipping
+  const hintBorderColor = revealed ? tierColor : tierColor + '40'; // 40 is hex for ~25% opacity
 
-    const frontAnimatedStyle = useAnimatedStyle(() => {
-        const spin = interpolate(rotate.value, [0, 180], [180, 360]);
-        return {
-            transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
-        };
-    });
+  const entryDelay = index * 100;
+  const rotate = useSharedValue(0);
+  const shineOpacity = useSharedValue(0);
 
-    const backAnimatedStyle = useAnimatedStyle(() => {
-        const spin = interpolate(rotate.value, [0, 180], [0, 180]);
-        return {
-            transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
-        };
-    });
+  useEffect(() => {
+    if (revealed) {
+      rotate.value = withTiming(180, { duration: 600 });
+      // Flash effect for Rare+ cards
+      if (rank >= 3) {
+        shineOpacity.value = withDelay(250, withSequence(
+          withTiming(0.9, { duration: 100 }), // Burst
+          withTiming(0, { duration: 400 })    // Fade
+        ));
+      }
+    } else {
+      rotate.value = 0;
+      shineOpacity.value = 0;
+    }
+  }, [revealed]);
 
-    return (
-        <Animated.View 
-            entering={FadeInDown.delay(entryDelay).duration(500)}
-            style={sizeMode === 'big' ? styles.bigCardSpace : styles.cardSpace2Col}
-        >
-            <TouchableOpacity activeOpacity={0.9} onPress={onFlip} style={{ flex: 1 }}>
-                <View style={[
-                  styles.cardBaseContainer,
-                  {
-                    borderColor: hintBorderColor,
-                    borderWidth: isGoldTier && revealed ? 4 : 2,
-                    shadowColor: tierColor,
-                    shadowOpacity: revealed ? 0.6 : 0.2,
-                  }
-                ]}>
-                    <Animated.View style={[styles.cardFace, styles.cardFront, frontAnimatedStyle]}>
-                        <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
-                        <View style={styles.cardOverlay}>
-                            <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
-                        </View>
-                    </Animated.View>
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    const spin = interpolate(rotate.value, [0, 180], [180, 360]);
+    return {
+      transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
+    };
+  });
 
-                    <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
-                        <View style={styles.pokeballDecor}>
-                            <View style={styles.pokeballTop} />
-                            <View style={styles.pokeballBelt} />
-                            <View style={styles.pokeballBase} />
-                            <View style={styles.pokeballCenter} />
-                        </View>
-                        <Sparkles color={tierColor} size={32} opacity={0.6} />
-                        <Text style={styles.rarityHintText}>
-                            {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
-                        </Text>
-                    </Animated.View>
-                </View>
-            </TouchableOpacity>
-        </Animated.View>
-    );
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    const spin = interpolate(rotate.value, [0, 180], [0, 180]);
+    return {
+      transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
+    };
+  });
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(entryDelay).duration(500)}
+      style={sizeMode === 'big' ? styles.bigCardSpace : styles.cardSpace2Col}
+    >
+      {/* 3D Cross Burst Flash for High Rarity */}
+      {(rank >= 3) && (
+        <>
+          {/* Beam 1 */}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFillObject,
+              { zIndex: -1, justifyContent: 'center', alignItems: 'center' },
+              useAnimatedStyle(() => ({
+                opacity: shineOpacity.value,
+                transform: [{ rotate: '45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
+              }))
+            ]}
+          >
+            <LinearGradient
+              colors={['transparent', tierColor, tierColor, 'transparent']}
+              start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
+              style={{ width: '150%', height: '20%' }} // Wide subtle beam
+            />
+            <LinearGradient
+              colors={['transparent', 'white', 'white', 'transparent']}
+              start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
+              style={{ position: 'absolute', width: '5%', height: '140%' }} // Vertical sharp beam
+            />
+          </Animated.View>
+
+          {/* Beam 2 */}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFillObject,
+              { zIndex: -1, justifyContent: 'center', alignItems: 'center' },
+              useAnimatedStyle(() => ({
+                opacity: shineOpacity.value,
+                transform: [{ rotate: '-45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
+              }))
+            ]}
+          >
+            <LinearGradient
+              colors={['transparent', tierColor, tierColor, 'transparent']}
+              start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
+              style={{ width: '150%', height: '20%' }}
+            />
+            <LinearGradient
+              colors={['transparent', 'white', 'white', 'transparent']}
+              start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
+              style={{ position: 'absolute', width: '5%', height: '140%' }}
+            />
+          </Animated.View>
+
+          {/* Central Halo */}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFillObject,
+              { zIndex: -2, backgroundColor: tierColor, borderRadius: 20 },
+              useAnimatedStyle(() => ({
+                opacity: shineOpacity.value * 0.5,
+                transform: [{ scale: 1.4 }]
+              }))
+            ]}
+          />
+        </>
+      )}
+
+      <TouchableOpacity activeOpacity={0.9} onPress={onFlip} style={{ flex: 1 }}>
+        <View style={styles.cardBaseContainer}>
+          <Animated.View style={[
+            styles.cardFace,
+            styles.cardFront,
+            frontAnimatedStyle,
+            {
+              borderColor: tierColor,
+              borderWidth: isGoldTier ? 4 : 2,
+              shadowColor: tierColor,
+              shadowOpacity: 0.6,
+              shadowRadius: 10,
+              elevation: 5,
+            }
+          ]}>
+            <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
+            <View style={styles.cardOverlay}>
+              <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
+            </View>
+            {/* Flash Overlay for High Rarity */}
+            {(isPurpleTier || isGoldTier) && (
+              <Animated.View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  { backgroundColor: 'white', zIndex: 10 },
+                  useAnimatedStyle(() => ({ opacity: shineOpacity.value }))
+                ]}
+              />
+            )}
+          </Animated.View>
+
+          <Animated.View style={[
+            styles.cardFace,
+            styles.cardBack,
+            backAnimatedStyle,
+            {
+              borderColor: hintBorderColor, // Use semi-transparent tier color for hint
+              borderWidth: 2,
+              shadowColor: tierColor,
+              shadowOpacity: 0.3,
+              shadowRadius: 5,
+              elevation: 3,
+            }
+          ]}>
+            <View style={styles.pokeballDecor}>
+              <View style={styles.pokeballTop} />
+              <View style={styles.pokeballBelt} />
+              <View style={styles.pokeballBase} />
+              <View style={styles.pokeballCenter} />
+            </View>
+            <Sparkles color={tierColor} size={32} opacity={0.6} />
+            <Text style={styles.rarityHintText}>
+              {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
+            </Text>
+          </Animated.View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 };
 
 // --- 3. MÀN HÌNH GACHA CHÍNH ---
@@ -131,11 +233,12 @@ export const GachaScreen = () => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isWide = windowWidth > 600;
 
-  const [phase, setPhase] = useState<'IDLE' | 'RESULT'>('IDLE');
+  const [phase, setPhase] = useState<'IDLE' | 'ANIMATING' | 'RESULT'>('IDLE');
   const [currentViewCards, setCurrentViewCards] = useState<Card[]>([]);
   const [revealed, setRevealed] = useState<boolean[]>([]);
   const [isRollMulti, setIsRollMulti] = useState(false);
   const [showInsufficentUI, setShowInsufficentUI] = useState(false);
+  const [bestRarityColor, setBestRarityColor] = useState('#3B82F6');
 
   const spend = useUserStore(state => state.spend);
   const userBalance = useUserStore(state => state.profile?.balance || 0);
@@ -145,38 +248,38 @@ export const GachaScreen = () => {
 
   const isAllRevealed = revealed.length > 0 && revealed.every(v => v);
 
-    const generateRandomCards = (count: number): any[] => {
-        const results: any[] = [];
-        for(let i=0; i<count; i++) {
-            const rand = Math.random();
-            let pool: Card[] = [];
+  const generateRandomCards = (count: number): any[] => {
+    const results: any[] = [];
+    for (let i = 0; i < count; i++) {
+      const rand = Math.random();
+      let pool: Card[] = [];
 
-            // Filter pools based on ALREADY NORMALIZED rarity
-            if (rand < 0.05) { 
-               pool = normalizedCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_vstar', 'rare_holo_vmax', 'rare_holo_v'].includes(c.rarity));
-            } else if (rand < 0.25) { 
-               pool = normalizedCards.filter(c => ['rare_holo', 'rare', 'rare_holo_gx', 'rare_holo_ex', 'promo'].includes(c.rarity));
-            } else { 
-               pool = normalizedCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
-            }
+      // Filter pools based on ALREADY NORMALIZED rarity
+      if (rand < 0.05) {
+        pool = normalizedCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_vstar', 'rare_holo_vmax', 'rare_holo_v'].includes(c.rarity));
+      } else if (rand < 0.25) {
+        pool = normalizedCards.filter(c => ['rare_holo', 'rare', 'rare_holo_gx', 'rare_holo_ex', 'promo'].includes(c.rarity));
+      } else {
+        pool = normalizedCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
+      }
 
-            if (pool.length === 0) pool = normalizedCards;
+      if (pool.length === 0) pool = normalizedCards;
 
-            const baseCard = pool[Math.floor(Math.random() * pool.length)];
-            
-            results.push({ 
-              ...baseCard, 
-              id: `${baseCard.id}-${Date.now()}-${i}`,
-              baseId: baseCard.id 
-            });
-        }
-        return results;
-    };
+      const baseCard = pool[Math.floor(Math.random() * pool.length)];
+
+      results.push({
+        ...baseCard,
+        id: `${baseCard.id}-${Date.now()}-${i}`,
+        baseId: baseCard.id
+      });
+    }
+    return results;
+  };
 
   const startSummon = (isMulti: boolean) => {
     // Safety check: Cannot summon again if current cards aren't fully revealed
     if (phase === 'RESULT' && !isAllRevealed) {
-       return;
+      return;
     }
 
     const cost = isMulti ? PRICE_10 : PRICE_1;
@@ -190,6 +293,19 @@ export const GachaScreen = () => {
     setIsRollMulti(isMulti);
     const count = isMulti ? 10 : 1;
     const newResults = generateRandomCards(count);
+
+    // Calculate Best Rarity for Glow
+    let bestColor = '#9CA3AF';
+    let maxRank = 0;
+
+    newResults.forEach(c => {
+      const rank = RARITY_RANKS[c.rarity as keyof typeof RARITY_RANKS] || 0;
+      if (rank > maxRank) {
+        maxRank = rank;
+        bestColor = getTierColor(c.rarity);
+      }
+    });
+    setBestRarityColor(bestColor);
 
     const assetsToAdd = newResults.map(card => ({
       id: card.id,
@@ -205,7 +321,13 @@ export const GachaScreen = () => {
 
     setCurrentViewCards(newResults);
     setRevealed(new Array(count).fill(false));
-    setPhase('RESULT'); 
+
+    // START ANIMATION
+    setPhase('ANIMATING');
+  };
+
+  const onAnimationFinish = () => {
+    setPhase('RESULT');
   };
 
   const resetGacha = () => {
@@ -227,62 +349,66 @@ export const GachaScreen = () => {
     <SafeAreaView style={styles.container}>
       {phase === 'IDLE' && (
         <View style={styles.menuOverlay}>
-          <Animated.View 
-            entering={FadeIn.duration(600)} 
+          <Animated.View
+            entering={FadeIn.duration(600)}
             style={[
-                styles.menuContainer,
-                isWide && { maxWidth: 500 }
+              styles.menuContainer,
+              isWide && { maxWidth: 500 }
             ]}
           >
             <Text style={styles.menuTitle}>{t('gacha_title')}</Text>
 
             <View style={styles.balanceTag}>
-               <Sparkles color="#eab308" size={20} />
-               <Text style={styles.balanceAmt}>{formatCurrency(userBalance, userCurrency)}</Text>
+              <Sparkles color="#eab308" size={20} />
+              <Text style={styles.balanceAmt}>{formatCurrency(userBalance, userCurrency)}</Text>
             </View>
 
             <View style={styles.priceSection}>
               <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(false)}>
-                 <View style={styles.sumBtn}>
-                    <View style={styles.pokeballIconSmall}>
-                        <View style={[styles.pokeballTop, { backgroundColor: '#ef4444' }]} />
-                        <View style={styles.pokeballBeltSmall} />
-                        <View style={styles.pokeballBase} />
-                        <View style={styles.pokeballCenterSmall}>
-                             <View style={styles.pokeballCenterInner} />
-                        </View>
+                <View style={styles.sumBtn}>
+                  <View style={styles.pokeballIconSmall}>
+                    <View style={[styles.pokeballTop, { backgroundColor: '#ef4444' }]} />
+                    <View style={styles.pokeballBeltSmall} />
+                    <View style={styles.pokeballBase} />
+                    <View style={styles.pokeballCenterSmall}>
+                      <View style={styles.pokeballCenterInner} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 15 }}>
-                      <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
-                      <Text style={styles.btnDesc}>{t('gacha_roll_x1_desc')}</Text>
-                    </View>
-                    <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
-                 </View>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 15 }}>
+                    <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
+                    <Text style={styles.btnDesc}>{t('gacha_roll_x1_desc')}</Text>
+                  </View>
+                  <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(true)}>
-                 <View style={styles.sumBtn}>
-                    <View style={[styles.pokeballIconSmall, { borderColor: '#1e293b' }]}>
-                        <View style={[styles.pokeballTop, { backgroundColor: '#a855f7' }]}>
-                            <View style={styles.masterBallSpotLeft} />
-                            <View style={styles.masterBallSpotRight} />
-                        </View>
-                        <View style={styles.pokeballBeltSmall} />
-                        <View style={styles.pokeballBase} />
-                        <View style={styles.pokeballCenterSmall}>
-                            <Text style={styles.masterBallM}>M</Text>
-                        </View>
+                <View style={styles.sumBtn}>
+                  <View style={[styles.pokeballIconSmall, { borderColor: '#1e293b' }]}>
+                    <View style={[styles.pokeballTop, { backgroundColor: '#a855f7' }]}>
+                      <View style={styles.masterBallSpotLeft} />
+                      <View style={styles.masterBallSpotRight} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 15 }}>
-                      <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
-                      <Text style={styles.btnDesc}>{t('gacha_roll_x10_desc')}</Text>
+                    <View style={styles.pokeballBeltSmall} />
+                    <View style={styles.pokeballBase} />
+                    <View style={styles.pokeballCenterSmall}>
+                      <Text style={styles.masterBallM}>M</Text>
                     </View>
-                    <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
-                 </View>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 15 }}>
+                    <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
+                    <Text style={styles.btnDesc}>{t('gacha_roll_x10_desc')}</Text>
+                  </View>
+                  <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </Animated.View>
         </View>
+      )}
+
+      {phase === 'ANIMATING' && (
+        <GachaAnimation tierColor={bestRarityColor} isMulti={isRollMulti} onFinish={onAnimationFinish} />
       )}
 
       {phase === 'RESULT' && (
@@ -294,49 +420,49 @@ export const GachaScreen = () => {
           <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
             {isRollMulti ? (
               <View style={[
-                  styles.columnsContainer,
-                  isWide && { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 }
+                styles.columnsContainer,
+                isWide && { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 }
               ]}>
                 {isWide ? (
-                    // 5x2 or wrapped grid for wide screens
-                    currentViewCards.map((card, idx) => (
-                        <GachaCardItem
-                            key={card.id}
-                            item={card}
-                            index={idx}
-                            revealed={revealed[idx]}
-                            onFlip={() => flipCard(idx)}
-                            sizeMode="small"
-                        />
-                    ))
+                  // 5x2 or wrapped grid for wide screens
+                  currentViewCards.map((card, idx) => (
+                    <GachaCardItem
+                      key={card.id}
+                      item={card}
+                      index={idx}
+                      revealed={revealed[idx]}
+                      onFlip={() => flipCard(idx)}
+                      sizeMode="small"
+                    />
+                  ))
                 ) : (
-                    // Original 2-column mobile layout
-                    <>
-                        <View style={styles.column}>
-                          {currentViewCards.slice(0, 5).map((card, idx) => (
-                            <GachaCardItem
-                              key={card.id}
-                              item={card}
-                              index={idx}
-                              revealed={revealed[idx]}
-                              onFlip={() => flipCard(idx)}
-                              sizeMode="small"
-                            />
-                          ))}
-                        </View>
-                        <View style={styles.column}>
-                          {currentViewCards.slice(5, 10).map((card, idx) => (
-                            <GachaCardItem
-                              key={card.id}
-                              item={card}
-                              index={idx + 5}
-                              revealed={revealed[idx + 5]}
-                              onFlip={() => flipCard(idx + 5)}
-                              sizeMode="small"
-                            />
-                          ))}
-                        </View>
-                    </>
+                  // Original 2-column mobile layout
+                  <>
+                    <View style={styles.column}>
+                      {currentViewCards.slice(0, 5).map((card, idx) => (
+                        <GachaCardItem
+                          key={card.id}
+                          item={card}
+                          index={idx}
+                          revealed={revealed[idx]}
+                          onFlip={() => flipCard(idx)}
+                          sizeMode="small"
+                        />
+                      ))}
+                    </View>
+                    <View style={styles.column}>
+                      {currentViewCards.slice(5, 10).map((card, idx) => (
+                        <GachaCardItem
+                          key={card.id}
+                          item={card}
+                          index={idx + 5}
+                          revealed={revealed[idx + 5]}
+                          onFlip={() => flipCard(idx + 5)}
+                          sizeMode="small"
+                        />
+                      ))}
+                    </View>
+                  </>
                 )}
               </View>
             ) : (
@@ -355,36 +481,36 @@ export const GachaScreen = () => {
 
           <Animated.View entering={FadeIn.delay(200)} style={styles.footer}>
             <View style={[isWide && { flexDirection: 'row', gap: 16 }]}>
-                {isAllRevealed ? (
-                  <TouchableOpacity 
-                    style={[styles.footerBtn, { backgroundColor: '#3b82f6' }, isWide && { minWidth: 180 }]} 
-                    onPress={resetGacha}
-                  >
-                    <Check color="white" size={20} style={{ marginRight: 8 }} />
-                    <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity 
-                    style={[styles.footerBtn, isWide && { minWidth: 180 }]} 
-                    onPress={openAllCurrent}
-                  >
-                    <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
-                    <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity 
-                  style={[
-                    styles.footerBtn, 
-                    { marginTop: isWide ? 0 : 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' },
-                    isWide && { minWidth: 180 }
-                  ]} 
-                  onPress={() => isAllRevealed && startSummon(isRollMulti)}
-                  disabled={!isAllRevealed}
+              {isAllRevealed ? (
+                <TouchableOpacity
+                  style={[styles.footerBtn, { backgroundColor: '#3b82f6' }, isWide && { minWidth: 180 }]}
+                  onPress={resetGacha}
                 >
-                  <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
-                  <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
+                  <Check color="white" size={20} style={{ marginRight: 8 }} />
+                  <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
                 </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.footerBtn, isWide && { minWidth: 180 }]}
+                  onPress={openAllCurrent}
+                >
+                  <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
+                  <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.footerBtn,
+                  { marginTop: isWide ? 0 : 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' },
+                  isWide && { minWidth: 180 }
+                ]}
+                onPress={() => isAllRevealed && startSummon(isRollMulti)}
+                disabled={!isAllRevealed}
+              >
+                <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
+                <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
         </Animated.View>
@@ -392,22 +518,22 @@ export const GachaScreen = () => {
 
       {/* Internal Modal for Insufficient Balance */}
       {showInsufficentUI && (
-         <View style={styles.balanceOverlayAbsolute}>
-            <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
-               <View style={styles.balanceIconBg}>
-                  <Coins color="#eab308" size={60} />
-               </View>
-               <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
-               <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
-               
-               <TouchableOpacity 
-                  style={styles.balanceCloseBtn} 
-                  onPress={() => setShowInsufficentUI(false)}
-               >
-                  <Text style={styles.balanceCloseText}>{t('close')}</Text>
-               </TouchableOpacity>
-            </Animated.View>
-         </View>
+        <View style={styles.balanceOverlayAbsolute}>
+          <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
+            <View style={styles.balanceIconBg}>
+              <Coins color="#eab308" size={60} />
+            </View>
+            <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
+            <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
+
+            <TouchableOpacity
+              style={styles.balanceCloseBtn}
+              onPress={() => setShowInsufficentUI(false)}
+            >
+              <Text style={styles.balanceCloseText}>{t('close')}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -416,16 +542,16 @@ export const GachaScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdf2f2' },
   menuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  menuContainer: { 
-    width: '100%', 
-    backgroundColor: 'white', 
-    borderRadius: 32, 
-    padding: 30, 
-    alignItems: 'center', 
-    elevation: 15, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 12 }, 
-    shadowOpacity: 0.2, 
+  menuContainer: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 32,
+    padding: 30,
+    alignItems: 'center',
+    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
     shadowRadius: 25,
     borderWidth: 2,
     borderColor: '#ef4444'
@@ -444,7 +570,7 @@ const styles = StyleSheet.create({
   resultContainer: { flex: 1, backgroundColor: '#0f172a' },
   headerResult: { paddingHorizontal: 25, paddingTop: 40, marginBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: '900', color: 'white', letterSpacing: 2 },
-  
+
   scrollContainer: { paddingHorizontal: 20, alignItems: 'center' },
   singleCardContainer: { paddingTop: 40, alignItems: 'center' },
   columnsContainer: { flexDirection: 'row', justifyContent: 'center', gap: 15, paddingBottom: 20 },
@@ -460,7 +586,7 @@ const styles = StyleSheet.create({
   cardImg: { width: '100%', height: '100%' },
   cardOverlay: { position: 'absolute', bottom: 0, width: '100%', backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
   cardNameText: { fontSize: 13, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 },
-  
+
   rarityHintText: { color: 'white', fontSize: 11, fontWeight: '900', position: 'absolute', bottom: 15, opacity: 0.8, letterSpacing: 1 },
 
   pokeballDecor: { position: 'absolute', width: 100, height: 100, borderRadius: 50, overflow: 'hidden', opacity: 0.1, borderWidth: 4, borderColor: '#1e293b' },
