@@ -2862,7 +2862,7 @@ export const allCards: Card[] = [
     value: 126000,
     image: require('../../assets/images/pokemon_by_rarity/Promo/Best_of_Game_001_Electabuzz.png'),
     isTrending: true,
-    isTrending: true,
+
   },
   {
     id: 'pkm-promo-401',
@@ -3840,7 +3840,7 @@ export const allCards: Card[] = [
     value: 228000,
     image: require('../../assets/images/pokemon_by_rarity/Rare_Holo/Secret_Wonders_001_Ampharos.png'),
     isTrending: true,
-    isTrending: true,
+
   },
   {
     id: 'pkm-rare_holo-536',
@@ -4816,7 +4816,7 @@ export const allCards: Card[] = [
     value: 15000,
     image: require('../../assets/images/pokemon_by_rarity/Uncommon/Ascended_Heroes_097_Team_Rockets_Mimikyu.png'),
     isTrending: true,
-    isTrending: true,
+
   },
   {
     id: 'pkm-uncommon-672',
