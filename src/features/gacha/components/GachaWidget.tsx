@@ -11,15 +11,20 @@ import { useUserStore } from '../../../shared/stores/userStore';
 import { useTranslation } from '../../../shared/utils/translations';
 import { formatCurrency } from '../../../shared/utils/currency';
 import { usePortfolioStore } from '../../../shared/stores/portfolioStore';
-import Animated, { 
-  FadeIn, 
-  FadeOut, 
-  ZoomIn, 
+import Animated, {
+  FadeIn,
+  FadeOut,
+  ZoomIn,
   FadeInDown,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSequence,
+  withRepeat,
+  withSpring,
   interpolate,
+  runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
@@ -41,79 +46,153 @@ const getTierColor = (rarity: string) => {
 
 // --- 2. COMPONENT THẺ BÀI CON (PUBG Style 3D Flip) ---
 const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
-    item: Card, index: number, revealed: boolean, onFlip: () => void, sizeMode: 'big' | 'small'
+  item: Card, index: number, revealed: boolean, onFlip: () => void, sizeMode: 'big' | 'small'
 }) => {
-    const tierColor = getTierColor(item.rarity);
-    const isGoldTier = tierColor === '#FFD700';
-    
-    const entryDelay = index * 100;
-    const rotate = useSharedValue(0);
+  const tierColor = getTierColor(item.rarity);
+  const isGoldTier = tierColor === '#FFD700';
 
-    useEffect(() => {
-        if (revealed) {
-            rotate.value = withTiming(180, { duration: 600 });
-        } else {
-            rotate.value = 0;
-        }
-    }, [revealed]);
+  const entryDelay = index * 100;
+  const rotate = useSharedValue(0);
 
-    const frontAnimatedStyle = useAnimatedStyle(() => {
-        const spin = interpolate(rotate.value, [0, 180], [180, 360]);
-        return {
-            transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
-        };
-    });
+  useEffect(() => {
+    if (revealed) {
+      rotate.value = withTiming(180, { duration: 600 });
+    } else {
+      rotate.value = 0;
+    }
+  }, [revealed]);
 
-    const backAnimatedStyle = useAnimatedStyle(() => {
-        const spin = interpolate(rotate.value, [0, 180], [0, 180]);
-        return {
-            transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
-        };
-    });
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    const spin = interpolate(rotate.value, [0, 180], [180, 360]);
+    return {
+      transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
+    };
+  });
 
-    return (
-        <Animated.View 
-            entering={FadeInDown.delay(entryDelay).duration(500)}
-            style={sizeMode === 'big' ? styles.bigCardSpace : styles.cardSpace2Col}
-        >
-            <TouchableOpacity activeOpacity={0.9} onPress={onFlip} style={{ flex: 1 }}>
-                <View style={[
-                  styles.cardBaseContainer,
-                  {
-                    borderColor: revealed ? tierColor : '#334155',
-                    borderWidth: isGoldTier && revealed ? 4 : 2,
-                  }
-                ]}>
-                    <Animated.View style={[styles.cardFace, styles.cardFront, frontAnimatedStyle]}>
-                        <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
-                        <View style={[
-                            styles.glowBehind,
-                            { backgroundColor: tierColor, opacity: 0.35 }
-                        ]} />
-                        <View style={styles.cardOverlay}>
-                            <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
-                        </View>
-                    </Animated.View>
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    const spin = interpolate(rotate.value, [0, 180], [0, 180]);
+    return {
+      transform: [{ perspective: 1000 }, { rotateY: `${spin}deg` }],
+    };
+  });
 
-                    <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
-                        <Sparkles color={tierColor} size={28} opacity={0.4} />
-                        <Text style={styles.rarityHintText}>{item.rarity.replace(/_/g, ' ').toUpperCase()}</Text>
-                    </Animated.View>
-                </View>
-            </TouchableOpacity>
-        </Animated.View>
-    );
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(entryDelay).duration(500)}
+      style={sizeMode === 'big' ? styles.bigCardSpace : styles.cardSpace2Col}
+    >
+      <TouchableOpacity activeOpacity={0.9} onPress={onFlip} style={{ flex: 1 }}>
+        <View style={[
+          styles.cardBaseContainer,
+          {
+            borderColor: revealed ? tierColor : '#334155',
+            borderWidth: isGoldTier && revealed ? 4 : 2,
+          }
+        ]}>
+          <Animated.View style={[styles.cardFace, styles.cardFront, frontAnimatedStyle]}>
+            <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
+            <View style={[
+              styles.glowBehind,
+              { backgroundColor: tierColor, opacity: 0.35 }
+            ]} />
+            <View style={styles.cardOverlay}>
+              <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
+            </View>
+          </Animated.View>
+
+          <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
+            <Sparkles color={tierColor} size={28} opacity={0.4} />
+            <Text style={styles.rarityHintText}>{item.rarity.replace(/_/g, ' ').toUpperCase()}</Text>
+          </Animated.View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 };
 
-// --- 3. WIDGET CHÍNH ---
+// --- 3. COMPONENT ANIMATION POKEBALL ---
+const GachaAnimation = ({ tierColor, onFinish }: { tierColor: string, onFinish: () => void }) => {
+  const shake = useSharedValue(0);
+  const scale = useSharedValue(0);
+  const glowOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    // 1. Zoom In
+    scale.value = withSpring(1, { damping: 12 });
+
+    // 2. Shake Sequence
+    const shakeSeq = withSequence(
+      withTiming(1, { duration: 100 }), // Wait
+      withRepeat(
+        withSequence(
+          withTiming(-10, { duration: 50 }),
+          withTiming(10, { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        ),
+        6, // Shake count
+        true // Reverse
+      )
+    );
+    shake.value = shakeSeq;
+
+    // 3. Glow Effect (Pulse)
+    glowOpacity.value = withRepeat(
+      withTiming(0.8, { duration: 500, easing: Easing.ease }),
+      -1,
+      true
+    );
+
+    // 4. Finish Timer
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: scale.value },
+        { rotateZ: `${shake.value}deg` }
+      ]
+    };
+  });
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  return (
+    <View style={styles.animContainer}>
+      {/* Glow Aura */}
+      <Animated.View style={[styles.glowAura, { backgroundColor: tierColor }, glowStyle]} />
+
+      {/* Pokéball */}
+      <Animated.View style={[styles.bigPokeball, animatedStyle]}>
+        <View style={styles.bigPokeballTop} />
+        <View style={styles.bigPokeballBelt} />
+        <View style={styles.bigPokeballBase} />
+        <View style={styles.bigPokeballCenter}>
+          <View style={styles.bigPokeballCenterInner} />
+        </View>
+      </Animated.View>
+
+      <Text style={styles.summoningText}>SUMMONING...</Text>
+    </View>
+  );
+};
+
+// --- 4. WIDGET CHÍNH ---
 const GachaWidget = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [phase, setPhase] = useState<'IDLE' | 'RESULT'>('IDLE');
+  const [phase, setPhase] = useState<'IDLE' | 'ANIMATING' | 'RESULT'>('IDLE');
 
   const [currentViewCards, setCurrentViewCards] = useState<Card[]>([]);
   const [revealed, setRevealed] = useState<boolean[]>([]);
   const [isRollMulti, setIsRollMulti] = useState(false);
   const [showInsufficentUI, setShowInsufficentUI] = useState(false);
+  const [bestRarityColor, setBestRarityColor] = useState('#3B82F6');
 
   const spend = useUserStore(state => state.spend);
   const userBalance = useUserStore(state => state.profile?.balance || 0);
@@ -124,30 +203,29 @@ const GachaWidget = () => {
   const isAllRevealed = revealed.length > 0 && revealed.every(v => v);
 
   const generateRandomCards = (count: number): any[] => {
-      const results: any[] = [];
-      for(let i=0; i<count; i++) {
-          const rand = Math.random();
-          let pool: Card[] = [];
+    const results: any[] = [];
+    for (let i = 0; i < count; i++) {
+      const rand = Math.random();
+      let pool: Card[] = [];
 
-          if (rand < 0.05) { 
-             pool = mockCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_v'].includes(c.rarity));
-          } else if (rand < 0.30) { 
-             pool = mockCards.filter(c => ['rare_holo', 'rare'].includes(c.rarity));
-          } else { 
-             pool = mockCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
-          }
-
-          if (pool.length === 0) pool = mockCards;
-
-          const baseCard = pool[Math.floor(Math.random() * pool.length)];
-          // Quan trọng: Lưu baseId để làm symbol chính xác
-          results.push({ 
-            ...baseCard, 
-            id: `${baseCard.id}-${Date.now()}-${i}`,
-            baseId: baseCard.id 
-          });
+      if (rand < 0.05) {
+        pool = mockCards.filter(c => ['rare_secret', 'rare_rainbow', 'rare_holo_v'].includes(c.rarity));
+      } else if (rand < 0.30) {
+        pool = mockCards.filter(c => ['rare_holo', 'rare'].includes(c.rarity));
+      } else {
+        pool = mockCards.filter(c => ['common', 'uncommon'].includes(c.rarity));
       }
-      return results;
+
+      if (pool.length === 0) pool = mockCards;
+
+      const baseCard = pool[Math.floor(Math.random() * pool.length)];
+      results.push({
+        ...baseCard,
+        id: `${baseCard.id}-${Date.now()}-${i}`,
+        baseId: baseCard.id
+      });
+    }
+    return results;
   };
 
   const startSummon = (isMulti: boolean) => {
@@ -163,11 +241,22 @@ const GachaWidget = () => {
     const count = isMulti ? 10 : 1;
     const newResults = generateRandomCards(count);
 
-    // Sync to Inventory correctly
+    // Calculate Best Rarity for Glow Animation
+    let bestColor = '#3B82F6';
+    const ranks: Record<string, number> = { '#FFD700': 3, '#C084FC': 2, '#3B82F6': 1 };
+
+    newResults.forEach(c => {
+      const color = getTierColor(c.rarity);
+      if ((ranks[color] || 0) > (ranks[bestColor] || 0)) {
+        bestColor = color;
+      }
+    });
+    setBestRarityColor(bestColor);
+
+    // Sync to Inventory
     const assetsToAdd = newResults.map(card => ({
       id: card.id,
       name: card.name,
-      // Đảm bảo symbol khớp với portfolioStore (PKM-ID)
       symbol: card.symbol || `PKM-${card.baseId.padStart(3, '0')}`,
       rarity: card.rarity,
       amount: 1,
@@ -179,7 +268,13 @@ const GachaWidget = () => {
 
     setCurrentViewCards(newResults);
     setRevealed(new Array(count).fill(false));
-    setPhase('RESULT'); 
+
+    // Start Animation Phase
+    setPhase('ANIMATING');
+  };
+
+  const onAnimationFinish = () => {
+    setPhase('RESULT');
   };
 
   const resetGacha = () => {
@@ -211,6 +306,11 @@ const GachaWidget = () => {
 
       <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={resetGacha}>
 
+        {/* BACKGROUND OVERLAY */}
+        <View style={StyleSheet.absoluteFillObject}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' }} />
+        </View>
+
         {phase === 'IDLE' && (
           <View style={styles.menuOverlay}>
             <Animated.View entering={ZoomIn.duration(600)} style={styles.menuContainer}>
@@ -218,27 +318,31 @@ const GachaWidget = () => {
               <Text style={styles.menuTitle}>{t('gacha_title')}</Text>
 
               <View style={styles.balanceTag}>
-                 <Sparkles color="#eab308" size={20} />
-                 <Text style={styles.balanceAmt}>{formatCurrency(userBalance, userCurrency)}</Text>
+                <Sparkles color="#eab308" size={20} />
+                <Text style={styles.balanceAmt}>{formatCurrency(userBalance, userCurrency)}</Text>
               </View>
 
               <View style={styles.priceSection}>
                 <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(false)}>
-                   <View style={styles.sumBtn}>
-                      <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
-                      <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
-                   </View>
+                  <View style={styles.sumBtn}>
+                    <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
+                    <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(true)}>
-                   <View style={styles.sumBtn}>
-                      <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
-                      <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
-                   </View>
+                  <View style={styles.sumBtn}>
+                    <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
+                    <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
+                  </View>
                 </TouchableOpacity>
               </View>
             </Animated.View>
           </View>
+        )}
+
+        {phase === 'ANIMATING' && (
+          <GachaAnimation tierColor={bestRarityColor} onFinish={onAnimationFinish} />
         )}
 
         {phase === 'RESULT' && (
@@ -311,22 +415,22 @@ const GachaWidget = () => {
         )}
 
         <Modal transparent visible={showInsufficentUI} animationType="fade">
-           <View style={styles.balanceOverlay}>
-              <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
-                 <View style={styles.balanceIconBg}>
-                    <Coins color="#eab308" size={60} />
-                 </View>
-                 <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
-                 <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
-                 
-                 <TouchableOpacity 
-                    style={styles.balanceCloseBtn} 
-                    onPress={() => setShowInsufficentUI(false)}
-                 >
-                    <Text style={styles.balanceCloseText}>{t('close')}</Text>
-                 </TouchableOpacity>
-              </Animated.View>
-           </View>
+          <View style={styles.balanceOverlay}>
+            <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
+              <View style={styles.balanceIconBg}>
+                <Coins color="#eab308" size={60} />
+              </View>
+              <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
+              <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
+
+              <TouchableOpacity
+                style={styles.balanceCloseBtn}
+                onPress={() => setShowInsufficentUI(false)}
+              >
+                <Text style={styles.balanceCloseText}>{t('close')}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </Modal>
       </Modal>
     </>
@@ -339,7 +443,7 @@ const styles = StyleSheet.create({
   floatingTrigger: { position: 'absolute', right: 20, bottom: 40, backgroundColor: '#ef4444', width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center', elevation: 8, zIndex: 9999, borderWidth: 3, borderColor: 'white' },
   triggerText: { color: 'white', fontSize: 10, fontWeight: 'bold', marginTop: 2 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
+  menuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   menuContainer: { width: '90%', backgroundColor: 'white', borderRadius: 24, padding: 25, alignItems: 'center' },
   closeBtn: { alignSelf: 'flex-end', padding: 5 },
   menuTitle: { fontSize: 24, fontWeight: '900', marginBottom: 15, color: '#111' },
@@ -352,10 +456,20 @@ const styles = StyleSheet.create({
   btnTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   btnPrice: { fontSize: 18, fontWeight: '900', color: '#ef4444' },
 
-  resultContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', paddingTop: 60 },
+  animContainer: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 20 },
+  bigPokeball: { width: 140, height: 140, borderRadius: 70, overflow: 'hidden', borderWidth: 6, borderColor: '#1e293b', backgroundColor: 'white' },
+  bigPokeballTop: { flex: 1, backgroundColor: '#ef4444' },
+  bigPokeballBase: { flex: 1, backgroundColor: 'white' },
+  bigPokeballBelt: { position: 'absolute', top: '45%', width: '100%', height: 14, backgroundColor: '#1e293b' },
+  bigPokeballCenter: { position: 'absolute', top: '50%', left: '50%', width: 44, height: 44, marginLeft: -22, marginTop: -22, borderRadius: 22, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  bigPokeballCenterInner: { width: 20, height: 20, borderRadius: 10, backgroundColor: 'white', borderWidth: 3, borderColor: '#1e293b' },
+  summoningText: { color: 'white', fontSize: 18, fontWeight: '900', marginTop: 40, letterSpacing: 2 },
+  glowAura: { position: 'absolute', width: 250, height: 250, borderRadius: 125, zIndex: -1 },
+
+  resultContainer: { flex: 1, width: '100%', paddingTop: 60 },
   headerResult: { paddingHorizontal: 25, marginBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: '900', color: 'white', letterSpacing: 2 },
-  
+
   scrollContainer: { paddingHorizontal: 20, alignItems: 'center' },
   singleCardContainer: { paddingTop: 40 },
   columnsContainer: { flexDirection: 'row', justifyContent: 'center', gap: 15, paddingBottom: 20 },
@@ -371,7 +485,7 @@ const styles = StyleSheet.create({
   cardImg: { width: '100%', height: '100%' },
   cardOverlay: { position: 'absolute', bottom: 0, width: '100%', backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, alignItems: 'center' },
   cardNameText: { fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
-  
+
   rarityHintText: { color: 'white', fontSize: 10, fontWeight: 'bold', position: 'absolute', bottom: 10, opacity: 0.6 },
 
   footer: { position: 'absolute', bottom: 40, width: '100%', alignItems: 'center' },
