@@ -39,9 +39,9 @@ export const InfoModal: React.FC<InfoModalProps> = ({
   };
 
   const icons = {
-    success: <CheckCircle2 size={40} color="#ffffff" />,
-    error: <AlertCircle size={40} color="#ffffff" />,
-    info: <Info size={40} color="#ffffff" />,
+    success: <CheckCircle2 size={32} color="#ffffff" />,
+    error: <AlertCircle size={32} color="#ffffff" />,
+    info: <Info size={32} color="#ffffff" />,
   };
 
   return (
@@ -88,53 +88,53 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 300,
     backgroundColor: '#ffffff',
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     elevation: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
   header: {
-    height: 100,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconWrapper: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   content: {
-    padding: 24,
+    padding: 20,
     alignItems: 'center',
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '900',
     color: '#1e293b',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   message: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 20,
+    marginBottom: 20,
   },
   button: {
     width: '100%',
-    height: 52,
-    borderRadius: 16,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   buttonGradient: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
   },

@@ -40,6 +40,9 @@ interface UserState {
   removePaymentMethod: (id: string) => void;
   setDefaultPaymentMethod: (id: string) => void;
 
+  changePassword: (oldPass: string, newPass: string) => Promise<{ success: boolean; message?: string }>;
+  set2FA: (enabled: boolean) => void;
+
   _setHydrated: (val: boolean) => void;
 }
 
@@ -323,6 +326,28 @@ export const useUserStore = create<UserState>()(
             registeredUsers: syncProfileInState(state, newProfile)
           };
         });
+      },
+
+      changePassword: async (oldPass, newPass) => {
+        const { profile, registeredUsers } = get();
+        if (!profile) return { success: false, message: 'Not logged in' };
+
+        const userIndex = registeredUsers.findIndex(u => u.email.toLowerCase() === profile.email.toLowerCase());
+        if (userIndex === -1) return { success: false, message: 'User not found' };
+
+        if (registeredUsers[userIndex].password !== oldPass) {
+            return { success: false, message: 'invalid_old_password' };
+        }
+
+        const newUsers = [...registeredUsers];
+        newUsers[userIndex] = { ...newUsers[userIndex], password: newPass };
+
+        set({ registeredUsers: newUsers });
+        return { success: true };
+      },
+
+      set2FA: (enabled) => {
+        get().updateProfile({ twoFactorEnabled: enabled });
       },
     }),
     {

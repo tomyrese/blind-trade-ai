@@ -627,6 +627,144 @@ const DepositModal = ({ visible, onClose, type, onDeposit }: { visible: boolean,
     );
 };
 
+const ChangePasswordModal = ({ visible, onClose }: { visible: boolean, onClose: () => void }) => {
+    const { t } = useTranslation();
+    const changePassword = useUserStore((state) => state.changePassword);
+    const showNotification = useUIStore((state) => state.showNotification);
+
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isChangingPass, setIsChangingPass] = useState(false);
+
+    const handlePasswordChange = async () => {
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            showNotification(t('please_fill_all_fields'), 'error');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showNotification(t('passwords_do_not_match'), 'error');
+            return;
+        }
+        if (newPassword.length < 6) {
+            showNotification(t('password_too_short'), 'error');
+            return;
+        }
+
+        setIsChangingPass(true);
+        const result = await changePassword(oldPassword, newPassword);
+        setIsChangingPass(false);
+
+        if (result.success) {
+            showNotification(t('password_changed_success'), 'success');
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+            onClose();
+        } else {
+            showNotification(t(result.message as any || 'error'), 'error');
+        }
+    };
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>{t('change_password')}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#0f172a" /></TouchableOpacity>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <Text style={styles.inputLabel}>{t('current_password')}</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="********" 
+                            secureTextEntry
+                            value={oldPassword}
+                            onChangeText={setOldPassword}
+                        />
+
+                        <Text style={styles.inputLabel}>{t('new_password')}</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="********" 
+                            secureTextEntry
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                        />
+
+                        <Text style={styles.inputLabel}>{t('confirm_password')}</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="********" 
+                            secureTextEntry
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                        />
+
+                        <TouchableOpacity 
+                            style={[styles.modalBtnSave, isChangingPass && { opacity: 0.7 }]} 
+                            onPress={handlePasswordChange}
+                            disabled={isChangingPass}
+                        >
+                            <Text style={styles.modalBtnTextSave}>
+                                {isChangingPass ? t('loading') : t('save_changes')}
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity style={styles.modalBtnCancel} onPress={onClose}>
+                            <Text style={styles.modalBtnTextCancel}>{t('cancel')}</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const SecurityModal = ({ visible, onClose, onChangePassword }: { visible: boolean, onClose: () => void, onChangePassword: () => void }) => {
+    const { t } = useTranslation();
+    const profile = useUserStore((state) => state.profile);
+    const set2FA = useUserStore((state) => state.set2FA);
+
+    return (
+        <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>{t('security')}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#0f172a" /></TouchableOpacity>
+                    </View>
+
+                    <View style={styles.securitySection}>
+                        <View style={[styles.settingRow, { marginBottom: 4 }]}>
+                            <Text style={styles.settingLabel}>{t('two_factor')}</Text>
+                            <Switch 
+                                value={profile?.twoFactorEnabled} 
+                                onValueChange={set2FA}
+                                trackColor={{ false: '#e2e8f0', true: '#10b981' }}
+                                thumbColor="#fff"
+                            />
+                        </View>
+                        <Text style={styles.securityDesc}>{t('two_factor_desc')}</Text>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <TouchableOpacity style={styles.securityActionRow} onPress={onChangePassword}>
+                        <View style={styles.securityActionInfo}>
+                            <Lock size={20} color="#3b82f6" />
+                            <Text style={styles.securityActionLabel}>{t('change_password')}</Text>
+                        </View>
+                        <ChevronRight size={20} color="#94a3b8" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
 const VipPackageCard = ({ title, price, duration, features, selected, onPress, badge, popular, premium, disabled }: any) => {
     const { t } = useTranslation();
     return (
@@ -676,12 +814,14 @@ export const ProfileScreen: React.FC = () => {
     const upgradeToVip = useUserStore((state) => state.upgradeToVip);
     const setAvatar = useUserStore((state) => state.setAvatar);
     const equipTitle = useUserStore((state) => state.equipTitle);
-    const showNotification = useUIStore((state) => state.showNotification);
     const addPaymentMethod = useUserStore((state) => state.addPaymentMethod);
     const removePaymentMethod = useUserStore((state) => state.removePaymentMethod);
     const setDefaultPM = useUserStore((state) => state.setDefaultPaymentMethod);
     const updateBalance = useUserStore((state) => state.updateBalance);
+    const changePassword = useUserStore((state) => state.changePassword);
+    const set2FA = useUserStore((state) => state.set2FA);
     const logout = useUserStore((state) => state.logout);
+    const showNotification = useUIStore((state) => state.showNotification);
     
     if (!profile) return <View style={styles.container} />;
 
@@ -692,6 +832,8 @@ export const ProfileScreen: React.FC = () => {
     const [avatarSelectionVisible, setAvatarSelectionVisible] = useState(false);
     const [pmVisible, setPmVisible] = useState(false);
     const [depositVisible, setDepositVisible] = useState(false);
+    const [securityVisible, setSecurityVisible] = useState(false);
+    const [changePasswordVisible, setChangePasswordVisible] = useState(false);
     const [depositType, setDepositType] = useState<'bank' | 'scratch' | 'virtual'>('virtual');
 
     const handleEquipTitle = (id: string) => {
@@ -841,7 +983,7 @@ export const ProfileScreen: React.FC = () => {
                         <MenuItem icon={Settings} label={t('system_settings')} color="#64748b" onPress={() => setSettingsVisible(true)} />
                         <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showNotification(t('coming_soon'), 'info')} />
                         <MenuItem icon={Crown} label={t('vip_packages')} color="#8b5cf6" onPress={() => setVipVisible(true)} />
-                        <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => showNotification(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => setSecurityVisible(true)} />
                         <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showNotification(t('coming_soon'), 'info')} />
                     </View>
 
@@ -884,6 +1026,20 @@ export const ProfileScreen: React.FC = () => {
                 onAdd={addPaymentMethod}
                 onRemove={removePaymentMethod}
                 onSetDefault={setDefaultPM}
+            />
+
+            <SecurityModal 
+                visible={securityVisible} 
+                onClose={() => setSecurityVisible(false)} 
+                onChangePassword={() => {
+                    setSecurityVisible(false);
+                    setTimeout(() => setChangePasswordVisible(true), 300);
+                }}
+            />
+
+            <ChangePasswordModal 
+                visible={changePasswordVisible} 
+                onClose={() => setChangePasswordVisible(false)} 
             />
 
             <DepositModal 
@@ -1044,6 +1200,14 @@ const styles = StyleSheet.create({
     titleCondition: { fontSize: 10, color: '#ef4444', marginTop: 2, fontWeight: '600' },
     equipBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
     equipBtnText: { fontSize: 12, fontWeight: '700' },
+    
+    securitySection: { paddingVertical: 4 },
+    securityDesc: { fontSize: 12, color: '#64748b', lineHeight: 18, marginBottom: 12 },
+    divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 10 },
+    
+    securityActionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 4 },
+    securityActionInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    securityActionLabel: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
 
     sectionTitle: { fontSize: 14, fontWeight: '700', color: '#94a3b8', marginTop: 20, marginBottom: 12, textTransform: 'uppercase' },
     settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -1053,6 +1217,9 @@ const styles = StyleSheet.create({
     optionBtnText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
     actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     actionRowText: { fontSize: 16, fontWeight: '600', color: '#ef4444' },
+
+    modalBtnCancel: { paddingVertical: 12, alignItems: 'center', marginTop: 10 },
+    modalBtnTextCancel: { fontSize: 15, fontWeight: '700', color: '#64748b' },
 
     // Avatar Selection Styles
     galleryPicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0' },

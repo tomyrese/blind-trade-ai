@@ -314,7 +314,7 @@ const translations = {
     apply_filter: 'Áp dụng',
 
     // Gacha
-    gacha_title: 'VÒNG QUAY THẦN THÚ',
+    gacha_title: 'VÒNG QUAY MAY MẮN',
     gacha_balance: 'Số dư:',
     gacha_roll_x1: 'ROLL x1',
     gacha_roll_x10: 'ROLL x10',
@@ -330,6 +330,17 @@ const translations = {
     gacha_reveal_title: 'ĐANG KHÁM PHÁ PHẦN THƯỞNG...',
     gacha_skip: 'BỎ QUA',
     gacha_hot: 'HOT',
+    gacha_roll_x1_desc: 'Nhận 1 Thẻ Pokémon',
+    gacha_roll_x10_desc: 'Nhận 10 Thẻ Pokémon',
+    
+    // Security Additional
+    change_password: 'Đổi Mật Khẩu',
+    current_password: 'Mật khẩu hiện tại',
+    new_password: 'Mật khẩu mới',
+    two_factor: 'Bảo mật 2 lớp (2FA)',
+    two_factor_desc: 'Tăng cường bảo mật tài khoản bằng cách yêu cầu mã xác nhận khi đăng nhập.',
+    password_changed_success: 'Đổi mật khẩu thành công!',
+    invalid_old_password: 'Mật khẩu hiện tại không đúng',
   },
   en: {
     // Common
@@ -641,7 +652,7 @@ const translations = {
     apply_filter: 'Apply',
 
     // Gacha
-    gacha_title: 'LEGENDARY SUMMON',
+    gacha_title: 'LUCKY SUMMON',
     gacha_balance: 'Balance:',
     gacha_roll_x1: 'ROLL x1',
     gacha_roll_x10: 'ROLL x10',
@@ -657,6 +668,17 @@ const translations = {
     gacha_reveal_title: 'UNCOVERING REWARDS...',
     gacha_skip: 'SKIP',
     gacha_hot: 'HOT',
+    gacha_roll_x1_desc: 'Get 1 Pokémon Card',
+    gacha_roll_x10_desc: 'Get 10 Pokémon Cards',
+    
+    // Security Additional
+    change_password: 'Change Password',
+    current_password: 'Current Password',
+    new_password: 'New Password',
+    two_factor: 'Two-Factor Auth (2FA)',
+    two_factor_desc: 'Enhance account security by requiring a confirmation code when logging in.',
+    password_changed_success: 'Password changed successfully!',
+    invalid_old_password: 'Current password is incorrect',
   }
 };
 

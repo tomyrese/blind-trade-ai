@@ -57,6 +57,7 @@ export interface UserProfile {
   language: 'vi' | 'en';
   soundEnabled: boolean;
   vibrationEnabled: boolean;
+  twoFactorEnabled: boolean;
 }
 
 export const MOCK_USER: UserProfile = {
@@ -96,4 +97,5 @@ export const MOCK_USER: UserProfile = {
   language: 'vi',
   soundEnabled: true,
   vibrationEnabled: true,
+  twoFactorEnabled: false,
 };

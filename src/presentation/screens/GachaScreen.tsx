@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Dimensions, Image, ScrollView, SafeAreaView,
+  Dimensions, Image, ScrollView, SafeAreaView, useWindowDimensions,
 } from 'react-native';
 import { X, Sparkles, Check, RotateCcw, Coins } from 'lucide-react-native';
 import Animated, { 
@@ -109,7 +109,13 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
                     </Animated.View>
 
                     <Animated.View style={[styles.cardFace, styles.cardBack, backAnimatedStyle]}>
-                        <Sparkles color={tierColor} size={28} opacity={0.4} />
+                        <View style={styles.pokeballDecor}>
+                            <View style={styles.pokeballTop} />
+                            <View style={styles.pokeballBelt} />
+                            <View style={styles.pokeballBase} />
+                            <View style={styles.pokeballCenter} />
+                        </View>
+                        <Sparkles color={tierColor} size={32} opacity={0.6} />
                         <Text style={styles.rarityHintText}>
                             {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
                         </Text>
@@ -122,6 +128,9 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
 
 // --- 3. MÀN HÌNH GACHA CHÍNH ---
 export const GachaScreen = () => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isWide = windowWidth > 600;
+
   const [phase, setPhase] = useState<'IDLE' | 'RESULT'>('IDLE');
   const [currentViewCards, setCurrentViewCards] = useState<Card[]>([]);
   const [revealed, setRevealed] = useState<boolean[]>([]);
@@ -218,7 +227,13 @@ export const GachaScreen = () => {
     <SafeAreaView style={styles.container}>
       {phase === 'IDLE' && (
         <View style={styles.menuOverlay}>
-          <Animated.View entering={FadeIn.duration(600)} style={styles.menuContainer}>
+          <Animated.View 
+            entering={FadeIn.duration(600)} 
+            style={[
+                styles.menuContainer,
+                isWide && { maxWidth: 500 }
+            ]}
+          >
             <Text style={styles.menuTitle}>{t('gacha_title')}</Text>
 
             <View style={styles.balanceTag}>
@@ -229,9 +244,17 @@ export const GachaScreen = () => {
             <View style={styles.priceSection}>
               <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(false)}>
                  <View style={styles.sumBtn}>
-                    <View>
+                    <View style={styles.pokeballIconSmall}>
+                        <View style={[styles.pokeballTop, { backgroundColor: '#ef4444' }]} />
+                        <View style={styles.pokeballBeltSmall} />
+                        <View style={styles.pokeballBase} />
+                        <View style={styles.pokeballCenterSmall}>
+                             <View style={styles.pokeballCenterInner} />
+                        </View>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 15 }}>
                       <Text style={styles.btnTitle}>{t('gacha_roll_x1')}</Text>
-                      <Text style={styles.btnDesc}>Get 1 Pokémon Card</Text>
+                      <Text style={styles.btnDesc}>{t('gacha_roll_x1_desc')}</Text>
                     </View>
                     <Text style={styles.btnPrice}>{formatCurrency(PRICE_1, userCurrency)}</Text>
                  </View>
@@ -239,9 +262,20 @@ export const GachaScreen = () => {
 
               <TouchableOpacity style={styles.priceRow} onPress={() => startSummon(true)}>
                  <View style={styles.sumBtn}>
-                    <View>
+                    <View style={[styles.pokeballIconSmall, { borderColor: '#1e293b' }]}>
+                        <View style={[styles.pokeballTop, { backgroundColor: '#a855f7' }]}>
+                            <View style={styles.masterBallSpotLeft} />
+                            <View style={styles.masterBallSpotRight} />
+                        </View>
+                        <View style={styles.pokeballBeltSmall} />
+                        <View style={styles.pokeballBase} />
+                        <View style={styles.pokeballCenterSmall}>
+                            <Text style={styles.masterBallM}>M</Text>
+                        </View>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 15 }}>
                       <Text style={styles.btnTitle}>{t('gacha_roll_x10')}</Text>
-                      <Text style={styles.btnDesc}>Get 10 Pokémon Cards</Text>
+                      <Text style={styles.btnDesc}>{t('gacha_roll_x10_desc')}</Text>
                     </View>
                     <Text style={styles.btnPrice}>{formatCurrency(PRICE_10, userCurrency)}</Text>
                  </View>
@@ -259,31 +293,51 @@ export const GachaScreen = () => {
 
           <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
             {isRollMulti ? (
-              <View style={styles.columnsContainer}>
-                <View style={styles.column}>
-                  {currentViewCards.slice(0, 5).map((card, idx) => (
-                    <GachaCardItem
-                      key={card.id}
-                      item={card}
-                      index={idx}
-                      revealed={revealed[idx]}
-                      onFlip={() => flipCard(idx)}
-                      sizeMode="small"
-                    />
-                  ))}
-                </View>
-                <View style={styles.column}>
-                  {currentViewCards.slice(5, 10).map((card, idx) => (
-                    <GachaCardItem
-                      key={card.id}
-                      item={card}
-                      index={idx + 5}
-                      revealed={revealed[idx + 5]}
-                      onFlip={() => flipCard(idx + 5)}
-                      sizeMode="small"
-                    />
-                  ))}
-                </View>
+              <View style={[
+                  styles.columnsContainer,
+                  isWide && { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 }
+              ]}>
+                {isWide ? (
+                    // 5x2 or wrapped grid for wide screens
+                    currentViewCards.map((card, idx) => (
+                        <GachaCardItem
+                            key={card.id}
+                            item={card}
+                            index={idx}
+                            revealed={revealed[idx]}
+                            onFlip={() => flipCard(idx)}
+                            sizeMode="small"
+                        />
+                    ))
+                ) : (
+                    // Original 2-column mobile layout
+                    <>
+                        <View style={styles.column}>
+                          {currentViewCards.slice(0, 5).map((card, idx) => (
+                            <GachaCardItem
+                              key={card.id}
+                              item={card}
+                              index={idx}
+                              revealed={revealed[idx]}
+                              onFlip={() => flipCard(idx)}
+                              sizeMode="small"
+                            />
+                          ))}
+                        </View>
+                        <View style={styles.column}>
+                          {currentViewCards.slice(5, 10).map((card, idx) => (
+                            <GachaCardItem
+                              key={card.id}
+                              item={card}
+                              index={idx + 5}
+                              revealed={revealed[idx + 5]}
+                              onFlip={() => flipCard(idx + 5)}
+                              sizeMode="small"
+                            />
+                          ))}
+                        </View>
+                    </>
+                )}
               </View>
             ) : (
               <View style={styles.singleCardContainer}>
@@ -296,33 +350,42 @@ export const GachaScreen = () => {
                 />
               </View>
             )}
-            <View style={{ height: 150 }} />
+            <View style={{ height: 180 }} />
           </ScrollView>
 
           <Animated.View entering={FadeIn.delay(200)} style={styles.footer}>
-            {isAllRevealed ? (
-              <TouchableOpacity style={[styles.footerBtn, { backgroundColor: '#3b82f6' }]} onPress={resetGacha}>
-                <Check color="white" size={20} style={{ marginRight: 8 }} />
-                <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.footerBtn} onPress={openAllCurrent}>
-                <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
-                <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
-              </TouchableOpacity>
-            )}
+            <View style={[isWide && { flexDirection: 'row', gap: 16 }]}>
+                {isAllRevealed ? (
+                  <TouchableOpacity 
+                    style={[styles.footerBtn, { backgroundColor: '#3b82f6' }, isWide && { minWidth: 180 }]} 
+                    onPress={resetGacha}
+                  >
+                    <Check color="white" size={20} style={{ marginRight: 8 }} />
+                    <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity 
+                    style={[styles.footerBtn, isWide && { minWidth: 180 }]} 
+                    onPress={openAllCurrent}
+                  >
+                    <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
+                    <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
+                  </TouchableOpacity>
+                )}
 
-            <TouchableOpacity 
-              style={[
-                styles.footerBtn, 
-                { marginTop: 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' }
-              ]} 
-              onPress={() => isAllRevealed && startSummon(isRollMulti)}
-              disabled={!isAllRevealed}
-            >
-              <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
-              <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.footerBtn, 
+                    { marginTop: isWide ? 0 : 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' },
+                    isWide && { minWidth: 180 }
+                  ]} 
+                  onPress={() => isAllRevealed && startSummon(isRollMulti)}
+                  disabled={!isAllRevealed}
+                >
+                  <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
+                  <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
+                </TouchableOpacity>
+            </View>
           </Animated.View>
         </Animated.View>
       )}
@@ -351,11 +414,24 @@ export const GachaScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#fdf2f2' },
   menuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  menuContainer: { width: '100%', backgroundColor: 'white', borderRadius: 32, padding: 30, alignItems: 'center', elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 },
-  menuTitle: { fontSize: 28, fontWeight: '900', marginBottom: 15, color: '#1e293b', letterSpacing: 1 },
-  balanceTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 25, marginBottom: 30 },
+  menuContainer: { 
+    width: '100%', 
+    backgroundColor: 'white', 
+    borderRadius: 32, 
+    padding: 30, 
+    alignItems: 'center', 
+    elevation: 15, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 12 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 25,
+    borderWidth: 2,
+    borderColor: '#ef4444'
+  },
+  menuTitle: { fontSize: 32, fontWeight: '900', marginBottom: 20, color: '#ef4444', letterSpacing: 2, textTransform: 'uppercase' },
+  balanceTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', paddingVertical: 12, paddingHorizontal: 25, borderRadius: 30, marginBottom: 35, borderWidth: 1, borderColor: '#fee2e2' },
   balanceAmt: { fontSize: 20, fontWeight: 'bold', marginLeft: 8, color: '#1e293b' },
 
   priceSection: { width: '100%', gap: 16 },
@@ -370,11 +446,11 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 24, fontWeight: '900', color: 'white', letterSpacing: 2 },
   
   scrollContainer: { paddingHorizontal: 20, alignItems: 'center' },
-  singleCardContainer: { paddingTop: 40 },
+  singleCardContainer: { paddingTop: 40, alignItems: 'center' },
   columnsContainer: { flexDirection: 'row', justifyContent: 'center', gap: 15, paddingBottom: 20 },
   column: { flexDirection: 'column', gap: 15 },
-  cardSpace2Col: { width: width * 0.40, aspectRatio: 0.72 },
-  bigCardSpace: { width: width * 0.6, aspectRatio: 0.72 },
+  cardSpace2Col: { width: Math.min(width * 0.40, 160), aspectRatio: 0.72 },
+  bigCardSpace: { width: Math.min(width * 0.6, 280), aspectRatio: 0.72 },
 
   glowBehind: { position: 'absolute', width: '100%', height: '100%', borderRadius: 12 },
   cardBaseContainer: { flex: 1, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
@@ -382,20 +458,35 @@ const styles = StyleSheet.create({
   cardFront: { backgroundColor: '#0f172a' },
   cardBack: { backgroundColor: '#1e293b' },
   cardImg: { width: '100%', height: '100%' },
-  cardOverlay: { position: 'absolute', bottom: 0, width: '100%', backgroundColor: 'rgba(0,0,0,0.7)', padding: 8, alignItems: 'center' },
-  cardNameText: { fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
+  cardOverlay: { position: 'absolute', bottom: 0, width: '100%', backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+  cardNameText: { fontSize: 13, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 },
   
-  rarityHintText: { color: 'white', fontSize: 10, fontWeight: 'bold', position: 'absolute', bottom: 10, opacity: 0.6 },
+  rarityHintText: { color: 'white', fontSize: 11, fontWeight: '900', position: 'absolute', bottom: 15, opacity: 0.8, letterSpacing: 1 },
+
+  pokeballDecor: { position: 'absolute', width: 100, height: 100, borderRadius: 50, overflow: 'hidden', opacity: 0.1, borderWidth: 4, borderColor: '#1e293b' },
+  pokeballTop: { flex: 1, backgroundColor: '#ef4444' },
+  pokeballBase: { flex: 1, backgroundColor: 'white' },
+  pokeballBelt: { position: 'absolute', top: '46%', width: '100%', height: 8, backgroundColor: '#1e293b' },
+  pokeballCenter: { position: 'absolute', top: '50%', left: '50%', width: 28, height: 28, marginLeft: -14, marginTop: -14, borderRadius: 14, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' },
+  pokeballCenterInner: { width: 16, height: 16, borderRadius: 8, backgroundColor: 'white', borderWidth: 2, borderColor: '#1e293b' },
+
+  pokeballIconSmall: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden', borderWidth: 2, borderColor: '#1e293b', position: 'relative' },
+  pokeballBeltSmall: { position: 'absolute', top: '44%', width: '100%', height: 4, backgroundColor: '#1e293b' },
+  pokeballCenterSmall: { position: 'absolute', top: '50%', left: '50%', width: 14, height: 14, marginLeft: -7, marginTop: -7, borderRadius: 7, backgroundColor: 'white', borderWidth: 2, borderColor: '#1e293b', justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+
+  masterBallSpotLeft: { position: 'absolute', left: 4, top: 4, width: 10, height: 10, borderRadius: 5, backgroundColor: '#ec4899' },
+  masterBallSpotRight: { position: 'absolute', right: 4, top: 4, width: 10, height: 10, borderRadius: 5, backgroundColor: '#ec4899' },
+  masterBallM: { color: '#ec4899', fontSize: 8, fontWeight: '900' },
 
   footer: { position: 'absolute', bottom: 40, width: '100%', alignItems: 'center' },
-  footerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', paddingVertical: 14, paddingHorizontal: 40, borderRadius: 30, elevation: 4, minWidth: 220 },
-  footerBtnText: { fontSize: 16, fontWeight: '900', color: '#1e293b', letterSpacing: 1 },
+  footerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 32, elevation: 8, minWidth: 240, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
+  footerBtnText: { fontSize: 16, fontWeight: '900', color: '#1e293b', letterSpacing: 1.5, textTransform: 'uppercase' },
 
-  balanceOverlayAbsolute: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 9999 },
-  balanceCard: { width: '90%', backgroundColor: '#1e293b', borderRadius: 32, padding: 30, alignItems: 'center', borderWidth: 2, borderColor: '#334155' },
-  balanceIconBg: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(234,179,8,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  balanceTitle: { color: 'white', fontSize: 22, fontWeight: '900', textAlign: 'center', marginBottom: 12 },
-  balanceDesc: { color: '#94a3b8', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 30 },
-  balanceCloseBtn: { width: '100%', backgroundColor: '#eab308', paddingVertical: 16, borderRadius: 16, alignItems: 'center' },
-  balanceCloseText: { color: 'black', fontSize: 18, fontWeight: '900', textTransform: 'uppercase' },
+  balanceOverlayAbsolute: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 9999 },
+  balanceCard: { width: '85%', maxWidth: 320, backgroundColor: '#1e293b', borderRadius: 28, padding: 25, alignItems: 'center', borderWidth: 2, borderColor: '#eab308' },
+  balanceIconBg: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(234,179,8,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  balanceTitle: { color: 'white', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 12, letterSpacing: 1 },
+  balanceDesc: { color: '#94a3b8', fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 25 },
+  balanceCloseBtn: { width: '100%', backgroundColor: '#eab308', paddingVertical: 14, borderRadius: 16, alignItems: 'center', elevation: 4 },
+  balanceCloseText: { color: '#000', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
 });
