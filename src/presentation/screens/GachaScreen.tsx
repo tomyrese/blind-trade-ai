@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Dimensions, Image, ScrollView, SafeAreaView, useWindowDimensions,
+  Dimensions, Image, ScrollView, SafeAreaView, useWindowDimensions, Modal,
 } from 'react-native';
 import { X, Sparkles, Check, RotateCcw, Coins } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -15,6 +15,8 @@ import Animated, {
   withDelay,
   withSequence,
   interpolate,
+  withRepeat,
+  Easing,
 } from 'react-native-reanimated';
 
 // Import Component & Data
@@ -68,15 +70,23 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
   const entryDelay = index * 100;
   const rotate = useSharedValue(0);
   const shineOpacity = useSharedValue(0);
+  const borderRotate = useSharedValue(0);
+
+  useEffect(() => {
+    // Loop border rotation for high rarity (ONCE on mount)
+    if (rank >= 3) {
+      borderRotate.value = withRepeat(withTiming(360, { duration: 3000, easing: Easing.linear }), -1);
+    }
+  }, []);
 
   useEffect(() => {
     if (revealed) {
       rotate.value = withTiming(180, { duration: 600 });
       // Flash effect for Rare+ cards
       if (rank >= 3) {
-        shineOpacity.value = withDelay(250, withSequence(
-          withTiming(0.9, { duration: 100 }), // Burst
-          withTiming(0, { duration: 400 })    // Fade
+        shineOpacity.value = withDelay(500, withSequence(
+          withTiming(1, { duration: 150 }), // Burst
+          withTiming(0, { duration: 500 })    // Fade
         ));
       }
     } else {
@@ -99,6 +109,33 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
     };
   });
 
+  // Hoisted Styles (Fix for "Rendered fewer hooks" error)
+
+
+  // Hoisted Styles (Fix for "Rendered fewer hooks" error)
+  const beam1Style = useAnimatedStyle(() => ({
+    opacity: shineOpacity.value,
+    transform: [{ rotate: '45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
+  }));
+
+  const beam2Style = useAnimatedStyle(() => ({
+    opacity: shineOpacity.value,
+    transform: [{ rotate: '-45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
+  }));
+
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: shineOpacity.value * 0.5,
+    transform: [{ scale: 1.4 }]
+  }));
+
+  const flashOverlayStyle = useAnimatedStyle(() => ({
+    opacity: shineOpacity.value
+  }));
+
+  const runningBorderStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${borderRotate.value}deg` }]
+  }));
+
   return (
     <Animated.View
       entering={FadeInDown.delay(entryDelay).duration(500)}
@@ -112,10 +149,7 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
             style={[
               StyleSheet.absoluteFillObject,
               { zIndex: -1, justifyContent: 'center', alignItems: 'center' },
-              useAnimatedStyle(() => ({
-                opacity: shineOpacity.value,
-                transform: [{ rotate: '45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
-              }))
+              beam1Style
             ]}
           >
             <LinearGradient
@@ -135,10 +169,7 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
             style={[
               StyleSheet.absoluteFillObject,
               { zIndex: -1, justifyContent: 'center', alignItems: 'center' },
-              useAnimatedStyle(() => ({
-                opacity: shineOpacity.value,
-                transform: [{ rotate: '-45deg' }, { scale: interpolate(shineOpacity.value, [0, 1], [0.8, 1.8]) }]
-              }))
+              beam2Style
             ]}
           >
             <LinearGradient
@@ -158,10 +189,7 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
             style={[
               StyleSheet.absoluteFillObject,
               { zIndex: -2, backgroundColor: tierColor, borderRadius: 20 },
-              useAnimatedStyle(() => ({
-                opacity: shineOpacity.value * 0.5,
-                transform: [{ scale: 1.4 }]
-              }))
+              haloStyle
             ]}
           />
         </>
@@ -174,28 +202,52 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
             styles.cardFront,
             frontAnimatedStyle,
             {
-              borderColor: tierColor,
-              borderWidth: isGoldTier ? 4 : 2,
+              // Remove static border for High Rarity to show Running Border
+              borderColor: (rank >= 3) ? 'transparent' : tierColor,
+              borderWidth: (rank >= 3) ? 0 : (isGoldTier ? 4 : 2),
               shadowColor: tierColor,
               shadowOpacity: 0.6,
               shadowRadius: 10,
               elevation: 5,
+              padding: (rank >= 3) ? 3 : 0, // Padding for border to show
             }
           ]}>
-            <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
-            <View style={styles.cardOverlay}>
-              <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
-            </View>
-            {/* Flash Overlay for High Rarity */}
-            {(isPurpleTier || isGoldTier) && (
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFillObject,
-                  { backgroundColor: 'white', zIndex: 10 },
-                  useAnimatedStyle(() => ({ opacity: shineOpacity.value }))
-                ]}
-              />
+            {/* RUNNING BORDER FOR FRONT (High Rarity) */}
+            {(rank >= 3) && (
+              <Animated.View style={[
+                StyleSheet.absoluteFill,
+                { justifyContent: 'center', alignItems: 'center' }
+              ]}>
+                <Animated.View style={[
+                  { width: '250%', height: '250%' },
+                  runningBorderStyle
+                ]}>
+                  <LinearGradient
+                    colors={[tierColor, 'transparent', tierColor, 'transparent']}
+                    start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
+                    style={{ flex: 1 }}
+                  />
+                </Animated.View>
+              </Animated.View>
             )}
+
+            {/* Content Container with Background to mask the center */}
+            <View style={{ flex: 1, width: '100%', borderRadius: 9, overflow: 'hidden', backgroundColor: '#0f172a' }}>
+              <Image source={item.image} style={styles.cardImg} resizeMode="cover" />
+              <View style={styles.cardOverlay}>
+                <Text style={[styles.cardNameText, { color: tierColor }]}>{item.name}</Text>
+              </View>
+              {/* Flash Overlay for High Rarity */}
+              {(isPurpleTier || isGoldTier) && (
+                <Animated.View
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    { backgroundColor: 'white', zIndex: 10 },
+                    flashOverlayStyle
+                  ]}
+                />
+              )}
+            </View>
           </Animated.View>
 
           <Animated.View style={[
@@ -203,24 +255,48 @@ const GachaCardItem = ({ item, index, revealed, onFlip, sizeMode }: {
             styles.cardBack,
             backAnimatedStyle,
             {
-              borderColor: hintBorderColor, // Use semi-transparent tier color for hint
-              borderWidth: 2,
+              // For high rarity, we use the running border logic (no static border)
+              borderColor: (rank >= 3 && !revealed) ? 'transparent' : hintBorderColor,
+              borderWidth: (rank >= 3 && !revealed) ? 0 : 2,
               shadowColor: tierColor,
               shadowOpacity: 0.3,
               shadowRadius: 5,
               elevation: 3,
+              padding: (rank >= 3 && !revealed) ? 3 : 0, // Padding to expose gradient
             }
           ]}>
-            <View style={styles.pokeballDecor}>
-              <View style={styles.pokeballTop} />
-              <View style={styles.pokeballBelt} />
-              <View style={styles.pokeballBase} />
-              <View style={styles.pokeballCenter} />
+            {/* RUNNING BORDER GRADIENT LAYER (High Rarity Only) */}
+            {(rank >= 3 && !revealed) && (
+              <Animated.View style={[
+                StyleSheet.absoluteFill,
+                { justifyContent: 'center', alignItems: 'center' }
+              ]}>
+                <Animated.View style={[
+                  { width: '250%', height: '250%' }, // Larger to cover rotation
+                  runningBorderStyle
+                ]}>
+                  <LinearGradient
+                    colors={[tierColor, 'transparent', tierColor, 'transparent']}
+                    start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
+                    style={{ flex: 1 }}
+                  />
+                </Animated.View>
+              </Animated.View>
+            )}
+
+            {/* INNER CONTENT MASK */}
+            <View style={{ flex: 1, width: '100%', borderRadius: 9, backgroundColor: '#1e293b', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={styles.pokeballDecor}>
+                <View style={styles.pokeballTop} />
+                <View style={styles.pokeballBelt} />
+                <View style={styles.pokeballBase} />
+                <View style={styles.pokeballCenter} />
+              </View>
+              <Sparkles color={tierColor} size={32} opacity={0.6} />
+              <Text style={styles.rarityHintText}>
+                {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
+              </Text>
             </View>
-            <Sparkles color={tierColor} size={32} opacity={0.6} />
-            <Text style={styles.rarityHintText}>
-              {(RARITY_CONFIGS[item.rarity as keyof typeof RARITY_CONFIGS]?.label || item.rarity).toUpperCase()}
-            </Text>
           </Animated.View>
         </View>
       </TouchableOpacity>
@@ -275,6 +351,8 @@ export const GachaScreen = () => {
     }
     return results;
   };
+
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
   const startSummon = (isMulti: boolean) => {
     // Safety check: Cannot summon again if current cards aren't fully revealed
@@ -334,10 +412,15 @@ export const GachaScreen = () => {
     setPhase('IDLE');
     setCurrentViewCards([]);
     setRevealed([]);
+    setSelectedCard(null);
   };
 
   const flipCard = (idx: number) => {
-    if (revealed[idx]) return;
+    if (revealed[idx]) {
+      // If already revealed, open detail view
+      setSelectedCard(currentViewCards[idx]);
+      return;
+    }
     const nextStates = [...revealed];
     nextStates[idx] = true;
     setRevealed(nextStates);
@@ -408,114 +491,119 @@ export const GachaScreen = () => {
       )}
 
       {phase === 'ANIMATING' && (
-        <GachaAnimation tierColor={bestRarityColor} isMulti={isRollMulti} onFinish={onAnimationFinish} />
+        <Modal visible={true} transparent={true} animationType="fade">
+          <GachaAnimation tierColor={bestRarityColor} isMulti={isRollMulti} onFinish={onAnimationFinish} />
+        </Modal>
       )}
 
       {phase === 'RESULT' && (
-        <Animated.View entering={FadeIn.duration(300)} style={styles.resultContainer}>
-          <View style={styles.headerResult}>
-            <Text style={styles.headerTitle}>{t('gacha_result_title')}</Text>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-            {isRollMulti ? (
-              <View style={[
-                styles.columnsContainer,
-                isWide && { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 }
-              ]}>
-                {isWide ? (
-                  // 5x2 or wrapped grid for wide screens
-                  currentViewCards.map((card, idx) => (
-                    <GachaCardItem
-                      key={card.id}
-                      item={card}
-                      index={idx}
-                      revealed={revealed[idx]}
-                      onFlip={() => flipCard(idx)}
-                      sizeMode="small"
-                    />
-                  ))
-                ) : (
-                  // Original 2-column mobile layout
-                  <>
-                    <View style={styles.column}>
-                      {currentViewCards.slice(0, 5).map((card, idx) => (
-                        <GachaCardItem
-                          key={card.id}
-                          item={card}
-                          index={idx}
-                          revealed={revealed[idx]}
-                          onFlip={() => flipCard(idx)}
-                          sizeMode="small"
-                        />
-                      ))}
-                    </View>
-                    <View style={styles.column}>
-                      {currentViewCards.slice(5, 10).map((card, idx) => (
-                        <GachaCardItem
-                          key={card.id}
-                          item={card}
-                          index={idx + 5}
-                          revealed={revealed[idx + 5]}
-                          onFlip={() => flipCard(idx + 5)}
-                          sizeMode="small"
-                        />
-                      ))}
-                    </View>
-                  </>
-                )}
-              </View>
-            ) : (
-              <View style={styles.singleCardContainer}>
-                <GachaCardItem
-                  item={currentViewCards[0]}
-                  index={0}
-                  revealed={revealed[0]}
-                  onFlip={() => flipCard(0)}
-                  sizeMode="big"
-                />
-              </View>
-            )}
-            <View style={{ height: 180 }} />
-          </ScrollView>
-
-          <Animated.View entering={FadeIn.delay(200)} style={styles.footer}>
-            <View style={[isWide && { flexDirection: 'row', gap: 16 }]}>
-              {isAllRevealed ? (
-                <TouchableOpacity
-                  style={[styles.footerBtn, { backgroundColor: '#3b82f6' }, isWide && { minWidth: 180 }]}
-                  onPress={resetGacha}
-                >
-                  <Check color="white" size={20} style={{ marginRight: 8 }} />
-                  <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.footerBtn, isWide && { minWidth: 180 }]}
-                  onPress={openAllCurrent}
-                >
-                  <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
-                  <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                style={[
-                  styles.footerBtn,
-                  { marginTop: isWide ? 0 : 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' },
-                  isWide && { minWidth: 180 }
-                ]}
-                onPress={() => isAllRevealed && startSummon(isRollMulti)}
-                disabled={!isAllRevealed}
-              >
-                <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
-                <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
-              </TouchableOpacity>
+        <Modal visible={true} transparent={false} animationType="fade" onRequestClose={resetGacha}>
+          <Animated.View entering={FadeIn.duration(300)} style={styles.resultContainer}>
+            <View style={styles.headerResult}>
+              <Text style={styles.headerTitle}>{t('gacha_result_title')}</Text>
             </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+              {isRollMulti ? (
+                <View style={[
+                  styles.columnsContainer,
+                  isWide && { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 }
+                ]}>
+                  {isWide ? (
+                    // 5x2 or wrapped grid for wide screens
+                    currentViewCards.map((card, idx) => (
+                      <GachaCardItem
+                        key={card.id}
+                        item={card}
+                        index={idx}
+                        revealed={revealed[idx]}
+                        onFlip={() => flipCard(idx)}
+                        sizeMode="small"
+                      />
+                    ))
+                  ) : (
+                    // Original 2-column mobile layout
+                    <>
+                      <View style={styles.column}>
+                        {currentViewCards.slice(0, 5).map((card, idx) => (
+                          <GachaCardItem
+                            key={card.id}
+                            item={card}
+                            index={idx}
+                            revealed={revealed[idx]}
+                            onFlip={() => flipCard(idx)}
+                            sizeMode="small"
+                          />
+                        ))}
+                      </View>
+                      <View style={styles.column}>
+                        {currentViewCards.slice(5, 10).map((card, idx) => (
+                          <GachaCardItem
+                            key={card.id}
+                            item={card}
+                            index={idx + 5}
+                            revealed={revealed[idx + 5]}
+                            onFlip={() => flipCard(idx + 5)}
+                            sizeMode="small"
+                          />
+                        ))}
+                      </View>
+                    </>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.singleCardContainer}>
+                  <GachaCardItem
+                    item={currentViewCards[0]}
+                    index={0}
+                    revealed={revealed[0]}
+                    onFlip={() => flipCard(0)}
+                    sizeMode="big"
+                  />
+                </View>
+              )}
+              <View style={{ height: 180 }} />
+            </ScrollView>
+
+            <Animated.View entering={FadeIn.delay(200)} style={styles.footer}>
+              <View style={[isWide && { flexDirection: 'row', gap: 16 }]}>
+                {isAllRevealed ? (
+                  <TouchableOpacity
+                    style={[styles.footerBtn, { backgroundColor: '#3b82f6' }, isWide && { minWidth: 180 }]}
+                    onPress={resetGacha}
+                  >
+                    <Check color="white" size={20} style={{ marginRight: 8 }} />
+                    <Text style={[styles.footerBtnText, { color: 'white' }]}>{t('gacha_done') || 'DONE'}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.footerBtn, isWide && { minWidth: 180 }]}
+                    onPress={openAllCurrent}
+                  >
+                    <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
+                    <Text style={styles.footerBtnText}>{t('gacha_flip_all') || 'REVEAL ALL'}</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.footerBtn,
+                    { marginTop: isWide ? 0 : 12, backgroundColor: isAllRevealed ? '#334155' : '#94a3b8' },
+                    isWide && { minWidth: 180 }
+                  ]}
+                  onPress={() => isAllRevealed && startSummon(isRollMulti)}
+                  disabled={!isAllRevealed}
+                >
+                  <RotateCcw color="white" size={20} style={{ marginRight: 8, opacity: isAllRevealed ? 1 : 0.5 }} />
+                  <Text style={[styles.footerBtnText, { color: 'white', opacity: isAllRevealed ? 1 : 0.7 }]}>{t('gacha_roll_again')}</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
+        </Modal>
       )}
 
+      {/* Internal Modal for Insufficient Balance */}
       {/* Internal Modal for Insufficient Balance */}
       {showInsufficentUI && (
         <View style={styles.balanceOverlayAbsolute}>
@@ -534,6 +622,28 @@ export const GachaScreen = () => {
             </TouchableOpacity>
           </Animated.View>
         </View>
+      )}
+
+      {/* CARD DETAIL MODAL */}
+      {selectedCard && (
+        <Modal visible={true} transparent={true} animationType="fade" onRequestClose={() => setSelectedCard(null)}>
+          <View style={styles.detailOverlay}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setSelectedCard(null)} />
+            <Animated.View entering={ZoomIn.duration(300)} style={styles.detailCardContainer}>
+              <Image source={selectedCard.image} style={styles.detailImage} resizeMode="contain" />
+              <View style={styles.detailInfo}>
+                <Text style={[styles.detailRarity, { color: getTierColor(selectedCard.rarity) }]}>
+                  {(RARITY_CONFIGS[selectedCard.rarity as keyof typeof RARITY_CONFIGS]?.label || selectedCard.rarity).toUpperCase()}
+                </Text>
+                <Text style={styles.detailName}>{selectedCard.name}</Text>
+                <Text style={styles.detailValue}>{formatCurrency(selectedCard.value, userCurrency)}</Text>
+              </View>
+              <TouchableOpacity style={styles.closeDetailBtn} onPress={() => setSelectedCard(null)}>
+                <X color="white" size={24} />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </Modal>
       )}
     </SafeAreaView>
   );
@@ -615,4 +725,13 @@ const styles = StyleSheet.create({
   balanceDesc: { color: '#94a3b8', fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 25 },
   balanceCloseBtn: { width: '100%', backgroundColor: '#eab308', paddingVertical: 14, borderRadius: 16, alignItems: 'center', elevation: 4 },
   balanceCloseText: { color: '#000', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
+
+  detailOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
+  detailCardContainer: { width: '50%', backgroundColor: '#1e293b', borderRadius: 20, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  detailImage: { width: '100%', aspectRatio: 0.72, borderRadius: 12 },
+  detailInfo: { width: '100%', padding: 10, alignItems: 'center' },
+  detailRarity: { fontSize: 12, fontWeight: '900', letterSpacing: 1.5, marginBottom: 4 },
+  detailName: { fontSize: 16, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
+  detailValue: { fontSize: 16, fontWeight: '900', color: '#eab308' },
+  closeDetailBtn: { position: 'absolute', top: -12, right: -12, width: 36, height: 36, borderRadius: 18, backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white', elevation: 10 },
 });
