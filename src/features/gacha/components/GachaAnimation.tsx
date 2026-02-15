@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useLayoutEffect } from 'react';
-import { View, StyleSheet, Text, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, TouchableWithoutFeedback, Modal, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 
@@ -61,6 +61,14 @@ const Pokeball3D = ({ tierColor, isMulti, onFinish, started, onStart }: { tierCo
     const whiteMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.2, metalness: 0.1 }), []);
     const innerWhiteMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8, metalness: 0.0, side: THREE.BackSide }), []);
     const blackMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.5, metalness: 0.5 }), []);
+    // Transparent Gold for Rim (matches Ultra Ball sides but fainter)
+    const goldMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+        color: '#facc15',
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.3,
+        metalness: 0.5
+    }), []);
 
     const dynamicButtonMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.2, metalness: 0.1, toneMapped: false }), []);
 
@@ -172,6 +180,12 @@ const Pokeball3D = ({ tierColor, isMulti, onFinish, started, onStart }: { tierCo
                     <primitive object={topShellMaterial} attach="material" />
                 </mesh>
 
+                {/* RIM THICKNESS for Top Shell */}
+                <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[0.92, 1.0, 64]} />
+                    <primitive object={blackMaterial} attach="material" />
+                </mesh>
+
                 {/* MASTER BALL DETAILS */}
                 {isMulti && (
                     <>
@@ -242,38 +256,50 @@ export const GachaAnimation: React.FC<GachaAnimationProps> = ({ tierColor, isMul
     const [started, setStarted] = useState(false);
 
     return (
-        <View style={styles.animContainer}>
-            <View style={styles.overlay} />
+        <Modal visible={true} transparent={true} animationType="fade" onRequestClose={onFinish}>
+            <View style={styles.animContainer}>
+                <View style={styles.overlay} />
 
-            <TouchableWithoutFeedback onPress={() => !started && setStarted(true)}>
-                <View style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                    <View style={{ width: width, height: width }}>
-                        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-                            <ambientLight intensity={0.8} />
-                            <directionalLight position={[5, 10, 5]} intensity={1.5} />
-                            <pointLight position={[-5, -5, 5]} intensity={0.5} />
+                {/* SKIP BUTTON */}
+                <SafeAreaView style={styles.skipContainer}>
+                    <TouchableOpacity onPress={onFinish} style={styles.skipButton}>
+                        <Text style={styles.skipText}>SKIP {'>>'}</Text>
+                    </TouchableOpacity>
+                </SafeAreaView>
 
-                            <Pokeball3D
-                                tierColor={tierColor}
-                                isMulti={isMulti}
-                                onFinish={onFinish}
-                                started={started}
-                                onStart={() => setStarted(true)}
-                            />
-                        </Canvas>
+                <TouchableWithoutFeedback onPress={() => !started && setStarted(true)}>
+                    <View style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: width, height: width }}>
+                            <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+                                <ambientLight intensity={0.8} />
+                                <directionalLight position={[5, 10, 5]} intensity={1.5} />
+                                <pointLight position={[-5, -5, 5]} intensity={0.5} />
+
+                                <Pokeball3D
+                                    tierColor={tierColor}
+                                    isMulti={isMulti}
+                                    onFinish={onFinish}
+                                    started={started}
+                                    onStart={() => setStarted(true)}
+                                />
+                            </Canvas>
+                        </View>
+
+                        <Text style={styles.summoningText}>
+                            {started ? "SUMMONING..." : "TAP TO OPEN"}
+                        </Text>
                     </View>
-
-                    <Text style={styles.summoningText}>
-                        {started ? "SUMMONING..." : "TAP TO OPEN"}
-                    </Text>
-                </View>
-            </TouchableWithoutFeedback>
-        </View>
+                </TouchableWithoutFeedback>
+            </View>
+        </Modal>
     );
 };
 
 const styles = StyleSheet.create({
     animContainer: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
-    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.92)' },
+    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.95)' },
     summoningText: { color: 'white', fontSize: 24, fontWeight: '900', marginTop: 40, letterSpacing: 4 },
+    skipContainer: { position: 'absolute', top: 0, right: 0, width: '100%', alignItems: 'flex-end', zIndex: 10000, padding: 20 },
+    skipButton: { paddingVertical: 8, paddingHorizontal: 16 },
+    skipText: { color: 'rgba(255,255,255,0.8)', fontWeight: 'bold', fontSize: 14, letterSpacing: 1 }
 });
