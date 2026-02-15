@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   Dimensions, Image, ScrollView, SafeAreaView, useWindowDimensions, Modal,
 } from 'react-native';
-import { X, Sparkles, Check, RotateCcw, Coins } from 'lucide-react-native';
+import { Sparkles, Check, RotateCcw, Coins } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   FadeIn,
@@ -606,22 +606,25 @@ export const GachaScreen = () => {
       {/* Internal Modal for Insufficient Balance */}
       {/* Internal Modal for Insufficient Balance */}
       {showInsufficentUI && (
-        <View style={styles.balanceOverlayAbsolute}>
-          <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
-            <View style={styles.balanceIconBg}>
-              <Coins color="#eab308" size={60} />
-            </View>
-            <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
-            <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
+        <Modal visible={true} transparent={true} animationType="fade" onRequestClose={() => setShowInsufficentUI(false)}>
+          <View style={styles.balanceOverlayAbsolute}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setShowInsufficentUI(false)} />
+            <Animated.View entering={ZoomIn.springify()} style={styles.balanceCard}>
+              <View style={styles.balanceIconBg}>
+                <Coins color="#eab308" size={60} />
+              </View>
+              <Text style={styles.balanceTitle}>{t('gacha_insufficient_balance')}</Text>
+              <Text style={styles.balanceDesc}>{t('gacha_topup_hint') || 'Please top up your balance to continue summon.'}</Text>
 
-            <TouchableOpacity
-              style={styles.balanceCloseBtn}
-              onPress={() => setShowInsufficentUI(false)}
-            >
-              <Text style={styles.balanceCloseText}>{t('close')}</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+              <TouchableOpacity
+                style={styles.balanceCloseBtn}
+                onPress={() => setShowInsufficentUI(false)}
+              >
+                <Text style={styles.balanceCloseText}>{t('close')}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </Modal>
       )}
 
       {/* CARD DETAIL MODAL */}
@@ -631,16 +634,6 @@ export const GachaScreen = () => {
             <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setSelectedCard(null)} />
             <Animated.View entering={ZoomIn.duration(300)} style={styles.detailCardContainer}>
               <Image source={selectedCard.image} style={styles.detailImage} resizeMode="contain" />
-              <View style={styles.detailInfo}>
-                <Text style={[styles.detailRarity, { color: getTierColor(selectedCard.rarity) }]}>
-                  {(RARITY_CONFIGS[selectedCard.rarity as keyof typeof RARITY_CONFIGS]?.label || selectedCard.rarity).toUpperCase()}
-                </Text>
-                <Text style={styles.detailName}>{selectedCard.name}</Text>
-                <Text style={styles.detailValue}>{formatCurrency(selectedCard.value, userCurrency)}</Text>
-              </View>
-              <TouchableOpacity style={styles.closeDetailBtn} onPress={() => setSelectedCard(null)}>
-                <X color="white" size={24} />
-              </TouchableOpacity>
             </Animated.View>
           </View>
         </Modal>
@@ -726,12 +719,7 @@ const styles = StyleSheet.create({
   balanceCloseBtn: { width: '100%', backgroundColor: '#eab308', paddingVertical: 14, borderRadius: 16, alignItems: 'center', elevation: 4 },
   balanceCloseText: { color: '#000', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
 
-  detailOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
-  detailCardContainer: { width: '50%', backgroundColor: '#1e293b', borderRadius: 20, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  detailImage: { width: '100%', aspectRatio: 0.72, borderRadius: 12 },
-  detailInfo: { width: '100%', padding: 10, alignItems: 'center' },
-  detailRarity: { fontSize: 12, fontWeight: '900', letterSpacing: 1.5, marginBottom: 4 },
-  detailName: { fontSize: 16, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
-  detailValue: { fontSize: 16, fontWeight: '900', color: '#eab308' },
-  closeDetailBtn: { position: 'absolute', top: -12, right: -12, width: 36, height: 36, borderRadius: 18, backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white', elevation: 10 },
+  detailOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
+  detailCardContainer: { width: '85%', height: '55%', justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' },
+  detailImage: { width: '100%', height: '100%', borderRadius: 16, resizeMode: 'contain' },
 });
