@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   containerSmall: {
     aspectRatio: 0.7, // Rectangular card-like
-    width: 48, // Fixed width for top bar
+    width: 90, // Increased from 48 for TradeUp slots
     padding: 0,
     borderRadius: 8,
   },

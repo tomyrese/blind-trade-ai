@@ -311,35 +311,45 @@ export const CardDetailScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Persistent Footer Actions - Hide if synthetic (already owned) */}
-      {!market.isSynthetic && (
-        <View style={styles.footer}>
-          <View style={styles.footerPriceInfo}>
-            <Text style={styles.footerLabel}>
-              {selectedListing ? `Người bán: ${selectedListing.sellerName}` : 'Phổ biến nhất'}
-            </Text>
-            <Text style={styles.footerPrice}>
-              {formatVND(selectedListing ? selectedListing.price : market.currentPrice)}
-            </Text>
-          </View>
-          
-          <View style={styles.footerActions}>
-            <Pressable 
-              onPress={handleAddToCart}
-              style={styles.cartBtn}
-            >
-              <ShoppingCart size={20} color="#ef4444" />
-            </Pressable>
-            <Pressable 
-              onPress={handleBuyNow}
-              style={styles.buyBtn}
-            >
-              <Zap size={20} color="#ffffff" fill="#ffffff" />
-              <Text style={styles.buyBtnText}>Mua Ngay</Text>
-            </Pressable>
-          </View>
+      {/* Persistent Footer Actions */}
+      <View style={styles.footer}>
+        <View style={styles.footerPriceInfo}>
+          <Text style={styles.footerLabel}>
+            {selectedListing ? `Người bán: ${selectedListing.sellerName}` : market.isSynthetic ? 'Giá thị trường' : 'Phổ biến nhất'}
+          </Text>
+          <Text style={styles.footerPrice}>
+            {formatVND(selectedListing ? selectedListing.price : market.currentPrice)}
+          </Text>
         </View>
-      )}
+        
+        <View style={styles.footerActions}>
+          {market.isSynthetic ? (
+            <Pressable 
+              onPress={() => navigation.navigate('TradeExecute', { symbol: market.symbol || market.id, type: 'sell' })}
+              style={[styles.buyBtn, { backgroundColor: '#ef4444' }]}
+            >
+              <TrendingUp size={20} color="#ffffff" />
+              <Text style={styles.buyBtnText}>Bán Ngay</Text>
+            </Pressable>
+          ) : (
+            <>
+              <Pressable 
+                onPress={handleAddToCart}
+                style={styles.cartBtn}
+              >
+                <ShoppingCart size={20} color="#ef4444" />
+              </Pressable>
+              <Pressable 
+                onPress={handleBuyNow}
+                style={styles.buyBtn}
+              >
+                <Zap size={20} color="#ffffff" fill="#ffffff" />
+                <Text style={styles.buyBtnText}>Mua Ngay</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

@@ -4,7 +4,6 @@ import {
   mapRarity,
   RARITY_RANKS,
   generateReward,
-  getFusionProbabilities,
   mockCards
 } from '../../shared/utils/cardData';
 
@@ -36,7 +35,6 @@ import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
 import { useUIStore } from '../../shared/stores/uiStore';
 import { LinearGradient } from 'react-native-linear-gradient';
-import { formatCurrency } from '../../shared/utils/currency';
 import { useNavigation } from '@react-navigation/native';
 
 export const TradeUpScreen: React.FC = () => {
@@ -126,25 +124,7 @@ export const TradeUpScreen: React.FC = () => {
     return result;
   }, [ownedCards, searchQuery, sortBy, selectedRarities]);
 
-  const totalValue = useMemo(() => {
-    return selectedCards.reduce((sum, id) => {
-      const card = ownedCards.find(c => c.id === id);
-      return sum + (card?.value || 0);
-    }, 0);
-  }, [ownedCards, selectedCards]);
 
-  const fusionChances = useMemo(() => {
-    const cards = ownedCards.filter(c => selectedCards.includes(c.id));
-    if (cards.length === 0) return { upgrade: 0, same: 0, downgrade: 0 };
-
-    // Use the logic from cardData.ts
-    const odds = getFusionProbabilities(cards);
-    return {
-        upgrade: Math.round(odds.upgrade * 100),
-        same: Math.round(odds.same * 100),
-        risk: Math.round(odds.downgrade * 100)
-    };
-  }, [ownedCards, selectedCards]);
 
   const highestSelectedRarity = useMemo(() => {
     if (selectedCards.length === 0) return 'common';
@@ -165,27 +145,25 @@ export const TradeUpScreen: React.FC = () => {
     const asset = assets.find(a => a.id === id);
     if (!asset) return;
 
-    setSelectedCards((prev) => {
-      const currentCount = prev.filter(i => i === id).length;
+    const currentCount = selectedCards.filter(i => i === id).length;
 
-      // If we have more than one and haven't selected all of them, add another
-      if (currentCount < asset.amount) {
-        if (prev.length >= 10) {
-          showNotification(t('fusion_limit_message'), 'warning');
-          return prev;
-        }
-        return [...prev, id];
-      } else {
-        // If we have selected all available or just one, remove all instances of this ID
-        // (Simplified toggle behavior: if max reached, clear selection for this card)
-        return prev.filter(i => i !== id);
+    // If we have more than one and haven't selected all of them, add another
+    if (currentCount < asset.amount) {
+      if (selectedCards.length >= 3) {
+        showNotification('Bạn chỉ có thể chọn tối đa 3 thẻ để hợp nhất.', 'warning');
+        return;
       }
-    });
-  }, [assets, t]);
+      setSelectedCards(prev => [...prev, id]);
+    } else {
+      // If we have selected all available or just one, remove all instances of this ID
+      // (Simplified toggle behavior: if max reached, clear selection for this card)
+      setSelectedCards(prev => prev.filter(i => i !== id));
+    }
+  }, [assets, selectedCards, showNotification]);
 
   const handleFusion = () => {
-    if (selectedCards.length < 2) {
-      showNotification(t('fusion_requirement_message'), 'info');
+    if (selectedCards.length !== 3) {
+      showNotification('Bạn cần chọn đúng 3 thẻ bài để bắt đầu hợp nhất.', 'info');
       return;
     }
 
@@ -216,7 +194,7 @@ export const TradeUpScreen: React.FC = () => {
     // Remove selected assets
     selectedCards.forEach(id => removeAsset(id));
 
-    // Add reward
+    // Add reward (Value is zeroed out since we don't display totalValue anymore, or we can just use the newReward.value)
     addAsset({
       id: newReward.id,
       name: newReward.name,
@@ -224,7 +202,7 @@ export const TradeUpScreen: React.FC = () => {
       rarity: newReward.rarity,
       amount: 1,
       value: newReward.value,
-      purchasePrice: totalValue / selectedCards.length,
+      purchasePrice: newReward.value,
       image: newReward.image,
     });
 
@@ -247,54 +225,34 @@ export const TradeUpScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Fusion Panel */}
         <View style={[styles.fusionPanel, { marginTop: 20 }]}>
-          <View style={styles.fusionHeader}>
-            <View style={styles.valueInfo}>
-              <Text style={styles.valueLabel}>{t('fusion_value')}</Text>
-              <Text style={styles.valueAmount}>{formatCurrency(totalValue, currency)}</Text>
-            </View>
-            <View style={styles.chancesBox}>
-              <View style={styles.chanceItem}>
-                <Sparkles size={14} color="#f59e0b" />
-                <Text style={styles.chanceText}>{t('fusion_upgrade')}: {fusionChances.upgrade}%</Text>
-              </View>
-              <View style={styles.chanceItem}>
-                <Layers size={14} color="#64748b" />
-                <Text style={styles.chanceText}>{t('condition')}: {fusionChances.same}%</Text>
-              </View>
-              <View style={styles.chanceItem}>
-                <Zap size={14} color="#ef4444" />
-                <Text style={styles.chanceText}>{t('fusion_risk')}: {fusionChances.risk}%</Text>
-              </View>
-            </View>
-          </View>
 
-          <View style={styles.fusionSlot}>
-            {selectedCards.length === 0 ? (
-              <View style={styles.emptySlot}>
-                <Layers size={48} color="#cbd5e1" strokeWidth={1} />
-                <Text style={styles.emptySlotText}>{t('no_cards_selected')}</Text>
-              </View>
-            ) : (
-              <View style={styles.selectedGrid}>
-                {selectedCards.slice(0, 5).map((id, index) => {
-                  const card = ownedCards.find(c => c.id === id);
-                  return card ? (
-                    <View key={`${id}-${index}`} style={styles.smallSelectedCard}>
-                      <CardItem card={card} size="small" showActions={false} hideSeller={true} />
+          <View style={styles.slotsContainer}>
+            {[0, 1, 2].map((i) => {
+              const cardId = selectedCards[i];
+              const card = cardId ? ownedCards.find(c => c.id === cardId) : null;
+              
+              return (
+                <Pressable 
+                  key={i} 
+                  style={styles.slotItem}
+                  onPress={() => cardId && handleToggleCard(cardId)}
+                >
+                  {card ? (
+                    <CardItem card={card} size="small" showActions={false} hideSeller={true} />
+                  ) : (
+                    <View style={styles.emptySlotBox}>
+                      <Text style={styles.emptySlotPlus}>+</Text>
                     </View>
-                  ) : null;
-                })}
-                  <View style={styles.moreBadge}>
-                    <Text style={styles.moreText}>+{selectedCards.length - 5}</Text>
-                  </View>
-              </View>
-            )}
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
 
           <Pressable
-            style={[styles.fuseButton, selectedCards.length < 2 && styles.buttonDisabled]}
+            style={[styles.fuseButton, selectedCards.length !== 3 && styles.buttonDisabled]}
             onPress={handleFusion}
-            disabled={selectedCards.length < 2}
+            disabled={selectedCards.length !== 3}
           >
             <Zap size={24} color="#ffffff" fill="#ffffff" />
             <Text style={styles.fuseButtonText}>{t('start_fusion')}</Text>
@@ -402,10 +360,9 @@ export const TradeUpScreen: React.FC = () => {
       </ScrollView>
 
       {/* Lootbox Animation Overlay */}
-      {reward && (
+      {isOpening && reward && (
         <Lootbox3D
-          isOpen={isOpening}
-          onClose={() => {
+          onAnimationComplete={() => {
             setIsOpening(false);
             setReward(null);
           }}
@@ -570,70 +527,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  fusionHeader: {
+
+  slotsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 16,
     marginBottom: 20,
+    marginTop: 10,
   },
-  valueInfo: {
-    flex: 1,
-  },
-  valueLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#64748b',
-    marginBottom: 6,
-  },
-  valueAmount: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#10b981',
-  },
-  chancesBox: {
-    gap: 4,
-  },
-  chanceItem: {
-    flexDirection: 'row',
+  slotItem: {
+    width: 90,
+    height: 128,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
   },
-  chanceText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  fusionSlot: {
-    height: 120,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+  emptySlotBox: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    padding: 12,
   },
-  emptySlot: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptySlotText: {
-    fontSize: 14,
+  emptySlotPlus: {
+    fontSize: 24,
     color: '#94a3b8',
     fontWeight: '600',
-  },
-  selectedGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  smallSelectedCard: {
-    width: 48,
-    marginHorizontal: -6, // Tighter stacking for rectangular shape
-    transform: [{ scale: 1.1 }], // Slightly larger to see details
   },
   moreBadge: {
     width: 36,

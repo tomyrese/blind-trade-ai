@@ -258,10 +258,6 @@ export const PortfolioScreen: React.FC = () => {
 
         renderItem={({ item: asset }) => (
             <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
-                <Pressable 
-                  onPress={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
-                  style={{ width: '100%' }}
-                >
                   <CardItem 
                     card={{
                       id: asset.id,
@@ -276,10 +272,9 @@ export const PortfolioScreen: React.FC = () => {
                     hideSeller={true}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
                     largeImage={true} // Use larger image in Portfolio Grid
-                    onToggle={() => {}}
+                    onToggle={() => navigation.navigate('CardDetail', { symbol: asset.symbol || asset.id })}
                     amount={asset.amount}
                   />
-                </Pressable>
 
                 <View style={[styles.itemProfitBadge, { backgroundColor: asset.value >= asset.purchasePrice ? '#10b981' : '#ef4444' }]}>
                    <Text style={styles.itemProfitText}>

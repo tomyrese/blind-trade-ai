@@ -157,9 +157,6 @@ export const FavoritesScreen: React.FC = () => {
         }
         renderItem={({ item }) => (
             <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
-                <Pressable 
-                  onPress={() => navigation.navigate('CardDetail', { symbol: item.symbol })}
-                >
                   <CardItem 
                     card={{
                         id: item.id,
@@ -172,12 +169,12 @@ export const FavoritesScreen: React.FC = () => {
                         cardMarketPrice: item.cardMarketPrice,
                         listings: item.listings
                     }}
+                    onToggle={() => navigation.navigate('CardDetail', { symbol: item.symbol })}
                     showActions={false}
                     hideSeller={false}
                     size={viewMode === 'grid' ? 'normal' : 'list'}
                     largeImage={true}
                   />
-                </Pressable>
             </View>
         )}
         ListEmptyComponent={

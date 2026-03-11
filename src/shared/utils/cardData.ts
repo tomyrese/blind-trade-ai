@@ -170,14 +170,15 @@ export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
 
   const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity, c.name)] || 0));
 
+  // Base odds adjusted for 3-to-1 sacrifice
   if (highestRank <= 2) { // Common, Uncommon
-    return { upgrade: 0.40, same: 0.45, downgrade: 0.15 };
+    return { upgrade: 0.50, same: 0.40, downgrade: 0.10 };
   } else if (highestRank <= 4) { // Rare, Holo
-    return { upgrade: 0.25, same: 0.50, downgrade: 0.25 };
+    return { upgrade: 0.35, same: 0.45, downgrade: 0.20 };
   } else if (highestRank <= 7) { // EX, GX, V
-    return { upgrade: 0.10, same: 0.50, downgrade: 0.40 };
+    return { upgrade: 0.20, same: 0.50, downgrade: 0.30 };
   } else { // Rainbow, Secret
-    return { upgrade: 0.02, same: 0.38, downgrade: 0.60 };
+    return { upgrade: 0.05, same: 0.45, downgrade: 0.50 };
   }
 };
 

@@ -10,12 +10,17 @@ import { generateMockOrderBook, mockMarketOrders, MarketOrder } from '../../shar
 import { TradeFormData } from '../../shared/validation/tradeSchema';
 import { formatPrice } from '../../shared/utils/formatters';
 
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types';
+
 export const TradeScreen: React.FC = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<'buy' | 'sell'>('buy');
+  const route = useRoute<RouteProp<RootStackParamList, 'TradeExecute'>>();
+  const { symbol = 'BTC/USDT', type } = route.params || {};
+
+  const [modalVisible, setModalVisible] = useState(type === 'buy' || type === 'sell');
+  const [modalType, setModalType] = useState<'buy' | 'sell'>(type || 'buy');
 
   // Mock data
-  const symbol = 'BTC/USDT';
   const currentPrice = 45000;
   const balance = 0.45; 
   const orderBook = generateMockOrderBook(currentPrice);

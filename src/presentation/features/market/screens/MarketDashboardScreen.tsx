@@ -253,17 +253,12 @@ export const MarketDashboardScreen: React.FC = () => {
           data={filteredMarkets}
           renderItem={({ item }) => (
             <View style={viewMode === 'grid' ? styles.gridItem : styles.listItem}>
-              <Pressable 
-                onPress={() => navigation.navigate('CardDetail', { symbol: item.symbol })}
-                style={{ width: '100%' }}
-              >
                 <CardItem 
                   card={marketToCard(item)} 
                   onToggle={() => navigation.navigate('CardDetail', { symbol: item.symbol })}
                   showActions={true}
                   size={viewMode === 'grid' ? 'normal' : 'list'}
                 />
-              </Pressable>
             </View>
           )}
           keyExtractor={(item) => item.id}
