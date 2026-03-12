@@ -168,23 +168,35 @@ export const TradeUpScreen: React.FC = () => {
     setSelectedCards((prev) => {
       const currentCount = prev.filter(i => i === id).length;
 
-      // If we have more than one and haven't selected all of them, add another
+      // If we are adding to our selection (currentCount < asset.amount)
       if (currentCount < asset.amount) {
-        if (prev.length >= 10) {
+        // Enforce all cards matching the rarity of the first selected card
+        if (prev.length > 0) {
+          const firstAsset = assets.find(a => a.id === prev[0]);
+          if (firstAsset) {
+            const firstRarity = mapRarity(firstAsset.rarity, firstAsset.name);
+            const thisRarity = mapRarity(asset.rarity, asset.name);
+            if (firstRarity !== thisRarity) {
+              showNotification(t('error_rarity_mismatch' as any), 'warning');
+              return prev;
+            }
+          }
+        }
+
+        if (prev.length >= 3) {
           showNotification(t('fusion_limit_message'), 'warning');
           return prev;
         }
         return [...prev, id];
       } else {
-        // If we have selected all available or just one, remove all instances of this ID
-        // (Simplified toggle behavior: if max reached, clear selection for this card)
+        // If we have selected all available or just want to toggle off
         return prev.filter(i => i !== id);
       }
     });
-  }, [assets, t]);
+  }, [assets, t, showNotification]);
 
   const handleFusion = () => {
-    if (selectedCards.length < 2) {
+    if (selectedCards.length !== 3) {
       showNotification(t('fusion_requirement_message'), 'info');
       return;
     }
@@ -210,23 +222,25 @@ export const TradeUpScreen: React.FC = () => {
     });
 
     const newReward = generateReward(cardsToFuse);
-    setReward(newReward);
+    setReward(newReward); // newReward can be null now
     setIsOpening(true);
 
-    // Remove selected assets
+    // Remove selected assets (burn them)
     selectedCards.forEach(id => removeAsset(id));
 
-    // Add reward
-    addAsset({
-      id: newReward.id,
-      name: newReward.name,
-      symbol: newReward.symbol || newReward.name.substring(0, 3).toUpperCase(),
-      rarity: newReward.rarity,
-      amount: 1,
-      value: newReward.value,
-      purchasePrice: totalValue / selectedCards.length,
-      image: newReward.image,
-    });
+    if (newReward) {
+      // Add reward
+      addAsset({
+        id: newReward.id,
+        name: newReward.name,
+        symbol: newReward.symbol || newReward.name.substring(0, 3).toUpperCase(),
+        rarity: newReward.rarity,
+        amount: 1,
+        value: newReward.value,
+        purchasePrice: totalValue / selectedCards.length,
+        image: newReward.image,
+      });
+    }
 
     setSelectedCards([]);
   };
@@ -292,9 +306,9 @@ export const TradeUpScreen: React.FC = () => {
           </View>
 
           <Pressable
-            style={[styles.fuseButton, selectedCards.length < 2 && styles.buttonDisabled]}
+            style={[styles.fuseButton, selectedCards.length !== 3 && styles.buttonDisabled]}
             onPress={handleFusion}
-            disabled={selectedCards.length < 2}
+            disabled={selectedCards.length !== 3}
           >
             <Zap size={24} color="#ffffff" fill="#ffffff" />
             <Text style={styles.fuseButtonText}>{t('start_fusion')}</Text>
@@ -402,18 +416,16 @@ export const TradeUpScreen: React.FC = () => {
       </ScrollView>
 
       {/* Lootbox Animation Overlay */}
-      {reward && (
-        <Lootbox3D
-          isOpen={isOpening}
-          onClose={() => {
-            setIsOpening(false);
-            setReward(null);
-          }}
-          reward={reward}
-          currency={currency}
-          highestSelectedRarity={highestSelectedRarity}
-        />
-      )}
+      <Lootbox3D
+        isOpen={isOpening}
+        onClose={() => {
+          setIsOpening(false);
+          setReward(null);
+        }}
+        reward={reward}
+        currency={currency}
+        highestSelectedRarity={highestSelectedRarity}
+      />
       {/* Filter Modal - Force Rebuild */}
       <Modal
         visible={isFilterModalVisible}

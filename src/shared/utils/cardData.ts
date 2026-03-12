@@ -54,7 +54,6 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
     label: 'Rare',
     symbol: 'R',
     shape: 'star',
-    starCount: 1,
     color: '#3B82F6',
     borderColor: '#60A5FA',
     glowColor: 'rgba(59, 130, 246, 0.2)',
@@ -71,8 +70,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_holo_ex: {
     label: 'Rare Holo EX',
     symbol: 'EX',
-    shape: 'star',
-    starCount: 2,
+    shape: 'sword',
     color: '#6366F1',
     borderColor: '#818CF8',
     glowColor: 'rgba(99, 102, 241, 0.3)',
@@ -81,8 +79,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_holo_gx: {
     label: 'Rare Holo GX',
     symbol: 'GX',
-    shape: 'star',
-    starCount: 2,
+    shape: 'shield',
     color: '#EC4899',
     borderColor: '#F472B6',
     glowColor: 'rgba(236, 72, 153, 0.3)',
@@ -91,8 +88,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_holo_v: {
     label: 'Rare Holo V',
     symbol: 'V',
-    shape: 'star',
-    starCount: 2,
+    shape: 'zap',
     color: '#F43F5E',
     borderColor: '#FB7185',
     glowColor: 'rgba(244, 63, 94, 0.3)',
@@ -101,8 +97,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_holo_vmax: {
     label: 'Rare Holo VMAX',
     symbol: 'VMAX',
-    shape: 'star',
-    starCount: 3,
+    shape: 'flame',
     color: '#A855F7',
     borderColor: '#C084FC',
     glowColor: 'rgba(168, 85, 247, 0.4)',
@@ -112,8 +107,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_holo_vstar: {
     label: 'Rare Holo VSTAR',
     symbol: 'VSTAR',
-    shape: 'star',
-    starCount: 3,
+    shape: 'sun',
     color: '#EAB308',
     borderColor: '#FACC15',
     glowColor: 'rgba(234, 179, 8, 0.4)',
@@ -123,8 +117,7 @@ export const RARITY_CONFIGS: Record<CardRarity, RarityConfigItem> = {
   rare_rainbow: {
     label: 'Rare Rainbow',
     symbol: 'RB',
-    shape: 'star',
-    starCount: 3,
+    shape: 'award',
     color: '#D946EF',
     borderColor: '#E879F9',
     borderGradient: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'], // Rainbow Gradient
@@ -170,21 +163,33 @@ export const getFusionProbabilities = (cards: Card[]): fusionOdds => {
 
   const highestRank = Math.max(...cards.map(c => RARITY_RANKS[mapRarity(c.rarity, c.name)] || 0));
 
+  let upgradeProb = 0;
   if (highestRank <= 2) { // Common, Uncommon
-    return { upgrade: 0.40, same: 0.45, downgrade: 0.15 };
+    upgradeProb = 0.40;
   } else if (highestRank <= 4) { // Rare, Holo
-    return { upgrade: 0.25, same: 0.50, downgrade: 0.25 };
+    upgradeProb = 0.25;
   } else if (highestRank <= 7) { // EX, GX, V
-    return { upgrade: 0.10, same: 0.50, downgrade: 0.40 };
+    upgradeProb = 0.10;
   } else { // Rainbow, Secret
-    return { upgrade: 0.02, same: 0.38, downgrade: 0.60 };
+    upgradeProb = 0.05;
   }
+
+  // Bonus chance per card
+  upgradeProb += (cards.length * 0.02);
+  upgradeProb = Math.min(0.95, upgradeProb); // Cap at 95%
+
+  return { upgrade: upgradeProb, same: 0, downgrade: 1 - upgradeProb };
 };
 
-export const generateReward = (selectedCards: Card[]): Card => {
+export const generateReward = (selectedCards: Card[]): Card | null => {
   const totalValue = selectedCards.reduce((sum, c) => sum + c.value, 0);
   const odds = getFusionProbabilities(selectedCards);
   const roll = Math.random();
+
+  // If failed
+  if (roll > odds.upgrade) {
+     return null;
+  }
 
   const ranks = Object.keys(RARITY_RANKS) as CardRarity[];
   const highestRank = Math.max(...selectedCards.map(c => RARITY_RANKS[mapRarity(c.rarity, c.name)] || 0));
@@ -192,18 +197,10 @@ export const generateReward = (selectedCards: Card[]): Card => {
   let targetRarity: CardRarity = 'common';
   let multiplier = 1.0;
 
-  if (roll <= odds.upgrade) {
-    const targetRank = Math.min(9, highestRank + (Math.random() > 0.8 ? 2 : 1));
-    targetRarity = ranks.find(r => RARITY_RANKS[r] === targetRank) || 'rare';
-    multiplier = 1.5 + (Math.random() * 1.5);
-  } else if (roll <= odds.upgrade + odds.same) {
-    targetRarity = ranks.find(r => RARITY_RANKS[r] === highestRank) || 'common';
-    multiplier = 0.9 + (Math.random() * 0.4);
-  } else {
-    const targetRank = Math.max(1, highestRank - 1);
-    targetRarity = ranks.find(r => RARITY_RANKS[r] === targetRank) || 'common';
-    multiplier = 0.4 + (Math.random() * 0.4);
-  }
+  // Upgrade by exactly 1-2 tiers
+  const targetRank = Math.min(10, highestRank + (Math.random() > 0.8 ? 2 : 1));
+  targetRarity = ranks.find(r => RARITY_RANKS[r] === targetRank) || 'rare';
+  multiplier = 1.5 + (Math.random() * 1.5);
 
   const rewardValue = Math.floor(totalValue * multiplier);
 

@@ -60,18 +60,18 @@ export const NotificationToast: React.FC = () => {
                 };
             case 'error':
                 return { 
-                    bg: '#fef2f2', 
-                    border: '#fecaca', 
-                    icon: '#dc2626', 
-                    text: '#991b1b',
+                    bg: '#fee2e2',       // deeper red bg
+                    border: '#f87171',    // solid red border
+                    icon: '#b91c1c',      // dark intense red icon
+                    text: '#7f1d1d',      // deeply saturated text
                     Icon: XCircle 
                 };
             case 'warning':
                 return { 
-                    bg: '#fffbeb', 
-                    border: '#fef3c7', 
-                    icon: '#d97706', 
-                    text: '#92400e',
+                    bg: '#fef3c7',       // deeper yellow bg
+                    border: '#fbbf24',    // solid yellow border
+                    icon: '#b45309',      // dark amber icon
+                    text: '#78350f',      // deeply saturated text
                     Icon: AlertCircle 
                 };
             case 'favorite':
@@ -133,10 +133,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        elevation: 12,
         zIndex: 10000,
     },
     content: {

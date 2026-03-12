@@ -148,8 +148,8 @@ export const FavoritesScreen: React.FC = () => {
       <FlashList<any>
         data={filteredCards}
         keyExtractor={item => item.id}
-        key={viewMode === 'grid' ? `grid-${width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2}` : 'list'}
-        numColumns={viewMode === 'grid' ? (width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2) : 1}
+        key={viewMode === 'grid' ? `grid-${width > 1344 ? 3 : 2}` : 'list'}
+        numColumns={viewMode === 'grid' ? (width > 1344 ? 3 : 2) : 1}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         refreshControl={

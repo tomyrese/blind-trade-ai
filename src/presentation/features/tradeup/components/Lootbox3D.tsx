@@ -20,7 +20,6 @@ import { Asset } from 'expo-asset';
 const { width, height } = Dimensions.get('window');
 
 // --- 3D Chest Component ---
-// --- 3D Chest Component ---
 import { CardItem } from './CardItem';
 
 // --- Detailed Fantasy Chest Component ---
@@ -126,8 +125,9 @@ const RewardCard3D = ({ active, image, rarityColor, isSuccess, onComplete }: {
     const mesh = useRef<THREE.Mesh>(null);
     const [phase, setPhase] = useState<'hidden' | 'pop' | 'vanish'>('hidden');
     
-    // Resolve asset safely
-    const texture = useTexture(image ? Asset.fromModule(image).uri : '');
+    // Safe texture loading - use placeholder if image is missing to avoid 'Invalid base URL' crash
+    const textureUri = image ? Asset.fromModule(image).uri : 'https://placehold.co/400x600/png?text=Fusion+Failed';
+    const texture = useTexture(textureUri);
     
     // Spring physics refs for ultra-smooth motion
     const posYSprung = useRef(0);
@@ -194,13 +194,13 @@ const RewardCard3D = ({ active, image, rarityColor, isSuccess, onComplete }: {
         <mesh ref={mesh} position={[0, 0, 0]} scale={[0.1, 0.1, 0.1]}>
             <planeGeometry args={[1, 1.4]} />
             <meshStandardMaterial 
-                map={texture} 
+                map={isSuccess ? texture : null} 
                 transparent 
                 side={THREE.DoubleSide} 
-                emissive={rarityColor}
+                emissive={isSuccess ? rarityColor : '#450a0a'} // Dark blood red for failure
                 opacity={opacity.current}
-                emissiveIntensity={texture ? (isSuccess ? 0.6 : 0.2) : 1.0}
-                color={texture ? '#ffffff' : rarityColor}
+                emissiveIntensity={isSuccess ? 0.6 : 1.2}
+                color={isSuccess ? '#ffffff' : '#1a1a1a'} // Dark charcoal for burnt/failed effect
             />
         </mesh>
     );
@@ -502,18 +502,18 @@ export const Lootbox3D: React.FC<Lootbox3DProps> = ({ isOpen, reward, onClose, c
     }, 6000); // 6s to allow seeing the final result
   };
 
-  if (!isOpen) return null;
-
-  const rarityColor = reward ? (RARITY_COLORS[reward.rarity] || '#3b82f6') : '#3b82f6';
-  const rarityConfig = reward ? RARITY_CONFIGS[reward.rarity] : null;
-  const particleColor = rarityConfig?.color || rarityColor; // Use primary color for better saturation
-
   const isSuccess = useMemo(() => {
     if (!reward) return false;
     const rewardRank = RARITY_RANKS[reward.rarity] || 0;
     const targetRank = RARITY_RANKS[highestSelectedRarity] || 0;
     return rewardRank > targetRank;
   }, [reward, highestSelectedRarity]);
+
+  if (!isOpen) return null;
+
+  const rarityColor = reward ? (RARITY_COLORS[reward.rarity] || '#3b82f6') : '#3b82f6';
+  const rarityConfig = reward ? RARITY_CONFIGS[reward.rarity] : null;
+  const particleColor = rarityConfig?.color || rarityColor; // Use primary color for better saturation
 
   return (
     <View style={styles.container}>
@@ -550,7 +550,7 @@ export const Lootbox3D: React.FC<Lootbox3DProps> = ({ isOpen, reward, onClose, c
              </Animated.View>
          )}
 
-         {showReward && reward && (
+         {showReward && (
             <Animated.View 
                 entering={ZoomIn.duration(600).springify()} 
                 style={styles.rewardCardContainer}
@@ -559,13 +559,14 @@ export const Lootbox3D: React.FC<Lootbox3DProps> = ({ isOpen, reward, onClose, c
                 <View style={[styles.glow, { shadowColor: rarityColor, backgroundColor: rarityColor }]} />
                 
                 {/* Custom Card Reveal - Image & Border Only */}
-                <View style={[
+                {reward ? (
+                 <View style={[
                   styles.rewardImageContainer, 
                   { 
                       borderColor: rarityConfig?.borderColor || rarityColor, 
                       shadowColor: rarityColor,
                   }
-                ]}>
+                 ]}>
                     {reward.image ? (
                         <Image 
                             source={reward.image} 
@@ -579,7 +580,21 @@ export const Lootbox3D: React.FC<Lootbox3DProps> = ({ isOpen, reward, onClose, c
                             </RNText>
                         </View>
                     )}
-                </View>
+                 </View>
+                ) : (
+                 <View style={[
+                  styles.rewardImageContainer, 
+                  { 
+                      borderColor: '#ef4444', 
+                      shadowColor: '#ef4444',
+                      backgroundColor: '#fef2f2'
+                  }
+                 ]}>
+                    <View style={styles.imagePlaceholder}>
+                        <RNText style={{ fontSize: 80, opacity: 0.8 }}>💔</RNText>
+                    </View>
+                 </View>
+                )}
                 
                 <View style={styles.congratsContainer}>
                     <RNText style={styles.congratsText}>

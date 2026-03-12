@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useUIStore } from '../../shared/stores/uiStore';
+import { useUIPreferencesStore } from '../../shared/stores/uiPreferencesStore';
 import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
 import { useTranslation } from '../../shared/utils/translations';
 import { formatCurrency, formatCompactVND } from '../../shared/utils/currency';
@@ -198,6 +199,97 @@ const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => 
                     </ScrollView>
                     <TouchableOpacity onPress={handleSave} style={styles.modalBtnSave} activeOpacity={0.8}>
                         <Text style={styles.modalBtnTextSave}>{t('save_changes')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const NotificationSettingsModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+    const { t } = useTranslation();
+    const { 
+        marketAlertsEnabled, toggleMarketAlerts,
+        priceChangeAlertsEnabled, togglePriceChangeAlerts,
+        dailySummaryEnabled, toggleDailySummary,
+        notificationsEnabled, toggleNotifications
+    } = useUIPreferencesStore();
+
+    const SettingRow = ({ label, desc, value, onToggle, icon: Icon, color }: any) => (
+        <View style={styles.settingRowGranular}>
+            <View style={styles.settingInfoGranular}>
+                <View style={[styles.settingIconGranular, { backgroundColor: `${color}15` }]}>
+                    <Icon size={20} color={color} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.settingLabelGranular}>{label}</Text>
+                    <Text style={styles.settingDescGranular}>{desc}</Text>
+                </View>
+            </View>
+            <Switch 
+                value={value} 
+                onValueChange={onToggle} 
+                trackColor={{ false: '#e2e8f0', true: `${color}40` }}
+                thumbColor={value ? color : '#f1f5f9'}
+                disabled={!notificationsEnabled && label !== (t('master_notifications' as any) || 'Tất cả thông báo')}
+            />
+        </View>
+    );
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Bell size={24} color="#3b82f6" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('notifications')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <Text style={styles.sectionTitle}>{t('general_settings' as any) || 'Cài đặt chung'}</Text>
+                        <SettingRow 
+                            label={t('master_notifications' as any) || 'Tất cả thông báo'} 
+                            desc={t('master_notifications_desc' as any) || 'Bật/tắt toàn bộ thông báo từ ứng dụng'}
+                            value={notificationsEnabled}
+                            onToggle={toggleNotifications}
+                            icon={Bell}
+                            color="#3b82f6"
+                        />
+                        
+                        <View style={{ opacity: notificationsEnabled ? 1 : 0.5 }}>
+                            <Text style={styles.sectionTitle}>{t('alert_types' as any) || 'Loại thông báo'}</Text>
+                            <SettingRow 
+                                label={t('market_alerts' as any) || 'Thông báo chợ'} 
+                                desc={t('market_alerts_desc' as any) || 'Thông báo khi có thẻ mới được rao bán trên chợ'}
+                                value={marketAlertsEnabled}
+                                onToggle={notificationsEnabled ? toggleMarketAlerts : undefined}
+                                icon={ShoppingCart}
+                                color="#10b981"
+                            />
+                            <SettingRow 
+                                label={t('price_alerts_granular' as any) || 'Biến động giá'} 
+                                desc={t('price_alerts_desc' as any) || 'Thông báo khi giá thẻ Pokémon thay đổi mạnh'}
+                                value={priceChangeAlertsEnabled}
+                                onToggle={notificationsEnabled ? togglePriceChangeAlerts : undefined}
+                                icon={Banknote}
+                                color="#f59e0b"
+                            />
+                            <SettingRow 
+                                label={t('daily_summary' as any) || 'Tóm tắt hằng ngày'} 
+                                desc={t('daily_summary_desc' as any) || 'Nhận báo cáo thị trường vào 8:00 sáng mỗi ngày'}
+                                value={dailySummaryEnabled}
+                                onToggle={notificationsEnabled ? toggleDailySummary : undefined}
+                                icon={Clock}
+                                color="#8b5cf6"
+                            />
+                        </View>
+                    </ScrollView>
+
+                    <TouchableOpacity onPress={onClose} style={[styles.modalBtnSave, { backgroundColor: '#3b82f6' }]} activeOpacity={0.8}>
+                        <Text style={styles.modalBtnTextSave}>{t('done')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -834,6 +926,7 @@ export const ProfileScreen: React.FC = () => {
     const [depositVisible, setDepositVisible] = useState(false);
     const [securityVisible, setSecurityVisible] = useState(false);
     const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+    const [notificationSettingsVisible, setNotificationSettingsVisible] = useState(false);
     const [depositType, setDepositType] = useState<'bank' | 'scratch' | 'virtual'>('virtual');
 
     const handleEquipTitle = (id: string) => {
@@ -981,7 +1074,7 @@ export const ProfileScreen: React.FC = () => {
                         <MenuItem icon={Edit2} label={t('edit_profile')} color="#ef4444" onPress={() => setEditVisible(true)} />
                         <MenuItem icon={Award} label={t('titles')} color="#f59e0b" onPress={() => setTitlesVisible(true)} />
                         <MenuItem icon={Settings} label={t('system_settings')} color="#64748b" onPress={() => setSettingsVisible(true)} />
-                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showNotification(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => setNotificationSettingsVisible(true)} />
                         <MenuItem icon={Crown} label={t('vip_packages')} color="#8b5cf6" onPress={() => setVipVisible(true)} />
                         <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => setSecurityVisible(true)} />
                         <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showNotification(t('coming_soon'), 'info')} />
@@ -1011,6 +1104,10 @@ export const ProfileScreen: React.FC = () => {
                 onClose={() => setSettingsVisible(false)} 
                 profile={profile} 
                 onUpdate={handleUpdateProfile} 
+            />
+            <NotificationSettingsModal 
+                visible={notificationSettingsVisible} 
+                onClose={() => setNotificationSettingsVisible(false)} 
             />
             <VipUpgradeModal 
                 visible={vipVisible} 
@@ -1217,6 +1314,21 @@ const styles = StyleSheet.create({
     optionBtnText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
     actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     actionRowText: { fontSize: 16, fontWeight: '600', color: '#ef4444' },
+
+    // Granular Settings Styles
+    settingRowGranular: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    settingInfoGranular: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 },
+    settingIconGranular: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    settingLabelGranular: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+    settingDescGranular: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
+
+    // Setting Row Container for Granular Notifications
+    settingRowContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    settingInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 },
+    settingIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    settingDesc: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
 
     modalBtnCancel: { paddingVertical: 12, alignItems: 'center', marginTop: 10 },
     modalBtnTextCancel: { fontSize: 15, fontWeight: '700', color: '#64748b' },
