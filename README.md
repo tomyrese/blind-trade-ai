@@ -33,18 +33,26 @@ PokéMarket là một ứng dụng di động React Native cao cấp được th
 - **Thành Viên VIP**: Người đăng ký nhận đặc quyền, khung avatar vàng/bạch kim và bonus XP.
 - **Tổng Quan Chỉ Số**: Theo dõi tiến độ Pokedex và các chỉ số bộ sưu tập.
 
-## ⚙️ Cấu Hình API AI (Quan Trọng)
+### 6. Xác Thực Email OTP
+- **Bảo Mật Cao**: Quy trình đăng ký bắt buộc phải xác thực mã OTP 6 số qua email trước khi tạo tài khoản.
+- **Tích Hợp Supabase**: Sử dụng Supabase Auth để quản lý việc gửi và xác m thực mã OTP.
+- **Giao Diện Hiện Đại**: Giao diện nhập OTP với phản hồi tức thì và nút đăng ký chỉ kích hoạt sau khi xác thực thành công.
 
-Để sử dụng tính năng Chat AI (Poké-AI), bạn cần cung cấp API Key từ Google Gemini.
+### 7. Thông Báo Hệ Thống (Notifications)
+- **Thông Báo Thời Gian Thực**: Sử dụng `@notifee/react-native` để hiển thị thông báo "Heads-up" thật trên Android.
+- **Theo Dõi Thị Trường**: Nhận thông báo ngay lập tức khi có thẻ bài mới hoặc giá cả biến động lớn.
 
-1. **Lấy API Key**: Truy cập [OpenRouter](https://openrouter.ai/) để tạo khóa mới.
-2. **Cấu Hình**:
-   - Mở file: `src/shared/services/GeminiService.ts`
-   - Tìm biến `OPENROUTER_API_KEY` (dòng 5).
-   - Thay thế `'API_KEY'` bằng khóa thực của bạn:
-     ```typescript
-     const OPENROUTER_API_KEY = 'YOUR_ACTUAL_API_KEY_HERE';
-     ```
+## ⚙️ Cấu Hình API (Quan Trọng)
+
+Để bảo mật, các khóa API đã được gỡ bỏ khỏi mã nguồn. Bạn cần làm theo các bước sau để thiết lập:
+
+1. **Copy File Mẫu**: 
+   ```bash
+   cp .env.example .env
+   ```
+2. **Điền Thông Tin**: Mở file `.env` (hoặc trực tiếp chỉnh sửa các file liên quan) và điền các khóa của bạn:
+   - **Supabase**: URL và Anon Key lấy từ Supabase Dashboard (`src/api/supabase.js`).
+   - **OpenRouter (AI)**: API Key lấy từ OpenRouter (`src/shared/services/OpenRouterService.ts`).
 
 ## 🛠 Công Nghệ Sử Dụng
 

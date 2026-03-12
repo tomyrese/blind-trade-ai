@@ -1,16 +1,18 @@
 import { Alert, Platform } from 'react-native';
+import notifee, { AndroidImportance, AuthorizationStatus } from '@notifee/react-native';
 import { useUIPreferencesStore } from '../stores/uiPreferencesStore';
 
 /**
  * NotificationService
- * Handles permission requests and simulated notifications for the app.
- * In a real-world scenario, this would integrate with expo-notifications 
- * or @react-native-firebase/messaging.
+ * Handles real system notifications using @notifee/react-native.
  */
 class NotificationService {
   private static instance: NotificationService;
+  private channelId: string = 'default';
 
-  private constructor() {}
+  private constructor() {
+    this.createChannel();
+  }
 
   public static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -19,29 +21,31 @@ class NotificationService {
     return NotificationService.instance;
   }
 
+  private async createChannel() {
+    if (Platform.OS === 'android') {
+      await notifee.createChannel({
+        id: this.channelId,
+        name: 'Default Channel',
+        importance: AndroidImportance.HIGH,
+        vibration: true,
+      });
+    }
+  }
+
   /**
-   * Request notification permissions on first launch or when toggled.
+   * Request notification permissions.
    */
   public async requestPermissions(): Promise<boolean> {
     try {
-      // In a real implementation with expo-notifications:
-      // const { status } = await Notifications.requestPermissionsAsync();
-      // return status === 'granted';
-
-      // For now, we simulate the request if on a real device or emulator
-      console.log('[NotificationService] Requesting permissions...');
+      const settings = await notifee.requestPermission();
       
-      // We can use Alert as a standby for the permission prompt in this simulated environment
-      return new Promise((resolve) => {
-        Alert.alert(
-          'Notifications',
-          'BlindTradeAI would like to send you notifications for price alerts and market updates.',
-          [
-            { text: 'Don\'t Allow', onPress: () => resolve(false), style: 'cancel' },
-            { text: 'Allow', onPress: () => resolve(true) },
-          ]
-        );
-      });
+      if (settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
+        console.log('[NotificationService] Permission granted');
+        return true;
+      } else {
+        console.log('[NotificationService] Permission denied');
+        return false;
+      }
     } catch (error) {
       console.error('[NotificationService] Error requesting permissions:', error);
       return false;
@@ -52,24 +56,8 @@ class NotificationService {
    * Check current permission status
    */
   public async checkPermissions(): Promise<boolean> {
-    // Simulate checking permissions
-    return true; 
-  }
-
-  /**
-   * Schedule a daily summary notification (e.g., at 8:00 AM)
-   */
-  public async scheduleDailySummary() {
-    const { dailySummaryEnabled, notificationsEnabled } = useUIPreferencesStore.getState();
-    
-    if (!notificationsEnabled || !dailySummaryEnabled) {
-        console.log('[NotificationService] Daily summary disabled, skipping schedule.');
-        return;
-    }
-
-    console.log('[NotificationService] Scheduling daily summary for 08:00 AM...');
-    // Real implementation:
-    // await Notifications.scheduleNotificationAsync({ ... });
+    const settings = await notifee.getNotificationSettings();
+    return settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED;
   }
 
   /**
@@ -80,8 +68,17 @@ class NotificationService {
     
     if (!notificationsEnabled || !marketAlertsEnabled) return;
 
-    console.log(`[NotificationService] Triggering market alert: ${cardName} is now available!`);
-    // Real implementation: show local notification
+    await notifee.displayNotification({
+      title: '🔔 Thẻ bài mới trên chợ!',
+      body: `${cardName} vừa được rao bán. Kiểm tra ngay!`,
+      android: {
+        channelId: this.channelId,
+        importance: AndroidImportance.HIGH,
+        pressAction: {
+          id: 'default',
+        },
+      },
+    });
   }
 
   /**
@@ -93,9 +90,27 @@ class NotificationService {
     if (!notificationsEnabled || !priceChangeAlertsEnabled) return;
 
     const direction = changePercent > 0 ? 'tăng' : 'giảm';
-    console.log(`[NotificationService] Triggering price alert: ${cardName} giá ${direction} ${Math.abs(changePercent)}%!`);
-    // Real implementation: show local notification
+    const color = changePercent > 0 ? '#22c55e' : '#ef4444';
+
+    await notifee.displayNotification({
+      title: '📈 Biến động giá!',
+      body: `Thẻ ${cardName} vừa ${direction} ${Math.abs(changePercent)}% trong hôm nay.`,
+      android: {
+        channelId: this.channelId,
+        color: color,
+        importance: AndroidImportance.HIGH,
+        pressAction: {
+          id: 'default',
+        },
+      },
+    });
+  }
+
+  public async scheduleDailySummary() {
+    // Basic implementation for now
+    console.log('[NotificationService] Daily summary logic can be expanded here.');
   }
 }
 
 export default NotificationService.getInstance();
+

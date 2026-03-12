@@ -2,7 +2,7 @@
 import { Market } from '../../domain/models/Market';
 import { allCards } from '../utils/allCards';
 
-const OPENROUTER_API_KEY = 'API_KEY';
+const OPENROUTER_API_KEY = 'YOUR_OPENROUTER_API_KEY';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const SYSTEM_PROMPT = `You are Poké-AI, an advanced AI Assistant specialized in Pokémon Trading Card Game (TCG).
