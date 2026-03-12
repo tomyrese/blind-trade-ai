@@ -1,37 +1,26 @@
 // OpenRouter AI Service for Pokemon Chat
 import { Market } from '../../domain/models/Market';
+import { allCards } from '../utils/allCards';
 
-const OPENROUTER_API_KEY = 'API_KEY';
+const OPENROUTER_API_KEY = 'YOUR_OPENROUTER_API_KEY';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-const SYSTEM_PROMPT = `You are Poké-AI, an expert assistant specializing in the Pokémon Trading Card Game (TCG).
+const SYSTEM_PROMPT = `You are Poké-AI, an advanced AI Assistant specialized in Pokémon Trading Card Game (TCG).
 
 IMPORTANT RULES:
-- ONLY answer questions about Pokémon TCG, cards, market prices, rarity, card sets, grading, and game strategies.
-- If the question is outside this scope, respond:
-  - (VN): "Xin lỗi, tôi chỉ có thể hỗ trợ về Pokémon TCG. Bạn có câu hỏi gì về thẻ bài Pokémon không?"
-  - (EN): "Sorry, I can only assist with Pokémon TCG. Do you have any questions about Pokémon cards?"
+- ONLY answer questions about Pokémon TCG, cards, market prices, rarity, card sets, grading, buying/selling, and strategies.
+- If the question is outside this scope, decline politely.
+
+Data Usage & Assistance:
+- You have access to the complete Pokédex data (all known cards in our app) and live Marketplace data (cards currently being sold by real traders).
+- If the user asks where to find/buy a card, look at the LIVE MARKETPLACE DATA and tell them exactly: the Card Name, the Seller's Name, the Condition, and the Price.
+- If asked about prices, analyze the market: aggregate the low/high/average prices for the card and give a brief constructive comment (e.g., "This is a great deal right now!").
+- Do not guarantee profits, but provide sound market analysis based on the data.
+- Keep answers concise, highly structured (use lists and bold text), friendly, and professional.
 
 Response Style:
 - Respond in the language used by the user (Vietnamese or English).
-- Keep answers concise (2-3 sentences), friendly, and professional.
-- Use emojis sparingly when appropriate.
-
-Data Usage:
-- You have access to real-time market prices in both VND and USD ($).
-- Specify card condition (Raw, PSA 10, PSA 9, etc.) when possible.
-- If prices are volatile, provide a price range and trend.
-
-Investment Advice:
-- Do not guarantee profits.
-- Use suggestive and neutral language.
-
-Gameplay Strategy:
-- Mention key combos and meta decks when relevant.
-
-Persona:
-- You are a professional Pokémon TCG trader & collector.
-- Your goal is to help users buy, sell, and play effectively.
+- Be a professional Pokémon TCG Trader & Collector AI.
 `;
 
 export class OpenRouterService {
@@ -41,15 +30,21 @@ export class OpenRouterService {
       let contextMessage = SYSTEM_PROMPT;
       contextMessage += `\n\nCURRENT LANGUAGE SETTING: ${language === 'vi' ? 'Vietnamese' : 'English'}`;
       
+      // Inject all Pokedex data for context
+      const dexSummary = allCards.map(c => `ID:${c.id.substring(0,4)} ${c.name} (${c.rarity}) Base:${this.formatVND(c.value)}`).join(' | ');
+      contextMessage += `\n\n[POKEDEX KNOWLEDGE BASE (ALL EXISTING CARDS)]:\n${dexSummary}\n`;
+      
       if (marketData && marketData.length > 0) {
-        const priceInfo = marketData.map(card => {
-          const priceVND = this.formatVND(card.currentPrice);
-          const priceUSD = this.formatUSD(card.currentPrice);
-          return `- ${card.name}: ${priceVND} (~${priceUSD}) (Rarity: ${card.rarity})`;
+        const marketDetails = marketData.map(card => {
+          const listingsMsg = card.listings && card.listings.length > 0 
+            ? card.listings.map(l => `Seller: ${l.sellerName}, Price: ${this.formatVND(l.price)}, Cond: ${l.condition}`).join('; ')
+            : 'No active listings';
+          return `- Card: ${card.name} (${card.rarity}). Market Avg: ${this.formatVND(card.currentPrice)}. Listings: [ ${listingsMsg} ]`;
         }).join('\n');
         
-        const marketHeader = language === 'vi' ? 'DỮ LIỆU THỊ TRƯỜNG HIỆN TẠI:' : 'CURRENT MARKET DATA:';
-        contextMessage += `\n\n${marketHeader}\n${priceInfo}`;
+        contextMessage += `\n\n[LIVE MARKETPLACE (CARDS CURRENTLY FOR SALE)]:\n${marketDetails}`;
+      } else {
+        contextMessage += `\n\n[LIVE MARKETPLACE]: No cards are currently available for sale.`;
       }
 
       // Call OpenRouter API

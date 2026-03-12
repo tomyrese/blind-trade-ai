@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Switch, Image, NativeModules, FlatList } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Switch, Image, NativeModules, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus } from 'lucide-react-native';
+import { LinearGradient } from 'react-native-linear-gradient';
+import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus, Mail, Phone, Globe } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useUIStore } from '../../shared/stores/uiStore';
+import { useUIPreferencesStore } from '../../shared/stores/uiPreferencesStore';
 import { VipType, Title, AVAILABLE_TITLES } from '../../domain/models/User';
 import { useTranslation } from '../../shared/utils/translations';
 import { formatCurrency, formatCompactVND } from '../../shared/utils/currency';
@@ -130,28 +132,30 @@ const TitlesModal = ({ visible, onClose, unlockedTitles = [], equippedTitle, onE
         </Modal>
     );
 };
-
-const ConfirmationModal = ({ visible, title, message, onConfirm, onCancel, confirmText = 'Xác Nhận', cancelText = 'Hủy', type = 'info' }: { visible: boolean, title: string, message: string, onConfirm: () => void, onCancel: () => void, confirmText?: string, cancelText?: string, type?: 'info' | 'danger' }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
-    <View style={styles.modalOverlay}>
-      <View style={styles.confirmationContent}>
-        <View style={[styles.iconContainer, type === 'danger' ? { backgroundColor: '#fef2f2' } : { backgroundColor: '#eff6ff' }]}>
-            {type === 'danger' ? <AlertTriangle size={32} color="#ef4444" /> : <Shield size={32} color="#3b82f6" />}
-        </View>
-        <Text style={styles.confirmTitle}>{title}</Text>
-        <Text style={styles.confirmMessage}>{message}</Text>
-        <View style={styles.confirmActions}>
-          <TouchableOpacity onPress={onCancel} style={styles.confirmBtnCancel} activeOpacity={0.8}>
-            <Text style={styles.confirmBtnTextCancel}>{cancelText}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onConfirm} style={[styles.confirmBtnAction, type === 'danger' && { backgroundColor: '#ef4444' }]} activeOpacity={0.8}>
-            <Text style={styles.confirmBtnTextAction}>{confirmText}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  </Modal>
-);
+const ConfirmationModal = ({ visible, title, message, onConfirm, onCancel, confirmText, cancelText, type = 'info' }: { visible: boolean, title: string, message: string, onConfirm: () => void, onCancel: () => void, confirmText?: string, cancelText?: string, type?: 'info' | 'danger' }) => {
+    const { t } = useTranslation();
+    return (
+        <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.confirmationContent}>
+                    <View style={[styles.iconContainer, { backgroundColor: type === 'danger' ? '#fef2f2' : '#f0f9ff' }]}>
+                        {type === 'danger' ? <LogOut size={24} color="#ef4444" /> : <Settings size={24} color="#3b82f6" />}
+                    </View>
+                    <Text style={styles.confirmTitle}>{title}</Text>
+                    <Text style={styles.confirmMessage}>{message}</Text>
+                    <View style={styles.confirmActions}>
+                        <TouchableOpacity style={styles.confirmBtnCancel} onPress={onCancel}>
+                            <Text style={styles.confirmBtnTextCancel}>{cancelText || t('cancel')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.confirmBtnAction, { backgroundColor: type === 'danger' ? '#ef4444' : '#3b82f6' }]} onPress={onConfirm}>
+                            <Text style={styles.confirmBtnTextAction}>{confirmText || t('confirm')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+};
 
 const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => {
     const { t } = useTranslation();
@@ -176,28 +180,143 @@ const EditProfileModal = ({ visible, onClose, initialProfile, onSave }: any) => 
         onClose();
     };
 
+    const EditInput = ({ label, icon: Icon, value, onChangeText, placeholder, keyboardType, multiline, numberOfLines }: any) => (
+        <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{label}</Text>
+            <View style={[styles.inputWrapper, multiline && { height: 100, alignItems: 'flex-start', paddingTop: 12 }]}>
+                <Icon size={20} color="#64748b" style={[styles.inputIcon, multiline && { marginTop: 4 }]} />
+                <TextInput 
+                    style={[styles.input, multiline && { textAlignVertical: 'top' }]} 
+                    value={value} 
+                    onChangeText={onChangeText} 
+                    placeholder={placeholder} 
+                    keyboardType={keyboardType}
+                    multiline={multiline}
+                    numberOfLines={numberOfLines}
+                    placeholderTextColor="#94a3b8"
+                />
+            </View>
+        </View>
+    );
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+                    <View style={styles.modalHeader}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Edit2 size={24} color="#ef4444" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('edit_profile')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
+                    </View>
+                    
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                        <EditInput label={t('trainer_name')} icon={User} value={name} onChangeText={setName} placeholder={t('trainer_name')} />
+                        <EditInput label={t('email')} icon={Mail} value={email} onChangeText={setEmail} placeholder={t('email')} keyboardType="email-address" />
+                        <EditInput label={t('phone')} icon={Phone} value={phone} onChangeText={setPhone} placeholder={t('phone')} keyboardType="phone-pad" />
+                        <EditInput label={t('address')} icon={Globe} value={address} onChangeText={setAddress} placeholder={t('address')} />
+                        <EditInput label={t('bio')} icon={BookOpen} value={bio} onChangeText={setBio} placeholder={t('bio')} multiline numberOfLines={3} />
+                    </ScrollView>
+
+                    <TouchableOpacity onPress={handleSave} style={styles.premiumBtn} activeOpacity={0.8}>
+                        <LinearGradient colors={['#ef4444', '#b91c1c']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                            <Check size={20} color="#fff" style={{marginRight: 8}} />
+                            <Text style={styles.premiumBtnText}>{t('save_changes')}</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+const NotificationSettingsModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+    const { t } = useTranslation();
+    const { 
+        marketAlertsEnabled, toggleMarketAlerts,
+        priceChangeAlertsEnabled, togglePriceChangeAlerts,
+        dailySummaryEnabled, toggleDailySummary,
+        notificationsEnabled, toggleNotifications
+    } = useUIPreferencesStore();
+
+    const SettingRow = ({ label, desc, value, onToggle, icon: Icon, color }: any) => (
+        <View style={styles.settingRowGranular}>
+            <View style={styles.settingInfoGranular}>
+                <View style={[styles.settingIconGranular, { backgroundColor: `${color}15` }]}>
+                    <Icon size={20} color={color} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.settingLabelGranular}>{label}</Text>
+                    <Text style={styles.settingDescGranular}>{desc}</Text>
+                </View>
+            </View>
+            <Switch 
+                value={value} 
+                onValueChange={onToggle} 
+                trackColor={{ false: '#e2e8f0', true: `${color}40` }}
+                thumbColor={value ? color : '#f1f5f9'}
+                disabled={!notificationsEnabled && label !== (t('master_notifications' as any) || 'Tất cả thông báo')}
+            />
+        </View>
+    );
+
     return (
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('edit_profile')}</Text>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Bell size={24} color="#3b82f6" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('notifications')}</Text>
+                        </View>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
                     </View>
+
                     <ScrollView showsVerticalScrollIndicator={false}>
-                        <Text style={styles.inputLabel}>{t('trainer_name')}</Text>
-                        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Tên trainer..." />
-                        <Text style={styles.inputLabel}>Email</Text>
-                        <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Email..." keyboardType="email-address" />
-                        <Text style={styles.inputLabel}>{t('phone')}</Text>
-                        <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="Số điện thoại..." keyboardType="phone-pad" />
-                        <Text style={styles.inputLabel}>{t('address')}</Text>
-                        <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Địa chỉ..." />
-                        <Text style={styles.inputLabel}>{t('bio')}</Text>
-                        <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} value={bio} onChangeText={setBio} placeholder="Bio..." multiline />
+                        <Text style={styles.sectionTitle}>{t('general_settings' as any) || 'Cài đặt chung'}</Text>
+                        <SettingRow 
+                            label={t('master_notifications' as any) || 'Tất cả thông báo'} 
+                            desc={t('master_notifications_desc' as any) || 'Bật/tắt toàn bộ thông báo từ ứng dụng'}
+                            value={notificationsEnabled}
+                            onToggle={toggleNotifications}
+                            icon={Bell}
+                            color="#3b82f6"
+                        />
+                        
+                        <View style={{ opacity: notificationsEnabled ? 1 : 0.5 }}>
+                            <Text style={styles.sectionTitle}>{t('alert_types' as any) || 'Loại thông báo'}</Text>
+                            <SettingRow 
+                                label={t('market_alerts' as any) || 'Thông báo chợ'} 
+                                desc={t('market_alerts_desc' as any) || 'Thông báo khi có thẻ mới được rao bán trên chợ'}
+                                value={marketAlertsEnabled}
+                                onToggle={notificationsEnabled ? toggleMarketAlerts : undefined}
+                                icon={ShoppingCart}
+                                color="#10b981"
+                            />
+                            <SettingRow 
+                                label={t('price_alerts_granular' as any) || 'Biến động giá'} 
+                                desc={t('price_alerts_desc' as any) || 'Thông báo khi giá thẻ Pokémon thay đổi mạnh'}
+                                value={priceChangeAlertsEnabled}
+                                onToggle={notificationsEnabled ? togglePriceChangeAlerts : undefined}
+                                icon={Banknote}
+                                color="#f59e0b"
+                            />
+                            <SettingRow 
+                                label={t('daily_summary' as any) || 'Tóm tắt hằng ngày'} 
+                                desc={t('daily_summary_desc' as any) || 'Nhận báo cáo thị trường vào 8:00 sáng mỗi ngày'}
+                                value={dailySummaryEnabled}
+                                onToggle={notificationsEnabled ? toggleDailySummary : undefined}
+                                icon={Clock}
+                                color="#8b5cf6"
+                            />
+                        </View>
                     </ScrollView>
-                    <TouchableOpacity onPress={handleSave} style={styles.modalBtnSave} activeOpacity={0.8}>
-                        <Text style={styles.modalBtnTextSave}>{t('save_changes')}</Text>
+
+                    <TouchableOpacity onPress={onClose} style={styles.premiumBtn} activeOpacity={0.8}>
+                        <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                            <Text style={styles.premiumBtnText}>{t('done')}</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -309,8 +428,10 @@ const SettingsModal = ({ visible, onClose, profile, onUpdate }: any) => {
                         
                     </ScrollView>
 
-                    <TouchableOpacity onPress={handleSave} style={styles.modalBtnSave} activeOpacity={0.8}>
-                        <Text style={styles.modalBtnTextSave}>{t('save_settings')}</Text>
+                    <TouchableOpacity onPress={handleSave} style={styles.premiumBtn} activeOpacity={0.8}>
+                        <LinearGradient colors={['#ef4444', '#b91c1c']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                            <Text style={styles.premiumBtnText}>{t('save_settings')}</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                     
                     <Text style={[styles.versionText, { marginTop: 16 }]}>v3.1.0 build 20240520</Text>
@@ -475,8 +596,10 @@ const PaymentMethodsModal = ({ visible, onClose, paymentMethods, onAdd, onRemove
                                 value={newCard.expiryDate}
                                 onChangeText={(val) => setNewCard({...newCard, expiryDate: val})}
                             />
-                            <TouchableOpacity style={styles.modalBtnSave} onPress={handleAdd}>
-                                <Text style={styles.modalBtnTextSave}>{t('confirm')}</Text>
+                            <TouchableOpacity style={styles.premiumBtn} onPress={handleAdd}>
+                                <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                                    <Text style={styles.premiumBtnText}>{t('confirm')}</Text>
+                                </LinearGradient>
                             </TouchableOpacity>
                         </ScrollView>
                     ) : (
@@ -617,8 +740,10 @@ const DepositModal = ({ visible, onClose, type, onDeposit }: { visible: boolean,
                             </View>
                         )}
 
-                        <TouchableOpacity style={styles.modalBtnSave} onPress={handleConfirm}>
-                            <Text style={styles.modalBtnTextSave}>{t('confirm')}</Text>
+                        <TouchableOpacity style={styles.premiumBtn} onPress={handleConfirm}>
+                            <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                                <Text style={styles.premiumBtnText}>{t('confirm')}</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
                     </ScrollView>
                 </View>
@@ -666,51 +791,56 @@ const ChangePasswordModal = ({ visible, onClose }: { visible: boolean, onClose: 
         }
     };
 
+    const PasswordInput = ({ label, value, onChangeText, placeholder }: any) => (
+        <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{label}</Text>
+            <View style={styles.inputWrapper}>
+                <Lock size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput 
+                    style={styles.input} 
+                    placeholder={t('password_placeholder')} 
+                    secureTextEntry
+                    value={value}
+                    onChangeText={onChangeText}
+                    placeholderTextColor="#94a3b8"
+                />
+            </View>
+        </View>
+    );
+
     return (
-        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
             <View style={styles.modalOverlay}>
                 <View style={[styles.modalContent, { maxHeight: '85%' }]}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>{t('change_password')}</Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#0f172a" /></TouchableOpacity>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Shield size={24} color="#3b82f6" style={{marginRight: 8}} />
+                            <Text style={styles.modalTitle}>{t('change_password')}</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={24} color="#64748b" /></TouchableOpacity>
                     </View>
 
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        <Text style={styles.inputLabel}>{t('current_password')}</Text>
-                        <TextInput 
-                            style={styles.input} 
-                            placeholder="********" 
-                            secureTextEntry
-                            value={oldPassword}
-                            onChangeText={setOldPassword}
-                        />
-
-                        <Text style={styles.inputLabel}>{t('new_password')}</Text>
-                        <TextInput 
-                            style={styles.input} 
-                            placeholder="********" 
-                            secureTextEntry
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                        />
-
-                        <Text style={styles.inputLabel}>{t('confirm_password')}</Text>
-                        <TextInput 
-                            style={styles.input} 
-                            placeholder="********" 
-                            secureTextEntry
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                        />
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                        <PasswordInput label={t('current_password')} value={oldPassword} onChangeText={setOldPassword} placeholder="********" />
+                        <PasswordInput label={t('new_password')} value={newPassword} onChangeText={setNewPassword} placeholder="********" />
+                        <PasswordInput label={t('confirm_password')} value={confirmPassword} onChangeText={setConfirmPassword} placeholder="********" />
 
                         <TouchableOpacity 
-                            style={[styles.modalBtnSave, isChangingPass && { opacity: 0.7 }]} 
+                            style={[styles.premiumBtn, isChangingPass && { opacity: 0.7 }]} 
                             onPress={handlePasswordChange}
                             disabled={isChangingPass}
+                            activeOpacity={0.8}
                         >
-                            <Text style={styles.modalBtnTextSave}>
-                                {isChangingPass ? t('loading') : t('save_changes')}
-                            </Text>
+                            <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.premiumBtnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                                {isChangingPass ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <Check size={20} color="#fff" style={{marginRight: 8}} />
+                                        <Text style={styles.premiumBtnText}>{t('save_changes')}</Text>
+                                    </>
+                                )}
+                            </LinearGradient>
                         </TouchableOpacity>
                         
                         <TouchableOpacity style={styles.modalBtnCancel} onPress={onClose}>
@@ -834,6 +964,7 @@ export const ProfileScreen: React.FC = () => {
     const [depositVisible, setDepositVisible] = useState(false);
     const [securityVisible, setSecurityVisible] = useState(false);
     const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+    const [notificationSettingsVisible, setNotificationSettingsVisible] = useState(false);
     const [depositType, setDepositType] = useState<'bank' | 'scratch' | 'virtual'>('virtual');
 
     const handleEquipTitle = (id: string) => {
@@ -981,7 +1112,7 @@ export const ProfileScreen: React.FC = () => {
                         <MenuItem icon={Edit2} label={t('edit_profile')} color="#ef4444" onPress={() => setEditVisible(true)} />
                         <MenuItem icon={Award} label={t('titles')} color="#f59e0b" onPress={() => setTitlesVisible(true)} />
                         <MenuItem icon={Settings} label={t('system_settings')} color="#64748b" onPress={() => setSettingsVisible(true)} />
-                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => showNotification(t('coming_soon'), 'info')} />
+                        <MenuItem icon={Bell} label={t('notifications')} color="#3b82f6" onPress={() => setNotificationSettingsVisible(true)} />
                         <MenuItem icon={Crown} label={t('vip_packages')} color="#8b5cf6" onPress={() => setVipVisible(true)} />
                         <MenuItem icon={Shield} label={t('security')} color="#10b981" onPress={() => setSecurityVisible(true)} />
                         <MenuItem icon={HelpCircle} label={t('support')} color="#64748b" onPress={() => showNotification(t('coming_soon'), 'info')} />
@@ -1011,6 +1142,10 @@ export const ProfileScreen: React.FC = () => {
                 onClose={() => setSettingsVisible(false)} 
                 profile={profile} 
                 onUpdate={handleUpdateProfile} 
+            />
+            <NotificationSettingsModal 
+                visible={notificationSettingsVisible} 
+                onClose={() => setNotificationSettingsVisible(false)} 
             />
             <VipUpgradeModal 
                 visible={vipVisible} 
@@ -1138,9 +1273,46 @@ const styles = StyleSheet.create({
     modalTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
     closeBtn: { padding: 4 },
     inputLabel: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 6, marginTop: 12 },
-    input: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 12, fontSize: 15, color: '#0f172a', fontWeight: '600' },
-    modalBtnSave: { backgroundColor: '#ef4444', padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 24 },
+    inputGroup: { marginBottom: 16 },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        paddingHorizontal: 12,
+        height: 52,
+    },
+    inputIcon: { marginRight: 10 },
+    input: { flex: 1, fontSize: 15, color: '#0f172a', fontWeight: '600' },
+    modalBtnSave: { backgroundColor: '#ef4444', padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 24, height: 56, justifyContent: 'center' },
     modalBtnTextSave: { color: '#fff', fontWeight: '800', fontSize: 16 },
+
+    premiumBtn: {
+        height: 56,
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: 12,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+    },
+    premiumBtnGradient: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+    },
+    premiumBtnText: {
+        color: '#fff',
+        fontWeight: '800',
+        fontSize: 16,
+        letterSpacing: 0.5,
+    },
 
     confirmationContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' },
     iconContainer: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
@@ -1217,6 +1389,21 @@ const styles = StyleSheet.create({
     optionBtnText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
     actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     actionRowText: { fontSize: 16, fontWeight: '600', color: '#ef4444' },
+
+    // Granular Settings Styles
+    settingRowGranular: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    settingInfoGranular: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 },
+    settingIconGranular: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    settingLabelGranular: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+    settingDescGranular: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
+
+    // Setting Row Container for Granular Notifications
+    settingRowContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    settingInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 },
+    settingIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    settingDesc: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
 
     modalBtnCancel: { paddingVertical: 12, alignItems: 'center', marginTop: 10 },
     modalBtnTextCancel: { fontSize: 15, fontWeight: '700', color: '#64748b' },

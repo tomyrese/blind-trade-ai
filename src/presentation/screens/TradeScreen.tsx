@@ -1,8 +1,10 @@
 // Trade Screen
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ShoppingCart, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle } from 'lucide-react-native';
+import { ChevronLeft, Filter, Search, TrendingUp, TrendingDown, Clock, CheckCircle2, XCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../../shared/utils/translations';
 import { OrderBookComponent } from '../features/trade/components/OrderBookComponent';
 import { InstantSellPanel } from '../features/trade/components/InstantSellPanel';
 import { BuySellModal } from '../features/trade/components/BuySellModal';
@@ -14,6 +16,8 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 
 export const TradeScreen: React.FC = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RootStackParamList, 'TradeExecute'>>();
   const { symbol = 'BTC/USDT', type } = route.params || {};
 
@@ -44,35 +48,31 @@ export const TradeScreen: React.FC = () => {
     const Icon = isBuy ? TrendingUp : TrendingDown;
     const color = isBuy ? '#10b981' : '#ef4444';
 
-    const StatusIcon = item.status === 'filled' ? CheckCircle : item.status === 'pending' ? Clock : XCircle;
-    const statusColor = item.status === 'filled' ? '#10b981' : item.status === 'pending' ? '#f59e0b' : '#6b7280';
-
     return (
       <View style={[styles.orderItem, { borderLeftColor: color }]}>
         <View style={styles.orderHeader}>
           <View style={styles.orderTypeContainer}>
             <Icon size={18} color={color} />
-            <Text style={styles.orderTitle}>{isBuy ? 'MUA' : 'BÁN'} {item.symbol}</Text>
+            <Text style={styles.orderTitle}>{isBuy ? t('buy') : t('sell')} {item.symbol}</Text>
           </View>
-          <View style={styles.statusContainer}>
-            <StatusIcon size={14} color={statusColor} />
-            <Text style={[styles.statusText, { color: statusColor }]}>
-              {item.status === 'filled' ? 'Hoàn Thành' : item.status === 'pending' ? 'Chờ' : 'Hủy'}
+          <View style={[styles.statusBadge, { backgroundColor: item.status === 'filled' ? '#f0fdf4' : item.status === 'pending' ? '#fefce8' : '#fef2f2' }]}>
+            <Text style={[styles.statusText, { color: item.status === 'filled' ? '#16a34a' : item.status === 'pending' ? '#ca8a04' : '#ef4444' }]}>
+              {item.status === 'filled' ? t('status_filled') : item.status === 'pending' ? t('status_pending') : t('status_canceled')}
             </Text>
           </View>
         </View>
 
         <View style={styles.orderDetails}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Giá:</Text>
-            <Text style={styles.detailValue}>{formatPrice(item.price)}</Text>
+            <Text style={styles.detailLabel}>{t('price_label')}</Text>
+            <Text style={styles.detailValue}>${item.price.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Số Lượng:</Text>
+            <Text style={styles.detailLabel}>{t('quantity_label')}</Text>
             <Text style={styles.detailValue}>{item.quantity}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Tổng:</Text>
+            <Text style={styles.detailLabel}>{t('total')}:</Text>
             <Text style={[styles.detailValue, { color: color, fontWeight: 'bold' }]}>{formatPrice(item.total)}</Text>
           </View>
         </View>
@@ -97,13 +97,13 @@ export const TradeScreen: React.FC = () => {
                   onPress={() => handleOpenModal('buy')}
                   style={[styles.mainButton, { backgroundColor: '#10b981' }]}
                 >
-                  <Text style={styles.buttonText}>Mua</Text>
+                  <Text style={styles.buttonText}>{t('buy')}</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => handleOpenModal('sell')}
                   style={[styles.mainButton, { backgroundColor: '#ef4444' }]}
                 >
-                  <Text style={styles.buttonText}>Bán</Text>
+                  <Text style={styles.buttonText}>{t('sell')}</Text>
                 </Pressable>
               </View>
 
@@ -114,7 +114,7 @@ export const TradeScreen: React.FC = () => {
                 onSell={handleInstantSell}
               />
 
-              <Text style={styles.sectionTitle}>Lệnh Gần Đây</Text>
+              <Text style={styles.sectionTitle}>{t('recent_orders' as any) || 'Lệnh Gần Đây'}</Text>
             </View>
           </>
         }
@@ -202,14 +202,16 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginLeft: 8,
   },
-  statusContainer: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    marginLeft: 4,
   },
   orderDetails: {
     gap: 4,

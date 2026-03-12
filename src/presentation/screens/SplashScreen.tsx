@@ -3,10 +3,13 @@ import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackNavigationProp } from '../navigation/types';
+import { useUserStore } from '../../shared/stores/userStore';
+import { useTranslation } from '../../shared/utils/translations';
 import { Sparkles } from 'lucide-react-native';
 
 export const SplashScreen: React.FC = () => {
-  const navigation = useNavigation<RootStackNavigationProp>();
+    const { t } = useTranslation();
+    const navigation = useNavigation<any>();
 
   useEffect(() => {
     // Simulate loading/initialization
@@ -32,7 +35,7 @@ export const SplashScreen: React.FC = () => {
         
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#ffffff" />
-          <Text style={styles.loadingText}>Đang tải dữ liệu Trainer...</Text>
+          <Text style={styles.loadingText}>{t('loading_trainer_data')}</Text>
         </View>
       </View>
     </View>

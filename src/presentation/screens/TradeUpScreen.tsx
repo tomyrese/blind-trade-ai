@@ -147,23 +147,36 @@ export const TradeUpScreen: React.FC = () => {
 
     const currentCount = selectedCards.filter(i => i === id).length;
 
-    // If we have more than one and haven't selected all of them, add another
+    // If we are adding to our selection (currentCount < asset.amount)
     if (currentCount < asset.amount) {
       if (selectedCards.length >= 3) {
-        showNotification('Bạn chỉ có thể chọn tối đa 3 thẻ để hợp nhất.', 'warning');
+        showNotification(t('fusion_limit_message' as any) || 'Bạn chỉ có thể chọn tối đa 3 thẻ để hợp nhất.', 'warning');
         return;
       }
+
+      // Enforce all cards matching the rarity of the first selected card (Remote logic)
+      if (selectedCards.length > 0) {
+        const firstAsset = assets.find(a => a.id === selectedCards[0]);
+        if (firstAsset) {
+          const firstRarity = mapRarity(firstAsset.rarity, firstAsset.name);
+          const thisRarity = mapRarity(asset.rarity, asset.name);
+          if (firstRarity !== thisRarity) {
+            showNotification(t('error_rarity_mismatch' as any) || 'Bạn phải chọn các thẻ cùng độ hiếm.', 'warning');
+            return;
+          }
+        }
+      }
+
       setSelectedCards(prev => [...prev, id]);
     } else {
-      // If we have selected all available or just one, remove all instances of this ID
-      // (Simplified toggle behavior: if max reached, clear selection for this card)
+      // If we have selected all available or just want to toggle off
       setSelectedCards(prev => prev.filter(i => i !== id));
     }
-  }, [assets, selectedCards, showNotification]);
+  }, [assets, selectedCards, showNotification, t]);
 
   const handleFusion = () => {
     if (selectedCards.length !== 3) {
-      showNotification('Bạn cần chọn đúng 3 thẻ bài để bắt đầu hợp nhất.', 'info');
+      showNotification(t('fusion_requirement_message' as any) || 'Bạn cần chọn đúng 3 thẻ bài để bắt đầu hợp nhất.', 'info');
       return;
     }
 
@@ -188,23 +201,25 @@ export const TradeUpScreen: React.FC = () => {
     });
 
     const newReward = generateReward(cardsToFuse);
-    setReward(newReward);
+    setReward(newReward); // newReward can be null now
     setIsOpening(true);
 
-    // Remove selected assets
+    // Remove selected assets (burn them)
     selectedCards.forEach(id => removeAsset(id));
 
-    // Add reward (Value is zeroed out since we don't display totalValue anymore, or we can just use the newReward.value)
-    addAsset({
-      id: newReward.id,
-      name: newReward.name,
-      symbol: newReward.symbol || newReward.name.substring(0, 3).toUpperCase(),
-      rarity: newReward.rarity,
-      amount: 1,
-      value: newReward.value,
-      purchasePrice: newReward.value,
-      image: newReward.image,
-    });
+    if (newReward) {
+      // Add reward
+      addAsset({
+        id: newReward.id,
+        name: newReward.name,
+        symbol: newReward.symbol || newReward.name.substring(0, 3).toUpperCase(),
+        rarity: newReward.rarity,
+        amount: 1,
+        value: newReward.value,
+        purchasePrice: newReward.value, // Keep literal value as remote's calculation (totalValue/length) might be zero if totalValue is mocked/missing
+        image: newReward.image,
+      });
+    }
 
     setSelectedCards([]);
   };
@@ -360,17 +375,16 @@ export const TradeUpScreen: React.FC = () => {
       </ScrollView>
 
       {/* Lootbox Animation Overlay */}
-      {isOpening && reward && (
-        <Lootbox3D
-          onAnimationComplete={() => {
-            setIsOpening(false);
-            setReward(null);
-          }}
-          reward={reward}
-          currency={currency}
-          highestSelectedRarity={highestSelectedRarity}
-        />
-      )}
+      <Lootbox3D
+        isOpen={isOpening}
+        onClose={() => {
+          setIsOpening(false);
+          setReward(null);
+        }}
+        reward={reward}
+        currency={currency}
+        highestSelectedRarity={highestSelectedRarity}
+      />
       {/* Filter Modal - Force Rebuild */}
       <Modal
         visible={isFilterModalVisible}

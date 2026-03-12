@@ -12,7 +12,9 @@ interface UIPreferencesState {
   language: Language;
   defaultChartType: ChartType;
   notificationsEnabled: boolean;
-  priceAlertsEnabled: boolean;
+  marketAlertsEnabled: boolean;
+  priceChangeAlertsEnabled: boolean;
+  dailySummaryEnabled: boolean;
   biometricEnabled: boolean;
   currency: string;
 
@@ -21,7 +23,9 @@ interface UIPreferencesState {
   setLanguage: (language: Language) => void;
   setDefaultChartType: (chartType: ChartType) => void;
   toggleNotifications: () => void;
-  togglePriceAlerts: () => void;
+  toggleMarketAlerts: () => void;
+  togglePriceChangeAlerts: () => void;
+  toggleDailySummary: () => void;
   toggleBiometric: () => void;
   setCurrency: (currency: string) => void;
   resetPreferences: () => void;
@@ -32,7 +36,9 @@ const defaultPreferences = {
   language: 'vi' as Language,
   defaultChartType: 'candlestick' as ChartType,
   notificationsEnabled: true,
-  priceAlertsEnabled: true,
+  marketAlertsEnabled: true,
+  priceChangeAlertsEnabled: true,
+  dailySummaryEnabled: true,
   biometricEnabled: false,
   currency: 'USDT',
 };
@@ -47,8 +53,12 @@ export const useUIPreferencesStore = create<UIPreferencesState>()(
       setDefaultChartType: (defaultChartType) => set({ defaultChartType }),
       toggleNotifications: () =>
         set((state) => ({ notificationsEnabled: !state.notificationsEnabled })),
-      togglePriceAlerts: () =>
-        set((state) => ({ priceAlertsEnabled: !state.priceAlertsEnabled })),
+      toggleMarketAlerts: () =>
+        set((state) => ({ marketAlertsEnabled: !state.marketAlertsEnabled })),
+      togglePriceChangeAlerts: () =>
+        set((state) => ({ priceChangeAlertsEnabled: !state.priceChangeAlertsEnabled })),
+      toggleDailySummary: () =>
+        set((state) => ({ dailySummaryEnabled: !state.dailySummaryEnabled })),
       toggleBiometric: () =>
         set((state) => ({ biometricEnabled: !state.biometricEnabled })),
       setCurrency: (currency) => set({ currency }),

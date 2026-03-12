@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraPlaceholder } from '../features/scanner/components/CameraPlaceholder';
 import { LaserScanner } from '../features/scanner/components/LaserScanner';
 import { VerificationResult, VerificationStatus } from '../features/scanner/components/VerificationResult';
+import { useTranslation } from '../../shared/utils/translations';
 
 const SCAN_STEPS = [
   {
@@ -26,6 +27,7 @@ const SCAN_STEPS = [
 ];
 
 export const ScannerScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [isScanning, setIsScanning] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>(null);
   const [confidence, setConfidence] = useState(0);
@@ -55,13 +57,13 @@ export const ScannerScreen: React.FC = () => {
 
   const details = useMemo(() => {
     if (verificationStatus === 'verified')
-      return 'Tất cả các chỉ số đều đạt ngưỡng an toàn. Tài sản này đã được xác thực.';
+      return t('scanner_result_safe');
     if (verificationStatus === 'suspicious')
-      return 'Một số dấu hiệu không khớp với dữ liệu thị trường. Cần xem xét kỹ.';
+      return t('scanner_result_warning');
     if (verificationStatus === 'fake')
-      return 'Phát hiện nhiều dấu hiệu bất thường. Tài sản này có khả năng cao là giả mạo.';
+      return t('scanner_result_danger');
     return undefined;
-  }, [verificationStatus]);
+  }, [verificationStatus, t]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
@@ -95,7 +97,7 @@ export const ScannerScreen: React.FC = () => {
                 }}
               >
                 <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
-                  Đang Quét...
+                  {t('scanning_loading')}
                 </Text>
               </View>
             </View>
@@ -120,7 +122,7 @@ export const ScannerScreen: React.FC = () => {
             }}
           >
             <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: 'bold' }}>
-              {isScanning ? 'Đang Quét...' : 'Bắt Đầu Quét'}
+              {isScanning ? t('scanning_loading') : t('start_scanning')}
             </Text>
           </Pressable>
 
@@ -151,11 +153,11 @@ export const ScannerScreen: React.FC = () => {
         {/* Info Cards */}
         <View style={{ marginTop: 24, gap: 12 }}>
           <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff', marginBottom: 8 }}>
-            Cách Thức Hoạt Động
+            {t('how_it_works')}
           </Text>
-          {SCAN_STEPS.map((item, i) => (
+          {['1', '2', '3'].map((step) => (
             <View
-              key={i}
+              key={step}
               style={{
                 backgroundColor: '#1e293b',
                 borderRadius: 12,
@@ -177,15 +179,15 @@ export const ScannerScreen: React.FC = () => {
                 }}
               >
                 <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 16 }}>
-                  {item.step}
+                  {step}
                 </Text>
               </View>
               <View style={{ marginLeft: 16, flex: 1 }}>
                 <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '600' }}>
-                  {item.title}
+                  {t(`scanner_step${step}_title` as any)}
                 </Text>
                 <Text style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>
-                  {item.desc}
+                  {t(`scanner_step${step}_desc` as any)}
                 </Text>
               </View>
             </View>

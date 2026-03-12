@@ -38,7 +38,18 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+import NotificationService from './src/shared/utils/NotificationService';
+import MarketAlertMonitor from './src/shared/utils/MarketAlertMonitor';
+
 function App(): React.JSX.Element {
+  React.useEffect(() => {
+    // Request permissions on mount
+    NotificationService.requestPermissions();
+    // Start simulated monitor
+    MarketAlertMonitor.start();
+    
+    return () => MarketAlertMonitor.stop();
+  }, []);
 
   const isDarkMode = useColorScheme() === 'dark';
 

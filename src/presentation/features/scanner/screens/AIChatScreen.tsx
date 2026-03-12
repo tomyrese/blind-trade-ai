@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, KeyboardAvoid
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, MessageSquare, Sparkles, User, ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'react-native-linear-gradient';
 import { openRouterService } from '../../../../shared/services/OpenRouterService';
 import { useMarkets } from '../../../../shared/hooks/useMarkets';
 import { useUserStore } from '../../../../shared/stores/userStore';
@@ -118,17 +119,25 @@ export const AIChatScreen: React.FC = () => {
         style={styles.container}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <LinearGradient 
+            colors={['#1e293b', '#0f172a']} 
+            start={{ x: 0, y: 0 }} 
+            end={{ x: 1, y: 1 }} 
+            style={styles.header}
+        >
           <View style={styles.headerTitleRow}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+                <ChevronLeft size={28} color="#ffffff" />
+            </Pressable>
             <View style={styles.aiIcon}>
-              <Sparkles size={18} color="#ffffff" fill="#ffffff" />
+              <Sparkles size={20} color="#0f172a" fill="#0f172a" />
             </View>
             <View>
               <Text style={styles.headerTitleText}>Poké-AI Assistant</Text>
               <Text style={styles.headerStatus}>{t('ai_chat_status')}</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         <ScrollView 
           ref={scrollViewRef}
@@ -193,44 +202,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    backgroundColor: '#ffffff',
+    borderBottomWidth: 0,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  backBtn: {
+    padding: 4,
+    marginRight: 4,
+  },
   aiIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#ef4444',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#38bdf8', // bright blue for modern look
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#38bdf8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerTitleText: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
   headerStatus: {
-    fontSize: 11,
-    color: '#10b981',
+    fontSize: 12,
+    color: '#34d399',
     fontWeight: '700',
+    marginTop: 2,
   },
   chatContent: {
     padding: 20,
     paddingBottom: 40,
+    backgroundColor: '#f8fafc',
   },
   messageWrapper: {
     flexDirection: 'row',
     marginBottom: 20,
     alignItems: 'flex-end',
-    gap: 8,
+    gap: 10,
   },
   userMsgWrapper: {
     justifyContent: 'flex-end',
@@ -239,36 +258,48 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   aiAvatar: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fee2e2',
+    backgroundColor: '#ffffff',
   },
   userAvatar: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#dbeafe',
+    backgroundColor: '#2563eb',
   },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: '75%',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 20,
   },
   userBubble: {
-    backgroundColor: '#3b82f6',
-    borderBottomRightRadius: 4,
+    backgroundColor: '#2563eb', // Deeper modern blue
+    borderBottomRightRadius: 6,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   aiBubble: {
-    backgroundColor: '#f8fafc',
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    backgroundColor: '#ffffff',
+    borderBottomLeftRadius: 6,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   typingBubble: {
     paddingVertical: 10,
@@ -277,31 +308,34 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 22,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   userText: {
     color: '#ffffff',
   },
   aiText: {
-    color: '#1e293b',
+    color: '#334155',
   },
   inputArea: {
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 16,
     paddingBottom: Platform.OS === 'ios' ? 10 : 20,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
+    borderTopWidth: 0,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    paddingLeft: 20,
+    paddingRight: 6,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 6,
   },
   input: {
     flex: 1,
@@ -312,15 +346,22 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 8 : 4,
   },
   sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ef4444',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#2563eb',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: 12,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   sendBtnDisabled: {
-    backgroundColor: '#cbd5e1',
+    backgroundColor: '#e2e8f0',
+    shadowOpacity: 0,
+    elevation: 0,
   },
 });

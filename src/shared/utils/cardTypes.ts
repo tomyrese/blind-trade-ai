@@ -21,8 +21,7 @@ export interface Card {
 export interface RarityConfigItem {
   label: string;
   symbol: string;
-  shape: 'circle' | 'diamond' | 'star' | 'sparkles' | 'gem' | 'crown' | 'zap' | 'image' | 'text';
-  starCount?: number;
+  shape: 'circle' | 'diamond' | 'star' | 'sparkles' | 'gem' | 'crown' | 'zap' | 'image' | 'text' | 'sword' | 'shield' | 'flame' | 'sun' | 'award';
   color: string;
   borderColor: string;
   borderGradient?: string[];

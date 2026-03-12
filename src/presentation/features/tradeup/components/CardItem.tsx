@@ -1,7 +1,7 @@
 // Premium CardItem Design - Modern & Beautiful
 import React from 'react';
 import { Pressable, Text, View, StyleSheet, Image } from 'react-native';
-import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image as ImageIcon } from 'lucide-react-native';
+import { Check, Heart, ShoppingCart, Star, Diamond, Circle, Sparkles, Gem, Crown, Zap, Image as ImageIcon, Sword, Shield, Flame, Sun, Award } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { Card, RARITY_CONFIGS } from '../../../../shared/utils/cardData';
 import { formatCurrency } from '../../../../shared/utils/currency';
@@ -48,15 +48,19 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
         case 'diamond':
           return <Diamond size={iconSize} fill={color} color={color} />;
         case 'star':
-          return (
-            <View style={{ flexDirection: 'row', gap: 1 }}>
-              {Array.from({ length: config.starCount || 1 }).map((_, i) => (
-                <Star key={i} size={iconSize} fill={color} color={color} />
-              ))}
-            </View>
-          );
+          return <Star size={iconSize} fill={color} color={color} />;
         case 'sparkles':
           return <Sparkles size={iconSize} fill={color} color={color} />;
+        case 'sword':
+          return <Sword size={iconSize} fill={color} color={color} />;
+        case 'shield':
+          return <Shield size={iconSize} fill={color} color={color} />;
+        case 'flame':
+          return <Flame size={iconSize} fill={color} color={color} />;
+        case 'sun':
+          return <Sun size={iconSize} fill={color} color={color} />;
+        case 'award':
+          return <Award size={iconSize} fill={color} color={color} />;
         case 'gem':
           return <Gem size={iconSize} fill={color} color={color} />;
         case 'crown':
@@ -85,7 +89,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 borderRadius: 16,
                 padding: 2, // Width of the gradient border
             },
-            (!isSmall && !isList) && { aspectRatio: 0.70 },
+            (!isSmall && !isList) && { aspectRatio: 0.72 },
             selected && styles.selectedContainer,
             disabled && styles.disabledContainer,
         ]
@@ -98,7 +102,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 borderColor: config.borderColor,
                 shadowColor: config.shadowColor || config.color,
             },
-            (!isSmall && !isList) && { aspectRatio: 0.70 },
+            (!isSmall && !isList) && { aspectRatio: 0.72 },
             selected && styles.selectedContainer,
             disabled && styles.disabledContainer,
         ]
@@ -129,18 +133,20 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                 {(!isSmall && !isList) && (
                 <View style={[styles.topBar, !showActions && { justifyContent: 'flex-start' }]}> 
                     {showRarity ? (
-                        <View style={[styles.rarityTag, { borderColor: config.borderColor, backgroundColor: config.glowColor }]}>
+                        <View style={[styles.rarityTag, { borderColor: config.borderColor, backgroundColor: config.glowColor, maxWidth: showActions ? '75%' : '100%' }]}>
                             {renderRarityIcon()}
-                            <Text style={[styles.raritySymbol, { color: config.color }]}>{config.label}</Text>
+                            <Text style={[styles.raritySymbol, { color: config.color }]} numberOfLines={1}>{config.label}</Text>
                         </View>
                     ) : (
                         <View style={[styles.rarityTag, { opacity: 0, borderWidth: 0 }]} /> 
                     )}
+                </View>
+                )}
 
-                    {showActions && (
+                {/* Absolutely positioned Favorite button to avoid being pushed by long rarity texts */}
+                {(!isSmall && !isList && showActions) && (
                     <Pressable 
                     onPress={() => {
-
                         const wasFavorite = isFavorite;
                         toggleFavorite(card.id);
                         showToast(
@@ -150,7 +156,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                         'favorite'
                         );
                     }}
-                    style={styles.iconButton}
+                    style={[styles.iconButton, { position: 'absolute', top: 5, right: 5, zIndex: 20 }]}
                     >
                     <Heart 
                         size={14} 
@@ -159,8 +165,6 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                         strokeWidth={2}
                     />
                     </Pressable>
-                    )}
-                </View>
                 )}
 
                 {/* Artwork Section */}
@@ -173,7 +177,7 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                     { borderColor: config.borderColor },
                     (!isSmall && !isList) && { aspectRatio: 0.75 },
                     (isSmall || isList) && styles.artworkContainerSmall,
-                    largeImage && !isList && !isSmall && { width: '62%' } // Reduced from 70% to clear price
+                    largeImage && !isList && !isSmall && { width: '68%' } // Increased from 62% for better fit in compact layout
                 ]}>
                     {/* Gradient Background for Holo effect if applicable */}
                         <View style={[
@@ -400,11 +404,13 @@ const styles = StyleSheet.create({
       paddingVertical: 2,
       borderRadius: 12,
       borderWidth: 1,
+      flexShrink: 1,
   },
   raritySymbol: {
       fontSize: 9, 
       fontWeight: '800',
       textTransform: 'uppercase',
+      flexShrink: 1,
   },
   iconButton: {
     width: 28,
@@ -435,7 +441,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   artworkContainer: {
-    width: '52%', // Reduced from 60% to clear price on Home screen
+    width: '60%', // Increased from 52% to fill top better in shorter aspect ratio
     borderRadius: 12,
     borderWidth: 2,
     padding: 2,
@@ -477,10 +483,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
 
-  // Details Section
+    // Details Section - Removed flex: 1 to prevent vertical stretching
   detailsSection: {
-    flex: 1,
-    gap: 2, // Final tightening to 2px
+    gap: 2, 
   },
   cardTitle: {
     fontSize: 14,
