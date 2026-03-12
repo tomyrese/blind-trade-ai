@@ -29,7 +29,10 @@ import {
 } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { Lootbox3D } from '../features/tradeup/components/Lootbox3D';
+import { GachaAnimation } from '../features/gacha/components/GachaAnimation';
+import { GachaCardItem, getTierColor } from '../../shared/components/GachaCardItem';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { Check } from 'lucide-react-native';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useTranslation } from '../../shared/utils/translations';
@@ -48,13 +51,15 @@ export const TradeUpScreen: React.FC = () => {
   const showNotification = useUIStore((state) => state.showNotification);
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [isOpening, setIsOpening] = useState(false);
+  const [phase, setPhase] = useState<'IDLE' | 'ANIMATING' | 'RESULT'>('IDLE');
   const [reward, setReward] = useState<Card | null>(null);
+  const [revealed, setRevealed] = useState<boolean[]>([false]);
 
   const handleGacha = () => {
     const result = executeGacha();
     setReward(result);
-    setIsOpening(true);
+    setRevealed([false]);
+    setPhase('ANIMATING');
   };
 
   // Filtering & Search state
@@ -202,7 +207,8 @@ export const TradeUpScreen: React.FC = () => {
 
     const newReward = generateReward(cardsToFuse);
     setReward(newReward); // newReward can be null now
-    setIsOpening(true);
+    setRevealed([false]);
+    setPhase('ANIMATING');
 
     // Remove selected assets (burn them)
     selectedCards.forEach(id => removeAsset(id));
@@ -374,17 +380,62 @@ export const TradeUpScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Lootbox Animation Overlay */}
-      <Lootbox3D
-        isOpen={isOpening}
-        onClose={() => {
-          setIsOpening(false);
-          setReward(null);
-        }}
-        reward={reward}
-        currency={currency}
-        highestSelectedRarity={highestSelectedRarity}
-      />
+      {/* Gacha Animation Overlay */}
+      {phase === 'ANIMATING' && reward && (
+        <Modal visible={true} transparent={true} animationType="fade">
+          <GachaAnimation
+            tierColor={getTierColor(reward.rarity)}
+            isMulti={false}
+            onFinish={() => setPhase('RESULT')}
+          />
+        </Modal>
+      )}
+
+      {/* Gacha Result Phase */}
+      {phase === 'RESULT' && reward && (
+        <Modal visible={true} transparent={false} animationType="fade" onRequestClose={() => setPhase('IDLE')}>
+          <Animated.View entering={FadeIn.duration(300)} style={{ flex: 1, backgroundColor: '#0f172a' }}>
+            <View style={{ paddingHorizontal: 25, paddingTop: 40, marginBottom: 20 }}>
+              <Text style={{ fontSize: 24, fontWeight: '900', color: 'white', letterSpacing: 2 }}>
+                {t('gacha_result_title') || 'RESULT'}
+              </Text>
+            </View>
+
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 20, alignItems: 'center' }} showsVerticalScrollIndicator={false}>
+              <View style={{ paddingTop: 40, alignItems: 'center' }}>
+                <GachaCardItem
+                  item={reward}
+                  index={0}
+                  revealed={revealed[0]}
+                  onFlip={() => setRevealed([true])}
+                  sizeMode="massive"
+                />
+              </View>
+              <View style={{ height: 180 }} />
+            </ScrollView>
+
+            <Animated.View entering={FadeIn.delay(200)} style={{ position: 'absolute', bottom: 40, width: '100%', alignItems: 'center' }}>
+                {revealed[0] ? (
+                  <Pressable
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#3b82f6', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 32, elevation: 8, minWidth: 240, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }}
+                    onPress={() => setPhase('IDLE')}
+                  >
+                    <Check color="white" size={20} style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: 'white', letterSpacing: 1.5, textTransform: 'uppercase' }}>{t('gacha_done') || 'DONE'}</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 32, elevation: 8, minWidth: 240, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }}
+                    onPress={() => setRevealed([true])}
+                  >
+                    <Sparkles color="#111" size={20} style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#1e293b', letterSpacing: 1.5, textTransform: 'uppercase' }}>{t('gacha_flip_all') || 'REVEAL'}</Text>
+                  </Pressable>
+                )}
+            </Animated.View>
+          </Animated.View>
+        </Modal>
+      )}
       {/* Filter Modal - Force Rebuild */}
       <Modal
         visible={isFilterModalVisible}

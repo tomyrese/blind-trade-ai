@@ -267,25 +267,8 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
                         )}
                     </View>
 
-                    {showActions && (
+                    {showActions && !isList && (
                         <View style={{ flexDirection: 'row', gap: 8 }}>
-                            {isList && (
-                                <Pressable 
-                                    onPress={() => {
-                                        const wasFavorite = isFavorite;
-                                        toggleFavorite(card.id);
-                                        showToast(wasFavorite ? t('remove_success') : t('add_success'), 'favorite');
-                                    }}
-                                    style={styles.iconButton}
-                                >
-                                    <Heart 
-                                        size={14} 
-                                        color={isFavorite ? '#ef4444' : '#94a3b8'} 
-                                        fill={isFavorite ? '#ef4444' : 'transparent'}
-                                        strokeWidth={2}
-                                    />
-                                </Pressable>
-                            )}
                             <Pressable 
                             onPress={() => {
                                 addToCart(card);
@@ -313,6 +296,36 @@ export const CardItem: React.FC<CardItemProps> = ({ card, selected = false, onTo
               <View style={styles.internalAmountBadge}>
                 <Text style={styles.internalAmountText}>x{amount}</Text>
               </View>
+            )}
+
+            {/* Absolute Positioned Actions for List Mode */}
+            {(isList && showActions) && (
+                <View style={{ position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', gap: 8, zIndex: 20 }}>
+                    <Pressable 
+                        onPress={() => {
+                            const wasFavorite = isFavorite;
+                            toggleFavorite(card.id);
+                            showToast(wasFavorite ? t('remove_success') : t('add_success'), 'favorite');
+                        }}
+                        style={styles.iconButton}
+                    >
+                        <Heart 
+                            size={14} 
+                            color={isFavorite ? '#ef4444' : '#94a3b8'} 
+                            fill={isFavorite ? '#ef4444' : 'transparent'}
+                            strokeWidth={2}
+                        />
+                    </Pressable>
+                    <Pressable 
+                        onPress={() => {
+                            addToCart(card);
+                            showToast(`${t('add_success')} ${card.name}`, 'cart');
+                        }}
+                        style={[styles.cartIconButton, { backgroundColor: config.glowColor }]}
+                    >
+                        <ShoppingCart size={13} color={config.color} strokeWidth={2} />
+                    </Pressable>
+                </View>
             )}
         </ContainerComponent>
       </Pressable>
@@ -559,6 +572,7 @@ const styles = StyleSheet.create({
   
   // Details list specific
   detailsSectionList: {
+      flex: 1, 
       justifyContent: 'center', 
       gap: 2, // Minimal gap between the two main blocks
       paddingVertical: 0, 
