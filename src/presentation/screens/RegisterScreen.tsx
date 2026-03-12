@@ -20,7 +20,7 @@ import { useTranslation } from '../../shared/utils/translations';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Mail, Lock, User, UserPlus, ArrowLeft, Globe, Phone, Check } from 'lucide-react-native';
+import { Mail, Lock, User, UserPlus, ArrowLeft, Globe, Phone, Check, Eye, EyeOff } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { useUIStore } from '../../shared/stores/uiStore';
 import { supabase } from '../../api/supabase';
@@ -78,6 +78,8 @@ export const RegisterScreen = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { control, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -272,7 +274,19 @@ export const RegisterScreen = () => {
                 <View style={styles.inputGroup}>
                   <View style={[styles.inputWrapper, errors.password && styles.inputErrorBorder]}>
                     <Lock size={20} color="#64748b" style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder={t('password')} placeholderTextColor="#94a3b8" onFocus={() => setPasswordFocused(true)} onBlur={() => setPasswordFocused(false)} onChangeText={onChange} value={value} secureTextEntry />
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder={t('password')} 
+                      placeholderTextColor="#94a3b8" 
+                      onFocus={() => setPasswordFocused(true)} 
+                      onBlur={() => setPasswordFocused(false)} 
+                      onChangeText={onChange} 
+                      value={value} 
+                      secureTextEntry={!showPassword} 
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 8 }}>
+                      {showPassword ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+                    </TouchableOpacity>
                   </View>
                   <PasswordRequirements password={value} visible={passwordFocused} />
                 </View>
@@ -287,7 +301,18 @@ export const RegisterScreen = () => {
                 <View style={styles.inputGroup}>
                   <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputErrorBorder]}>
                     <Lock size={20} color="#64748b" style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder={t('confirm_password')} placeholderTextColor="#94a3b8" onBlur={onBlur} onChangeText={onChange} value={value} secureTextEntry />
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder={t('confirm_password')} 
+                      placeholderTextColor="#94a3b8" 
+                      onBlur={onBlur} 
+                      onChangeText={onChange} 
+                      value={value} 
+                      secureTextEntry={!showConfirmPassword} 
+                    />
+                    <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={{ padding: 8 }}>
+                      {showConfirmPassword ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}

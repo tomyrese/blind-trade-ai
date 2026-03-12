@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Modal, TextInput, Dimensions, TouchableOpacity, Switch, Image, NativeModules, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'react-native-linear-gradient';
-import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus, Mail, Phone, Globe } from 'lucide-react-native';
+import { User, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Award, Star, BookOpen, Edit2, Medal, Crown, Check, X, AlertTriangle, CheckCircle, Info, Lock, Eye, EyeOff, Image as ImageIcon, Camera, Wallet, CreditCard, Banknote, ShoppingCart, Clock, Trash2, Plus, Mail, Phone, Globe } from 'lucide-react-native';
 import { useUserStore } from '../../shared/stores/userStore';
 import { useUIStore } from '../../shared/stores/uiStore';
 import { useUIPreferencesStore } from '../../shared/stores/uiPreferencesStore';
@@ -761,6 +761,10 @@ const ChangePasswordModal = ({ visible, onClose }: { visible: boolean, onClose: 
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isChangingPass, setIsChangingPass] = useState(false);
+    
+    const [showOld, setShowOld] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handlePasswordChange = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -791,19 +795,22 @@ const ChangePasswordModal = ({ visible, onClose }: { visible: boolean, onClose: 
         }
     };
 
-    const PasswordInput = ({ label, value, onChangeText, placeholder }: any) => (
+    const PasswordInput = ({ label, value, onChangeText, placeholder, visible, onToggle }: any) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>{label}</Text>
             <View style={styles.inputWrapper}>
                 <Lock size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput 
                     style={styles.input} 
-                    placeholder={t('password_placeholder')} 
-                    secureTextEntry
+                    placeholder={placeholder || t('password_placeholder')} 
+                    secureTextEntry={!visible}
                     value={value}
                     onChangeText={onChangeText}
                     placeholderTextColor="#94a3b8"
                 />
+                <TouchableOpacity onPress={onToggle} style={{ padding: 8 }}>
+                    {visible ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -821,9 +828,9 @@ const ChangePasswordModal = ({ visible, onClose }: { visible: boolean, onClose: 
                     </View>
 
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-                        <PasswordInput label={t('current_password')} value={oldPassword} onChangeText={setOldPassword} placeholder="********" />
-                        <PasswordInput label={t('new_password')} value={newPassword} onChangeText={setNewPassword} placeholder="********" />
-                        <PasswordInput label={t('confirm_password')} value={confirmPassword} onChangeText={setConfirmPassword} placeholder="********" />
+                        <PasswordInput label={t('current_password')} value={oldPassword} onChangeText={setOldPassword} placeholder="********" visible={showOld} onToggle={() => setShowOld(!showOld)} />
+                        <PasswordInput label={t('new_password')} value={newPassword} onChangeText={setNewPassword} placeholder="********" visible={showNew} onToggle={() => setShowNew(!showNew)} />
+                        <PasswordInput label={t('confirm_password')} value={confirmPassword} onChangeText={setConfirmPassword} placeholder="********" visible={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
 
                         <TouchableOpacity 
                             style={[styles.premiumBtn, isChangingPass && { opacity: 0.7 }]} 

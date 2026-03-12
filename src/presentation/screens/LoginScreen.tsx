@@ -18,7 +18,7 @@ import { RootStackNavigationProp } from '../navigation/types';
 import { useUserStore } from '../../shared/stores/userStore';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useTranslation } from '../../shared/utils/translations';
-import { Mail, Lock, LogIn, Globe, KeyRound } from 'lucide-react-native';
+import { Mail, Lock, LogIn, Globe, KeyRound, Eye, EyeOff } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
 import { useUIStore } from '../../shared/stores/uiStore';
 
@@ -49,6 +49,8 @@ export const LoginScreen = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [recoveryOtp, setRecoveryOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   
   const { control, handleSubmit, watch, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -63,10 +65,19 @@ export const LoginScreen = () => {
     Keyboard.dismiss();
     setLoading(true);
     try {
-      const success = await login(data.email, data.password);
+      const success = await login(data.email.trim(), data.password);
       if (!success) {
         showNotification(t('invalid_credentials'), 'error');
+      } else {
+        // Auto-seed portfolio for demo account if empty
+        if (data.email.trim().toLowerCase() === 'demo@blindtrade.ai') {
+          const currentAssets = usePortfolioStore.getState().assets;
+          if (currentAssets.length === 0) {
+            seedPortfolio();
+          }
+        }
       }
+
     } catch (error) {
       showNotification(t('something_went_wrong'), 'error');
     } finally {
@@ -235,11 +246,22 @@ export const LoginScreen = () => {
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
                       autoCapitalize="none"
                       textContentType="password"
                       onSubmitEditing={handleSubmit(handleLogin)}
                     />
+                    <TouchableOpacity 
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={{ padding: 8 }}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={20} color="#64748b" />
+                      ) : (
+                        <Eye size={20} color="#64748b" />
+                      )}
+                    </TouchableOpacity>
+
                   </View>
                   {errors.password && <Text style={styles.errorText}>{t(errors.password.message as any)}</Text>}
                 </View>
@@ -274,23 +296,6 @@ export const LoginScreen = () => {
                   </>
                 )}
               </LinearGradient>
-            </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t('or')}</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity
-              style={styles.demoButton}
-              onPress={() => { 
-                Keyboard.dismiss(); 
-                loginAsGuest();
-                seedPortfolio(); // Ensure demo cards are available
-              }}
-            >
-              <Text style={styles.demoButtonText}>{t('login_demo')}</Text>
             </TouchableOpacity>
 
             <View style={styles.footer}>

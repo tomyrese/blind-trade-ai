@@ -1,45 +1,79 @@
 # PokéMarket - Hệ Sinh Thái Định Giá & Giao Dịch Thẻ Pokémon (Beta)
 
+[![React Native](https://img.shields.io/badge/React_Native-0.83.1-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Zustand](https://img.shields.io/badge/State-Zustand-orange)](https://github.com/pmndrs/zustand)
+[![Supabase](https://img.shields.io/badge/Backend-Supabase-green?logo=supabase)](https://supabase.com/)
+
 PokéMarket là một ứng dụng di động React Native cao cấp, kết hợp công nghệ AI và Gamification để mang lại trải nghiệm tối ưu cho cộng đồng sưu tầm Pokémon TCG. Ứng dụng không chỉ là nơi theo dõi giá mà còn là một thị trường sống động với hệ thống "Trade Up" độc đáo và trợ lý AI thông minh.
+
+---
+
+## 🏗️ Kiến Trúc Dự Án (Folder Structure)
+
+Dự án được tổ chức theo kiến trúc sạch giúp dễ dàng mở rộng và bảo trì:
+
+- **`src/presentation`**: Toàn bộ UI layer (Screens, Components, Styles).
+  - `screens/`: Màn hình chức năng (HomeScreen, GachaScreen, TradeUpScreen, v.v.).
+  - `navigation/`: Cấu hình React Navigation (Bottom Tabs, Stack).
+- **`src/shared/stores`**: State Management layer sử dụng **Zustand**.
+  - `userStore`: Quản lý xác thực, hồ sơ và số dư.
+  - `portfolioStore`: Quản lý bộ sưu tập thẻ của người dùng.
+- **`src/core` & `src/domain`**: Chứa logic nghiệp vụ lõi và các định nghĩa Models (User, Card, Trade).
+- **`src/features`**: Các module chức năng đặc biệt như `gacha`.
+- **`src/api`**: Cấu hình kết nối API ngoài và Supabase.
+- **`src/shared/storage`**: Cấu hình **MMKV** để lưu trữ persistent dữ liệu siêu nhanh.
 
 ---
 
 ## 🚀 Tính Năng Nổi Bật
 
-### 1. Trung Tâm Thị Trường (Real-time Marketplace)
-- **Dữ Liệu Trực Tiếp**: Hệ thống cập nhật biến động giá thẻ bài theo thời gian thực (Real-time).
-- **Trải Nghiệm Mượt Mà**: Sử dụng `@shopify/flash-list` tối ưu hóa cho danh sách hàng nghìn thẻ bài với tốc độ 60fps.
-- **Phân Loại Thông Minh**: Hiệu ứng Gradient và Glow (Phát sáng) động thay đổi theo độ hiếm (Common, Rare, Ultra Rare, Rainbow, Gold).
+### 1. 🧪 Hệ Thống Trade Up & Gacha
+- **Trade Up**: Hợp nhất các thẻ bài độ hiếm thấp để có cơ hội nhận thẻ Rare/Ultra Rare với hiệu ứng animations 3D.
+- **Gacha (Lootbox)**: Trải nghiệm mở thẻ bài kịch tính với âm thanh và rung (Haptic Feedback).
 
-### 2. Trợ Lý Poké-AI (OpenRouter Integration)
-- **Tư Vấn Đầu Tư**: AI phân tích dữ liệu thị trường để đưa ra lời khuyên "Mua" hoặc "Bán".
-- **Tra Cứu Nhanh**: Trả lời mọi câu hỏi về kỹ năng thẻ, bộ set và độ hiếm.
-- **Hỗ Trợ Đa Ngôn Ngữ**: Tự động chuyển đổi giữa Tiếng Việt và Tiếng Anh.
+### 2. 📊 Trung Tâm Thị Trường & Portfolio
+- **Real-time Marketplace**: Theo dõi biến động giá hàng nghìn thẻ bài với hiệu suất cao nhờ `@shopify/flash-list`.
+- **Định Giá Tài Sản**: Tự động tính toán giá trị bộ sưu tập Trainer dựa trên dữ liệu thị trường.
+- **Pokedex**: Hệ thống tra cứu thông tin thẻ bài toàn diện.
 
-### 3. Hệ Thống Trade Up (Hợp Nhất Thẻ Bài)
-- **Cơ Chế Rủi Ro - Phần Thưởng**: Hợp nhất nhiều thẻ bài độ hiếm thấp (Common/Uncommon) để nhận thẻ bài có giá trị cực cao.
-- **Giải Thuật Cân Bằng**: Tỉ lệ thành công dựa trên tổng giá trị (VND) của các thẻ bài đưa vào.
-- **Hoạt Ảnh Lootbox 3D**: Trải nghiệm mở hộp kịch tính với hiệu ứng âm thanh và rung (Haptic Feedback).
+### 3. 🤖 Trợ Lý Poké-AI (OpenRouter)
+- Phân tích thị trường và tư vấn đầu tư thẻ bài thông minh.
+- Hỗ trợ giải đáp thắc mắc về gameplay và độ hiếm thẻ bài.
 
-### 4. Quản Lý Danh Mục (Trainer Portfolio)
-- **Định Giá Tài Sản**: Tự động tính toán tổng giá trị bộ sưu tập dựa trên giá thị trường hiện tại.
-- **Hệ Thống Rank Trainer**: Thăng cấp từ *Tân Binh* đến *Nhà Sưu Tầm Đại Tài* dựa trên thành tích.
-- **Hồ Sơ Trainer**: Chỉnh sửa avatar, biệt danh và theo dõi chỉ số Pokedex cá nhân.
+### 4. 🛡️ Bảo Mật & Xác Thực
+- **Auth Flow**: Đăng nhập, Đăng ký và Quên mật khẩu qua OTP mượt mà.
+- **Password Toggle**: Tính năng bật/tắt hiển thị mật khẩu ở tất cả các màn hình (Login, Register, Profile).
+- **Session Persistence**: Tự động khôi phục phiên đăng nhập khi quay lại app.
 
-### 5. Bảo Mật & Xác Thực (OTP Flow)
-- **OTP Quên Mật Khẩu**: Quy trình khôi phục mật khẩu 3 bước bảo mật cao: Nhận mã qua Email -> Xác thực OTP -> Đổi mật khẩu trực tiếp.
-- **Supabase Integration**: Sử dụng Supabase Auth để quản lý danh tính người dùng một cách an toàn.
+---
+
+## 🧪 Tài Khoản Thử Nghiệm (Demo Account)
+
+Để thuận tiện cho việc kiểm tra các chức năng, dự án cung cấp tài khoản demo siêu cấp:
+
+- **Email**: `demo@blindtrade.ai`
+- **Mật khẩu**: `password123`
+
+> [!TIP]
+> **Đặc quyền tài khoản Demo:**
+> - Số dư khởi tạo: **50.000.000 VND**.
+> - Trạng thái: **VIP Lifetime**, Level 99.
+> - **Auto-Seeding**: Tự động thêm 10 thẻ bài vào Portfolio ngay trong lần đăng nhập đầu tiên để trải nghiệm các tính năng Trade Up/Fusion.
 
 ---
 
 ## 🛠 Công Nghệ Sử Dụng
 
-- **Frontend**: React Native 0.83.1, TypeScript.
-- **Styling**: NativeWind (TailwindCSS), Reanimated 3 (Animations), Linear Gradient.
-- **State Management**: **Zustand** kết hợp với **MMKV** để lưu trữ dữ liệu cục bộ siêu nhanh.
-- **Backend & Auth**: Supabase.
-- **AI Engine**: OpenRouter (Trinity Large Preview).
-- **UI Components**: Lucide Icons, FlashList, Bottom Tabs, Native Stack.
+| Công Nghệ | Phiên Bản | Công Dụng |
+| :--- | :--- | :--- |
+| **React Native** | 0.83.1 | Framework chính |
+| **React 19** | 19.2.0 | Core UI library |
+| **Zustand** | 5.0.11 | State Management |
+| **MMKV** | 2.12.2 | Local Storage (Siêu nhanh) |
+| **NativeWind** | 4.2.1 | Styling (TailwindCSS) |
+| **Supabase** | 2.99.1 | Backend & Authentication |
+| **Lucide Icons** | 0.563.0 | Icon System |
 
 ---
 
@@ -48,7 +82,7 @@ PokéMarket là một ứng dụng di động React Native cao cấp, kết hợ
 ### Yêu Cầu Hệ Thống
 - **Node.js**: >= 20.x
 - **JDK**: >= 21
-- **Android Studio / Xcode** (để build native)
+- **Android Studio / Xcode**
 
 ### Các Bước Thực Hiện
 
@@ -59,12 +93,10 @@ PokéMarket là một ứng dụng di động React Native cao cấp, kết hợ
    npm install
    ```
 
-2. **Cấu Hình Môi Trường (Security)**:
-   Để bảo mật, dự án sử dụng biến môi trường. Hãy copy file `.env.example` thành `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   *Lưu ý: Không bao giờ commit file `.env` chứa key thực lên GitHub.*
+2. **Cấu Hình Môi Trường**:
+   Copy file `.env.example` thành `.env` và điền các API key cần thiết:
+   - `SUPABASE_URL` & `SUPABASE_ANON_KEY`
+   - `OPENROUTER_API_KEY`
 
 3. **Chạy Ứng Dụng**:
    ```bash
@@ -77,28 +109,12 @@ PokéMarket là một ứng dụng di động React Native cao cấp, kết hợ
 
 ---
 
-## 🔒 Quản Lý API Keys (Quan Trọng)
-
-Dự án yêu cầu các cấu hình sau để hoạt động đầy đủ:
-
-| Key | Vị trí file | Công dụng |
-| :--- | :--- | :--- |
-| `SUPABASE_URL` | `src/api/supabase.js` | Kết nối Backend |
-| `SUPABASE_ANON_KEY` | `src/api/supabase.js` | Authentication |
-| `OPENROUTER_API_KEY` | `src/shared/services/OpenRouterService.ts` | Trợ lý AI |
-
-> [!WARNING]
-> Mọi API Key cứng (hardcoded) trong mã nguồn đã được gỡ bỏ và thay thế bằng placeholders. Vui lòng điền thông tin vào file `.env` hoặc cập nhật thủ công các biến hằng số trong code để ứng dụng hoạt động.
+## 📝 Nhật Ký Cập Nhật (Gần Đây)
+- ✅ **Sửa lỗi Auth Persistence**: Duy trì phiên đăng nhập khi tắt/mở app.
+- ✅ **Nâng cấp Bảo mật**: Thêm nút bật/tắt xem mật khẩu trên toàn bộ ứng dụng.
+- ✅ **Tính năng Demo**: Tự động cấp vốn và vật phẩm cho tài khoản demo.
+- ✅ **Tối ưu Trade Up**: Sửa lỗi "bad setState" khi chọn thẻ bài và đồng bộ hóa điều kiện độ hiếm.
 
 ---
 
-## 📂 Cấu Trúc Thư Mục
-
-- `src/presentation`: Chứa toàn bộ màn hình, components và assets.
-- `src/shared/stores`: Quản lý logic trạng thái (User, Portfolio, Market, Trade).
-- `src/shared/utils`: Chứa i18n/translations và các hàm bổ trợ.
-- `src/api`: Cấu hình kết nối Supabase và các service API ngoài.
-
----
-
-*Phát triển bởi cộng đồng yêu thích Pokémon TCG.*
+*Phát triển bởi cộng đồng yêu thích Pokémon TCG. Chúc bạn có những phút giây sưu tầm thú vị!*

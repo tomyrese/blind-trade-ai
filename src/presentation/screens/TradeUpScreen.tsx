@@ -149,30 +149,52 @@ export const TradeUpScreen: React.FC = () => {
 
     // If we are adding to our selection (currentCount < asset.amount)
     if (currentCount < asset.amount) {
+<<<<<<< HEAD
       if (selectedCards.length >= 3) {
         showNotification(t('fusion_limit_message' as any) || 'Bạn chỉ có thể chọn tối đa 3 thẻ để hợp nhất.', 'warning');
         return;
       }
 
       // Enforce all cards matching the rarity of the first selected card (Remote logic)
+=======
+      // Enforce all cards matching the rarity of the first selected card
+>>>>>>> 1dd696d (feat: fix auth persistence, add password toggles, enhance demo account, and update README)
       if (selectedCards.length > 0) {
         const firstAsset = assets.find(a => a.id === selectedCards[0]);
         if (firstAsset) {
           const firstRarity = mapRarity(firstAsset.rarity, firstAsset.name);
           const thisRarity = mapRarity(asset.rarity, asset.name);
           if (firstRarity !== thisRarity) {
+<<<<<<< HEAD
             showNotification(t('error_rarity_mismatch' as any) || 'Bạn phải chọn các thẻ cùng độ hiếm.', 'warning');
+=======
+            showNotification(t('error_rarity_mismatch' as any), 'warning');
+>>>>>>> 1dd696d (feat: fix auth persistence, add password toggles, enhance demo account, and update README)
             return;
           }
         }
       }
 
+<<<<<<< HEAD
       setSelectedCards(prev => [...prev, id]);
     } else {
       // If we have selected all available or just want to toggle off
       setSelectedCards(prev => prev.filter(i => i !== id));
     }
   }, [assets, selectedCards, showNotification, t]);
+=======
+      if (selectedCards.length >= 3) {
+        showNotification(t('fusion_limit_message'), 'warning');
+        return;
+      }
+      
+      setSelectedCards((prev) => [...prev, id]);
+    } else {
+      // If we have selected all available or just want to toggle off
+      setSelectedCards((prev) => prev.filter(i => i !== id));
+    }
+  }, [assets, selectedCards, t, showNotification]);
+>>>>>>> 1dd696d (feat: fix auth persistence, add password toggles, enhance demo account, and update README)
 
   const handleFusion = () => {
     if (selectedCards.length !== 3) {

@@ -65,7 +65,23 @@ export const useUserStore = create<UserState>()(
       profile: null,
       isAuthenticated: false,
       language: 'vi',
-      registeredUsers: [],
+      registeredUsers: [
+        {
+          email: 'demo@blindtrade.ai',
+          password: 'password123',
+            profile: {
+              ...MOCK_USER,
+              email: 'demo@blindtrade.ai',
+              name: 'Demo Trainer',
+              balance: 50000000,
+              isVip: true,
+              vipType: 'lifetime',
+              level: 99,
+              rank: 'Elite Trainer',
+              unlockedTitles: ['rookie', 'collector', 'pro_trader', 'elite', 'champion', 'vip_member', 'legendary'],
+            },
+        },
+      ],
       hasHydrated: false,
 
       _setHydrated: (val) => set({ hasHydrated: val }),
@@ -388,8 +404,31 @@ export const useUserStore = create<UserState>()(
         registeredUsers: state.registeredUsers,
       }),
       onRehydrateStorage: () => (state) => {
-        // Atomic update to signal hydration finished
-        state?._setHydrated(true);
+        if (state) {
+          // Ensure demo user is always available even after hydration from old data
+          const demoEmail = 'demo@blindtrade.ai';
+          const hasDemo = state.registeredUsers.some(u => u.email.toLowerCase() === demoEmail.toLowerCase());
+          
+          if (!hasDemo) {
+            state.registeredUsers.push({
+              email: demoEmail,
+              password: 'password123',
+              profile: {
+                ...MOCK_USER,
+                email: demoEmail,
+                name: 'Demo Trainer',
+                balance: 50000000,
+                isVip: true,
+                vipType: 'lifetime',
+                level: 99,
+                rank: 'Elite Trainer',
+                unlockedTitles: ['rookie', 'collector', 'pro_trader', 'elite', 'champion', 'vip_member', 'legendary'],
+              },
+            });
+          }
+          
+          state._setHydrated(true);
+        }
       },
     }
   )
