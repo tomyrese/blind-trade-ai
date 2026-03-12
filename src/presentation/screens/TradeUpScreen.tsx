@@ -29,7 +29,7 @@ import {
 } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
 import { CardItem } from '../features/tradeup/components/CardItem';
-import { GachaAnimation } from '../features/gacha/components/GachaAnimation';
+import { GachaAnimation } from '../../features/gacha/components/GachaAnimation';
 import { GachaCardItem, getTierColor } from '../../shared/components/GachaCardItem';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
