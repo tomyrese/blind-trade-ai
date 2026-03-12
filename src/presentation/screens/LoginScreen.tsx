@@ -18,9 +18,9 @@ import { RootStackNavigationProp } from '../navigation/types';
 import { useUserStore } from '../../shared/stores/userStore';
 import { usePortfolioStore } from '../../shared/stores/portfolioStore';
 import { useTranslation } from '../../shared/utils/translations';
-import { Mail, Lock, LogIn, Globe } from 'lucide-react-native';
+import { Mail, Lock, LogIn, Globe, KeyRound } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
-import { InfoModal, ModalType } from '../components/InfoModal';
+import { useUIStore } from '../../shared/stores/uiStore';
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,13 +37,20 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export const LoginScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { login, loginAsGuest, setLanguage } = useUserStore();
+  const { login, loginAsGuest, setLanguage, resetPassword, registeredUsers } = useUserStore();
   const { seedPortfolio } = usePortfolioStore();
   const { t, language } = useTranslation();
+  const showNotification = useUIStore((state) => state.showNotification);
   
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [isForgotModalVisible, setIsForgotModalVisible] = useState(false);
+  const [recoveryStep, setRecoveryStep] = useState<'email' | 'otp' | 'password'>('email');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [recoveryOtp, setRecoveryOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     mode: 'onChange',
     defaultValues: {
@@ -52,35 +59,98 @@ export const LoginScreen = () => {
     },
   });
   
-  // Custom Modal State
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
-    type: ModalType;
-    title: string;
-    message: string;
-  }>({
-    type: 'info',
-    title: '',
-    message: '',
-  });
-
-  const showInfo = (type: ModalType, title: string, message: string) => {
-    setModalConfig({ type, title, message });
-    setModalVisible(true);
-  };
-
   const handleLogin = async (data: LoginForm) => {
     Keyboard.dismiss();
     setLoading(true);
     try {
       const success = await login(data.email, data.password);
       if (!success) {
-        showInfo('error', t('error'), t('invalid_credentials'));
+        showNotification(t('invalid_credentials'), 'error');
       }
     } catch (error) {
-      showInfo('error', t('error'), t('something_went_wrong'));
+      showNotification(t('something_went_wrong'), 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    setRecoveryStep('email');
+    setForgotEmail('');
+    setRecoveryOtp('');
+    setNewPassword('');
+    setIsForgotModalVisible(true);
+  };
+
+  const onConfirmEmail = async () => {
+    if (!forgotEmail || !z.string().email().safeParse(forgotEmail).success) {
+      showNotification(t('invalid_email_format'), 'warning');
+      return;
+    }
+
+    const userExists = registeredUsers.some(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
+    if (!userExists) {
+      showNotification(t('email_not_found'), 'error');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const result = await useUserStore.getState().resetPassword(forgotEmail);
+      if (result.success) {
+        showNotification(t('reset_password_sent'), 'success');
+        setRecoveryStep('otp');
+      } else {
+        showNotification(result.message || t('something_went_wrong'), 'error');
+      }
+    } catch (error) {
+      showNotification(t('something_went_wrong'), 'error');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const onConfirmOTP = async () => {
+    if (recoveryOtp.length < 6) {
+      showNotification(t('enter_otp_6'), 'warning');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const result = await useUserStore.getState().verifyRecoveryOTP(forgotEmail, recoveryOtp);
+      if (result.success) {
+        showNotification(t('otp_verified'), 'success');
+        setRecoveryStep('password');
+      } else {
+        showNotification(result.message || t('invalid_otp'), 'error');
+      }
+    } catch (error) {
+      showNotification(t('something_went_wrong'), 'error');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const onConfirmNewPassword = async () => {
+    if (newPassword.length < 6) {
+      showNotification(t('password_too_short' as any) || 'Mật khẩu quá ngắn', 'warning');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const result = await useUserStore.getState().updateUserPassword(newPassword);
+      if (result.success) {
+        showNotification(t('password_reset_success'), 'success');
+        setIsForgotModalVisible(false);
+      } else {
+        showNotification(result.message || t('something_went_wrong'), 'error');
+      }
+    } catch (error) {
+      showNotification(t('something_went_wrong'), 'error');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -176,6 +246,14 @@ export const LoginScreen = () => {
               )}
             />
 
+            <TouchableOpacity 
+              style={styles.forgotPasswordBtn} 
+              onPress={handleForgotPassword}
+            >
+                <KeyRound size={16} color="#ee1515" style={{ marginRight: 6 }} />
+                <Text style={styles.forgot_password_text}>{t('forgot_password')}</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.loginButton}
               onPress={handleSubmit(handleLogin)}
@@ -225,13 +303,130 @@ export const LoginScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <InfoModal
-        visible={modalVisible}
-        type={modalConfig.type}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        onClose={() => setModalVisible(false)}
+      {/* Forgot Password Modal (Wizard) */}
+      <ForgotPasswordModal 
+        visible={isForgotModalVisible}
+        onClose={() => setIsForgotModalVisible(false)}
+        step={recoveryStep}
+        email={forgotEmail}
+        setEmail={setForgotEmail}
+        otp={recoveryOtp}
+        setOtp={setRecoveryOtp}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        onConfirmEmail={onConfirmEmail}
+        onConfirmOTP={onConfirmOTP}
+        onConfirmNewPassword={onConfirmNewPassword}
+        loading={resetLoading}
       />
+    </View>
+  );
+};
+
+// Internal component for the modal
+const ForgotPasswordModal = ({ 
+  visible, onClose, step, email, setEmail, otp, setOtp, 
+  newPassword, setNewPassword, onConfirmEmail, onConfirmOTP, 
+  onConfirmNewPassword, loading 
+}: any) => {
+  const { t } = useTranslation();
+  
+  if (!visible) return null;
+
+  return (
+    <View style={styles.modalOverlay}>
+      <TouchableOpacity 
+        style={styles.modalOverlayBlur} 
+        activeOpacity={1} 
+        onPress={onClose} 
+      />
+      <View style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <View style={styles.iconCircle}>
+            {step === 'email' ? <Mail size={24} color="#ee1515" /> : 
+             step === 'otp' ? <KeyRound size={24} color="#ee1515" /> : 
+             <Lock size={24} color="#ee1515" />}
+          </View>
+          <Text style={styles.modalTitle}>
+            {step === 'email' ? t('forgot_password') : 
+             step === 'otp' ? t('verifying_otp') : 
+             t('new_password_placeholder')}
+          </Text>
+          <Text style={styles.modalSubtitle}>
+            {step === 'email' ? t('forgot_password_desc') : 
+             step === 'otp' ? t('enter_recovery_otp') : 
+             t('new_password_placeholder')}
+          </Text>
+        </View>
+
+        <View style={styles.modalInputGroup}>
+          <View style={styles.modalInputWrapper}>
+            {step === 'email' ? (
+              <>
+                <Mail size={20} color="#64748b" style={styles.modalInputIcon} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={t('email')}
+                  placeholderTextColor="#94a3b8"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </>
+            ) : step === 'otp' ? (
+              <>
+                <KeyRound size={20} color="#64748b" style={styles.modalInputIcon} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="000000"
+                  placeholderTextColor="#94a3b8"
+                  value={otp}
+                  onChangeText={setOtp}
+                  maxLength={6}
+                  keyboardType="numeric"
+                />
+              </>
+            ) : (
+              <>
+                <Lock size={20} color="#64748b" style={styles.modalInputIcon} />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder={t('password_placeholder') as any}
+                  placeholderTextColor="#94a3b8"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.modalActions}>
+          <TouchableOpacity 
+            style={styles.cancelLink} 
+            onPress={onClose}
+          >
+            <Text style={styles.cancelText}>{t('cancel')}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.confirmButton} 
+            onPress={step === 'email' ? onConfirmEmail : step === 'otp' ? onConfirmOTP : onConfirmNewPassword}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.confirmButtonText}>
+                {t('confirm')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -444,6 +639,121 @@ const styles = StyleSheet.create({
   registerLink: {
     color: '#ee1515',
     fontSize: 14,
+    fontWeight: '800',
+  },
+  forgotPasswordBtn: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 20,
+    marginTop: -4,
+    padding: 4,
+  },
+  forgot_password_text: {
+    color: '#ee1515',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: width,
+    height: height,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalOverlayBlur: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: '#ffffff',
+    borderRadius: 25,
+    padding: 24,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff1f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  modalInputGroup: {
+    marginBottom: 24,
+  },
+  modalInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 15,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+  },
+  modalInputIcon: {
+    marginRight: 12,
+  },
+  modalInput: {
+    flex: 1,
+    color: '#1e293b',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  cancelLink: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  cancelText: {
+    color: '#64748b',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  confirmButton: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#ee1515',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+  },
+  confirmButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
     fontWeight: '800',
   },
 });

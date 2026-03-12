@@ -24,7 +24,7 @@ import { useTranslation } from '../../shared/utils/translations';
 export const TransactionDetailScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
     const { transactionId } = route.params;
     
     const transactions = useTransactionHistoryStore((state) => state.transactions);
@@ -35,9 +35,9 @@ export const TransactionDetailScreen: React.FC = () => {
             <SafeAreaView style={styles.container}>
                 <View style={styles.errorContainer}>
                     <AlertCircle size={48} color="#ef4444" />
-                    <Text style={styles.errorText}>Giao dịch không tồn tại</Text>
+                    <Text style={styles.errorText}>{t('transaction_not_found')}</Text>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtnError}>
-                        <Text style={styles.backBtnText}>Quay lại</Text>
+                        <Text style={styles.backBtnText}>{t('back')}</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -45,8 +45,9 @@ export const TransactionDetailScreen: React.FC = () => {
     }
 
     const date = new Date(transaction.date);
-    const dateString = date.toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
-    const timeString = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US';
+    const dateString = date.toLocaleDateString(dateLocale, { day: '2-digit', month: 'long', year: 'numeric' });
+    const timeString = date.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     const isBuy = transaction.type === 'buy';
     const isDeposit = transaction.type === 'deposit';
@@ -54,7 +55,7 @@ export const TransactionDetailScreen: React.FC = () => {
     const handleShare = async () => {
         try {
             await Share.share({
-                message: `Hóa đơn giao dịch Poké-Market\nMã: ${transaction.id}\nSố tiền: ${formatCurrency(transaction.amount, transaction.currency as any)}\nNgày: ${dateString}`,
+                message: `${t('receipt_ready')}\nMã: ${transaction.id}\nSố tiền: ${formatCurrency(transaction.amount, transaction.currency as any)}\nNgày: ${dateString}`,
             });
         } catch (error) {
             console.log(error);
@@ -67,7 +68,7 @@ export const TransactionDetailScreen: React.FC = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
                     <ChevronLeft size={24} color="#0f172a" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t('transaction_details' as any) || 'Chi tiết giao dịch'}</Text>
+                <Text style={styles.headerTitle}>{t('transaction_details')}</Text>
                 <TouchableOpacity onPress={handleShare} style={styles.iconButton}>
                     <Share2 size={20} color="#0f172a" />
                 </TouchableOpacity>
@@ -87,7 +88,7 @@ export const TransactionDetailScreen: React.FC = () => {
                         {isBuy ? '-' : '+'}{formatCurrency(transaction.amount, transaction.currency as any)}
                     </Text>
                     <Text style={[styles.statusText, transaction.status === 'success' ? { color: '#10b981' } : { color: '#ef4444' }]}>
-                        {transaction.status === 'success' ? 'Giao dịch thành công' : 'Giao dịch thất bại'}
+                        {transaction.status === 'success' ? t('transaction_success_msg') : t('transaction_failed_msg')}
                     </Text>
                     <Text style={styles.idLabel}>ID: {transaction.id}</Text>
                 </View>
@@ -97,11 +98,11 @@ export const TransactionDetailScreen: React.FC = () => {
                     <View style={styles.infoRow}>
                         <View style={styles.infoIconBox}><Calendar size={18} color="#64748b" /></View>
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>{t('transaction_date' as any) || 'Ngày giao dịch'}</Text>
+                            <Text style={styles.infoLabel}>{t('transaction_date')}</Text>
                             <Text style={styles.infoValue}>{dateString}</Text>
                         </View>
                         <View style={styles.infoContentRight}>
-                            <Text style={styles.infoLabel}>{t('time' as any) || 'Giờ'}</Text>
+                            <Text style={styles.infoLabel}>{t('time')}</Text>
                             <Text style={styles.infoValue}>{timeString}</Text>
                         </View>
                     </View>
@@ -111,9 +112,9 @@ export const TransactionDetailScreen: React.FC = () => {
                     <View style={styles.infoRow}>
                         <View style={styles.infoIconBox}><Receipt size={18} color="#64748b" /></View>
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>{t('transaction_type' as any) || 'Loại giao dịch'}</Text>
+                            <Text style={styles.infoLabel}>{t('transaction_type')}</Text>
                             <Text style={styles.infoValue}>
-                                {isBuy ? 'Mua thẻ Pokémon' : isDeposit ? 'Nạp tiền vào tài khoản' : 'Giao dịch khác'}
+                                {isBuy ? t('buy_pokemon') : isDeposit ? t('deposit_to_account') : t('other_transaction')}
                             </Text>
                         </View>
                     </View>
@@ -125,7 +126,7 @@ export const TransactionDetailScreen: React.FC = () => {
                         <View style={styles.sectionHeader}>
                             <Package size={18} color="#0f172a" />
                             <Text style={styles.sectionTitle}>
-                                {t('items_count' as any) || 'Danh sách vật phẩm'} ({transaction.items.length})
+                                {t('order_items')} ({transaction.items.length})
                             </Text>
                         </View>
                         
@@ -156,15 +157,15 @@ export const TransactionDetailScreen: React.FC = () => {
 
                         <View style={styles.priceBreakdown}>
                             <View style={styles.breakdownRow}>
-                                <Text style={styles.breakdownLabel}>{t('subtotal') || 'Tạm tính'}</Text>
+                                <Text style={styles.breakdownLabel}>{t('subtotal')}</Text>
                                 <Text style={styles.breakdownValue}>{formatCurrency(transaction.amount * 0.9, transaction.currency as any)}</Text>
                             </View>
                             <View style={styles.breakdownRow}>
-                                <Text style={styles.breakdownLabel}>{t('tax') || 'Thuế VAT (10%)'}</Text>
+                                <Text style={styles.breakdownLabel}>{t('tax')}</Text>
                                 <Text style={styles.breakdownValue}>{formatCurrency(transaction.amount * 0.1, transaction.currency as any)}</Text>
                             </View>
                             <View style={[styles.breakdownRow, { marginTop: 8 }]}>
-                                <Text style={styles.totalLabel}>{t('total') || 'Tổng số tiền'}</Text>
+                                <Text style={styles.totalLabel}>{t('total')}</Text>
                                 <Text style={styles.totalValue}>{formatCurrency(transaction.amount, transaction.currency as any)}</Text>
                             </View>
                         </View>
@@ -175,7 +176,7 @@ export const TransactionDetailScreen: React.FC = () => {
                 <View style={styles.securityBox}>
                     <ShieldCheck size={20} color="#16a34a" />
                     <Text style={styles.securityText}>
-                        Giao dịch này được bảo mật bởi hệ thống Poké-Shield™
+                        {t('protected_by')}
                     </Text>
                 </View>
 
@@ -183,7 +184,7 @@ export const TransactionDetailScreen: React.FC = () => {
                 <View style={styles.actions}>
                     <TouchableOpacity style={styles.downloadBtn} activeOpacity={0.8}>
                         <Download size={20} color="#ffffff" />
-                        <Text style={styles.downloadBtnText}>Tải hóa đơn (PDF)</Text>
+                        <Text style={styles.downloadBtnText}>{t('download_receipt_pdf')}</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
@@ -191,7 +192,7 @@ export const TransactionDetailScreen: React.FC = () => {
                         onPress={() => navigation.navigate('MainTabs', { screen: 'AIChat' })}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.helpBtnText}>Cần hỗ trợ về giao dịch này?</Text>
+                        <Text style={styles.helpBtnText}>{t('need_help')}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

@@ -36,7 +36,7 @@ export const PurchaseHistoryScreen: React.FC = () => {
                             {item.type === 'buy' ? <ArrowDownLeft size={20} color="#3b82f6" /> : <ArrowUpRight size={20} color="#16a34a" />}
                         </View>
                         <View>
-                            <Text style={styles.typeName}>{item.type === 'buy' ? t('purchase_success') || 'Mua hàng' : t('deposit_success') || 'Nạp tiền'}</Text>
+                            <Text style={styles.typeName}>{item.type === 'buy' ? t('buy_item') : t('deposit')}</Text>
                             <Text style={styles.dateText}>{dateString} • {timeString}</Text>
                         </View>
                     </View>
@@ -72,7 +72,7 @@ export const PurchaseHistoryScreen: React.FC = () => {
                 
                 <View style={styles.footer}>
                    <Text style={[styles.status, item.status === 'success' ? { color: '#16a34a' } : { color: '#ef4444' }]}>
-                       {item.status === 'success' ? (t('success') || 'Thành công') : (t('failed' as any) || 'Thất bại')}
+                       {item.status === 'success' ? t('success') : t('failed')}
                    </Text>
                    <Text style={styles.transId}>ID: {item.id.slice(0, 8)}...</Text>
                 </View>
@@ -86,7 +86,7 @@ export const PurchaseHistoryScreen: React.FC = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <ChevronLeft size={24} color="#0f172a" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t('purchase_history' as any) || 'Lịch sử giao dịch'}</Text>
+                <Text style={styles.headerTitle}>{t('purchase_history')}</Text>
                 <View style={{width: 40}} />
             </View>
 
@@ -99,7 +99,7 @@ export const PurchaseHistoryScreen: React.FC = () => {
                     <View style={styles.emptyContainer}>
                         <View style={styles.emptyIcon}><ShoppingBag size={48} color="#cbd5e1" /></View>
                         <Text style={styles.emptyTitle}>{t('no_results_found')}</Text>
-                        <Text style={styles.emptyDesc}>Bạn chưa thực hiện giao dịch nào.</Text>
+                        <Text style={styles.emptyDesc}>{t('no_transactions')}</Text>
                     </View>
                 }
             />

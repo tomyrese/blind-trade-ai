@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKVStorage } from '../storage/mmkv';
 import { UserProfile, MOCK_USER, VipType, AVAILABLE_TITLES } from '../../domain/models/User';
+import { supabase } from '../../api/supabase';
 
 interface RegisteredUser {
   email: string;
@@ -41,6 +42,9 @@ interface UserState {
   setDefaultPaymentMethod: (id: string) => void;
 
   changePassword: (oldPass: string, newPass: string) => Promise<{ success: boolean; message?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
+  verifyRecoveryOTP: (email: string, token: string) => Promise<{ success: boolean; message?: string }>;
+  updateUserPassword: (newPassword: string) => Promise<{ success: boolean; message?: string }>;
   set2FA: (enabled: boolean) => void;
 
   _setHydrated: (val: boolean) => void;
@@ -343,6 +347,30 @@ export const useUserStore = create<UserState>()(
         newUsers[userIndex] = { ...newUsers[userIndex], password: newPass };
 
         set({ registeredUsers: newUsers });
+        return { success: true };
+      },
+
+      resetPassword: async (email) => {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) return { success: false, message: error.message };
+        return { success: true };
+      },
+
+      verifyRecoveryOTP: async (email, token) => {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'recovery',
+        });
+        if (error) return { success: false, message: error.message };
+        return { success: true };
+      },
+
+      updateUserPassword: async (newPassword) => {
+        const { data, error } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        if (error) return { success: false, message: error.message };
         return { success: true };
       },
 

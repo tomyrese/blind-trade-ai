@@ -22,7 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Mail, Lock, User, UserPlus, ArrowLeft, Globe, Phone, Check } from 'lucide-react-native';
 import { LinearGradient } from 'react-native-linear-gradient';
-import { InfoModal, ModalType } from '../components/InfoModal';
+import { useUIStore } from '../../shared/stores/uiStore';
 import { supabase } from '../../api/supabase';
 
 const { width, height } = Dimensions.get('window');
@@ -85,23 +85,12 @@ export const RegisterScreen = () => {
     defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '', otp: '' },
   });
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
-    type: ModalType;
-    title: string;
-    message: string;
-    onClose?: () => void;
-  }>({ type: 'info', title: '', message: '' });
-
-  const showInfo = (type: ModalType, title: string, message: string, onClose?: () => void) => {
-    setModalConfig({ type, title, message, onClose });
-    setModalVisible(true);
-  };
+  const showNotification = useUIStore((state) => state.showNotification);
 
   const handleSendOTP = async () => {
     const email = watch('email');
     if (!email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) === false) {
-      showInfo('error', t('error'), t('invalid_email_format'));
+      showNotification(t('invalid_email_format'), 'error');
       return;
     }
 
@@ -110,9 +99,9 @@ export const RegisterScreen = () => {
       const { error } = await supabase.auth.signInWithOtp({ email });
       if (error) throw error;
       setOtpSent(true);
-      showInfo('success', 'OTP Sent', 'Vui lòng kiểm tra email của bạn.');
+      showNotification(t('otp_sent' as any) || 'Mã OTP đã được gửi!', 'success');
     } catch (error: any) {
-      showInfo('error', t('error'), error.message);
+      showNotification(error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -122,7 +111,7 @@ export const RegisterScreen = () => {
     const email = watch('email');
     const otp = watch('otp');
     if (!otp || otp.length !== 6) {
-      showInfo('error', t('error'), 'Vui lòng nhập mã OTP 6 số.');
+      showNotification('Vui lòng nhập mã OTP 6 số.', 'error');
       return;
     }
 
@@ -136,10 +125,10 @@ export const RegisterScreen = () => {
       if (error) throw error;
       if (data.session || data.user) {
         setOtpVerified(true);
-        showInfo('success', 'Verified', 'Email đã được xác thực thành công!');
+        showNotification(t('email_verified' as any) || 'Email đã được xác thực!', 'success');
       }
     } catch (error: any) {
-      showInfo('error', t('error'), error.message);
+      showNotification(error.message, 'error');
     } finally {
       setVerifying(false);
     }
@@ -148,7 +137,7 @@ export const RegisterScreen = () => {
   const handleRegister = async (data: RegisterForm) => {
     Keyboard.dismiss();
     if (!otpVerified) {
-      showInfo('error', t('error'), 'Vui lòng xác thực email trước.');
+      showNotification(t('please_verify_email'), 'warning');
       return;
     }
 
@@ -156,14 +145,13 @@ export const RegisterScreen = () => {
     try {
       const success = await register(data.name, data.email, data.password, data.phone);
       if (success) {
-        showInfo('success', t('success'), t('registration_success'), () => {
-          navigation.navigate('Login');
-        });
+        showNotification(t('registration_success'), 'success');
+        navigation.navigate('Login');
       } else {
-        showInfo('error', t('error'), t('registration_failed'));
+        showNotification(t('registration_failed'), 'error');
       }
     } catch (error: any) {
-      showInfo('error', t('error'), t('something_went_wrong'));
+      showNotification(t('something_went_wrong'), 'error');
     } finally {
       setLoading(false);
     }
@@ -329,7 +317,6 @@ export const RegisterScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <InfoModal visible={modalVisible} type={modalConfig.type} title={modalConfig.title} message={modalConfig.message} onClose={() => setModalVisible(false)} />
     </View>
   );
 };
